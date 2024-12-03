@@ -70,8 +70,8 @@ DB_NAME=anilist_db
 
 1. Clone este repositório:
    ```bash
-   git clone https://github.com/seu-usuario/seu-repositorio.git
-   cd seu-repositorio
+   git clone https://github.com/polixter/anilist-api-fastify.git
+   cd anilist-api-fastify
    ```
 
 2. Instale as dependências:
