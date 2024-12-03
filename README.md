@@ -252,7 +252,15 @@ DATABASE_URL=postgres://user:password@localhost:5432/anilist_db
 
 ### **Tabelas**
 
-1. **Tabela `animes`**
+1. **Tabela `titles`**
+  - `id` (integer, primary): Identificador único do título.
+  - `english_title` (string, not nullable): Título em inglês.
+  - `native_title` (string, not nullable): Título no idioma nativo.
+  - `romanji_title` (string, not nullable): Título transliterado para Romanji.
+  - `created_at` (timestamp): Data e hora de criação do registro (gerado automaticamente).
+  - `updated_at` (timestamp): Data e hora da última atualização do registro (gerado automaticamente).
+
+2. **Tabela `animes`**
    - `id`: Identificador único do anime.
    - `title`: Título do anime.
    - `description`: Descrição traduzida.
@@ -261,7 +269,7 @@ DATABASE_URL=postgres://user:password@localhost:5432/anilist_db
    - `season_year`: Ano da temporada.
    - `is_current_season`: Indica se o anime é da temporada atual.
 
-2. **Tabela `episodes`**
+3. **Tabela `episodes`**
    - `anime_id`: ID do anime relacionado.
    - `episode_number`: Número do episódio.
    - `title_english`: Título em inglês.
@@ -269,7 +277,7 @@ DATABASE_URL=postgres://user:password@localhost:5432/anilist_db
    - `url`: URL do episódio.
    - `site`: Site onde o episódio está disponível.
 
-3. **Tabela `genres`**
+4. **Tabela `genres`**
    - `id`: Identificador único do gênero.
    - `name_en`: Nome do gênero em inglês.
    - `name_pt`: Nome do gênero traduzido.
