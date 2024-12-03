@@ -53,8 +53,15 @@ Certifique-se de ter as seguintes ferramentas instaladas:
 Além disso, configure um arquivo `.env` com as seguintes variáveis:
 
 ```env
-DEEPL_API_KEY=your_deepl_api_key
-DATABASE_URL=postgres://user:password@localhost:5432/anilist_db
+# DeepL API Key
+DEEPL_API_KEY=sua_api_deepl
+
+# Configuração do Banco de Dados
+DB_CLIENT=pg
+DB_HOST=endereço
+DB_USER=usuario
+DB_PASSWORD=senha
+DB_NAME=anilist_db
 ```
 
 ---
