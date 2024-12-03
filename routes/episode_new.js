@@ -5,6 +5,28 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function processEpisodeTitle(title, episodeNumber, fastify) {
+  try {
+    // Normaliza o título, removendo "Episode X - " se existir
+    const normalizedTitle = title.replace(/Episode \d+ - /i, "").trim();
+
+    // Traduz apenas a parte relevante
+    const translatedResult = await fastify.deeplTranslator.translateText(
+      normalizedTitle,
+      "en",
+      "pt-BR",
+      { splitSentences: "1" } // Tradução frase por frase
+    );
+
+    // Reconstrói o título no formato padrão
+    return `Episódio ${episodeNumber} - ${translatedResult.text}`;
+  } catch (error) {
+    fastify.log.error(`Erro ao traduzir título do episódio: ${error.message}`);
+    // Retorna o título original como fallback
+    return `Episódio ${episodeNumber} - ${title}`;
+  }
+}
+
 async function episodesRoutes(fastify, options) {
   fastify.get("/episodes/new", async (request, reply) => {
     try {
@@ -64,18 +86,18 @@ async function episodesRoutes(fastify, options) {
           const newEpisodes = await Promise.all(
             orderedEpisodes.map(async (episode, index) => {
               try {
-                const translatedTitle =
-                  await fastify.deeplTranslator.translateText(
-                    episode.title || `Episódio ${index + 1}`,
-                    "en",
-                    "pt-BR"
-                  );
+                // Traduzir o título do episódio
+                const translatedTitle = await processEpisodeTitle(
+                  episode.title || `Episódio ${index + 1}`,
+                  index + 1,
+                  fastify
+                );
 
                 const episodeData = {
                   anime_id: anime.id,
                   episode_number: index + 1, // Atribui a numeração correta
                   title_english: episode.title || `Episódio ${index + 1}`,
-                  title_translated: translatedTitle.text,
+                  title_translated: translatedTitle,
                   url: episode.url,
                   site: episode.site,
                   image_url:
