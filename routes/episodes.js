@@ -1,6 +1,28 @@
 const axios = require("axios");
 const knex = require("knex")(require("../knexfile").development);
 
+async function processEpisodeTitle(title, episodeNumber, fastify) {
+  try {
+    // Normaliza o título, removendo "Episode X - " se existir
+    const normalizedTitle = title.replace(/Episode \d+ - /i, "").trim();
+
+    // Traduz apenas a parte relevante
+    const translatedResult = await fastify.deeplTranslator.translateText(
+      normalizedTitle,
+      "en",
+      "pt-BR",
+      { splitSentences: "1" } // Tradução frase por frase
+    );
+
+    // Reconstrói o título no formato padrão
+    return `Episódio ${episodeNumber} - ${translatedResult.text}`;
+  } catch (error) {
+    fastify.log.error(`Erro ao traduzir título do episódio: ${error.message}`);
+    // Retorna o título original como fallback
+    return `Episódio ${episodeNumber} - ${title}`;
+  }
+}
+
 async function episodesRoutes(fastify, options) {
   fastify.get("/episodes/:id", async (request, reply) => {
     const { id } = request.params;
@@ -39,41 +61,57 @@ async function episodesRoutes(fastify, options) {
         `,
         variables: { id },
       });
-      
-      const episodeNodes = anilistResponse.data?.data?.Media?.streamingEpisodes || [];
-      
+
+      const episodeNodes =
+        anilistResponse.data?.data?.Media?.streamingEpisodes || [];
+
       if (episodeNodes.length === 0) {
         return reply.status(404).send({
           error: "Nenhum episódio encontrado para este anime na API Anilist.",
         });
       }
-      
-      // Traduz os títulos dos episódios
+
+      // Traduzir e salvar episódios
       const translatedEpisodes = await Promise.all(
         episodeNodes.map(async (episode, index) => {
-          const translatedTitle = await fastify.deeplTranslator.translateText(
-            episode.title || `Episódio ${index + 1}`,
-            "en", // Detectar automaticamente o idioma de origem
-            "pt-BR" // Traduzir para português
-          );
-      
-          return {
-            anime_id: id,
-            episode_number: index + 1,
-            title_english: episode.title || `Episódio ${index + 1}`,
-            title_translated: translatedTitle.text,
-            url: episode.url,
-            site: episode.site,
-            image_url: episode.thumbnail || "https://via.placeholder.com/300",
-          };
+          try {
+            // Traduzir e reconstruir o título do episódio
+            const translatedTitle = await processEpisodeTitle(
+              episode.title || `Episódio ${index + 1}`,
+              index + 1,
+              fastify
+            );
+
+            return {
+              anime_id: id,
+              episode_number: index + 1,
+              title_english: episode.title || `Episódio ${index + 1}`,
+              title_translated: translatedTitle,
+              url: episode.url,
+              site: episode.site,
+              image_url:
+                episode.thumbnail || "https://via.placeholder.com/300",
+            };
+          } catch (error) {
+            fastify.log.error(
+              `Erro ao processar episódio ${index + 1} para anime ${id}: ${error.message}`
+            );
+            return null;
+          }
         })
       );
-      
+
+      // Filtrar episódios válidos
+      const validEpisodes = translatedEpisodes.filter((ep) => ep !== null);
+
       // Salva os episódios no banco de dados
-      await knex("episodes").insert(translatedEpisodes);
-      
+      await knex("episodes")
+        .insert(validEpisodes)
+        .onConflict(["anime_id", "episode_number"])
+        .ignore();
+
       // Retorna os episódios traduzidos
-      return reply.send(translatedEpisodes);      
+      return reply.send(validEpisodes);
     } catch (error) {
       fastify.log.error(error);
 
