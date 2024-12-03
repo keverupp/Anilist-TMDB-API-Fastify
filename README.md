@@ -10,7 +10,7 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
 5. [Estrutura do Projeto](#estrutura-do-projeto)
 6. [Rotas Disponíveis](#rotas-disponíveis)
    - [Rota `/search`](#rota-search)
-   - [Rota `/searchApi`](#rota-searchApi)
+   - [Rota `/searchApi`](#rota-search-api)
    - [Rota `/anime/:id`](#rota-animeid)
    - [Rota `/episodes/:id`](#rota-episodesid)
    - [Rota `/episodes/new`](#rota-episodesnew)
