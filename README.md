@@ -1,7 +1,3 @@
-Aqui está um exemplo de **README** estruturado que cobre tudo o que você desenvolveu até o momento para sua API de animes:
-
----
-
 # **AniList API Integration**
 
 Este projeto é uma API construída com **Fastify** que utiliza a API do AniList para buscar informações sobre animes, episódios e temporadas. Ele também utiliza **Knex.js** para gerenciar o banco de dados e **DeepL** para traduzir informações.
