@@ -50,28 +50,15 @@ Certifique-se de ter as seguintes ferramentas instaladas:
 - [Node.js](https://nodejs.org/) (v16 ou superior)
 - [PostgreSQL](https://www.postgresql.org/) (v12 ou superior)
 
-Além disso, configure um arquivo `.env` com as seguintes variáveis:
-
-```env
-# DeepL API Key
-DEEPL_API_KEY=sua_api_deepl
-
-# Configuração do Banco de Dados
-DB_CLIENT=pg
-DB_HOST=endereço
-DB_USER=usuario
-DB_PASSWORD=senha
-DB_NAME=anilist_db
-```
-
+Além disso, configure um arquivo `.env` seguindo o `.env.example`
 ---
 
 ## **Instalação**
 
 1. Clone este repositório:
    ```bash
-   git clone https://github.com/polixter/otakudiscussv2.git
-   cd otakudiscussv2
+   git clone https://github.com/polixter/anilist-api-fastify.git
+   cd anilist-api-fastify
    ```
 
 2. Instale as dependências:
@@ -86,7 +73,7 @@ DB_NAME=anilist_db
      ```
    - Execute as migrations:
      ```bash
-     knex migrate:latest
+     npx knex migrate:latest
      ```
 
 4. Inicie o servidor:
@@ -121,10 +108,6 @@ A documentação detalhada das rotas foi movida para o [README de `routes`](./ro
 ---
 
 ### **Banco de Dados**
-
----
-
-### **Tabelas**
 
 ---
 
