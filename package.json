@@ -6,11 +6,11 @@
   "directories": {
     "test": "test"
   },
-  "scripts": {
-    "dev": "nodemon --watch . --ext js,json --exec \"node app.js\"",
-    "start": "fastify start -l info app.js",
-    "test": "node --test test/**/*.test.js"
-  },
+"scripts": {
+  "dev": "nodemon --watch . --ext js,json --exec \"node dev.js\"",
+  "start": "fastify start -l info app.js",
+  "test": "node --test test/**/*.test.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
