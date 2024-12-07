@@ -8,7 +8,7 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
 3. [Pré-requisitos](#pré-requisitos)
 4. [Instalação](#instalação)
 5. [Estrutura do Projeto](#estrutura-do-projeto)
-6. [Rotas Disponíveis](#rotas-disponíveis)
+6. [Rotas Públicas](#rotas-públicas)
    - [Rota `/search`](#rota-search)
    - [Rota `/searchApi`](#rota-search-api)
    - [Rota `/anime/:id`](#rota-animeid)
@@ -29,18 +29,26 @@ Este projeto visa integrar informações da API AniList para construção de fun
 - Tradução automática de títulos e descrições.
 - Armazenamento e gerenciamento de dados em um banco de dados relacional.
 
+Este projeto tem como objetivo final ser uma plataforma completa de animes em Portugues(BR).
+
 ---
 
 ## **Tecnologias Usadas**
 
-- **Fastify**: Framework web para Node.js.
-- **Knex.js**: ORM para interagir com o banco de dados.
-- **PostgreSQL**: Banco de dados relacional utilizado.
-- **Axios**: Cliente HTTP para requisições à API AniList.
-- **DeepL**: API de tradução para traduzir títulos e descrições.
+- **Fastify**: Framework web para Node.js utilizado para construção da API.
+- **Knex.js**: Query builder para interagir com o banco de dados relacional.
+- **PostgreSQL**: Banco de dados relacional usado para persistência de dados.
+- **Axios**: Cliente HTTP usado para requisições, como à API AniList.
+- **DeepL**: API de tradução utilizada para traduzir títulos e descrições.
+- **GraphQL Request**: Cliente leve para realizar requisições GraphQL.
+- **Argon2**: Biblioteca para hashing de senhas.
+- **jsonwebtoken**: Utilizado para autenticação baseada em tokens JWT.
+- **dotenv**: Gerenciamento de variáveis de ambiente.
+- **Nodemon**: Ferramenta para reiniciar automaticamente o servidor em desenvolvimento.
 - **Node.js**: Ambiente de execução JavaScript.
+- **pg**: Driver para conectar ao PostgreSQL.
 
----
+--- 
 
 ## **Pré-requisitos**
 
@@ -48,7 +56,6 @@ Certifique-se de ter as seguintes ferramentas instaladas:
 
 - [Node.js](https://nodejs.org/) (v16 ou superior)
 - [PostgreSQL](https://www.postgresql.org/) (v12 ou superior)
-- [Knex CLI](https://knexjs.org/)
 
 Além disso, configure um arquivo `.env` com as seguintes variáveis:
 
@@ -70,8 +77,8 @@ DB_NAME=anilist_db
 
 1. Clone este repositório:
    ```bash
-   git clone https://github.com/polixter/anilist-api-fastify.git
-   cd anilist-api-fastify
+   git clone https://github.com/polixter/otakudiscussv2.git
+   cd otakudiscussv2
    ```
 
 2. Instale as dependências:
@@ -100,14 +107,11 @@ DB_NAME=anilist_db
 
 ```plaintext
 ├── knexfile.js          # Configurações do Knex
+├── controllers/         # Controladores da API
+├── middlewares/         # Middlewares da aplicação
 ├── migrations/          # Arquivos de migração do banco de dados
 ├── routes/              # Definição das rotas da API
-│   ├── anime.js
-│   ├── episodes.js
-│   ├── episodes_new.js
-│   ├── populate_genres.js
-│   ├── search.js
-│   └── searchApi.js
+├── services/            # Serviços auxiliares
 ├── package.json         # Dependências do projeto
 ├── README.md            # Documentação do projeto
 └── .env                 # Configurações de ambiente
@@ -115,7 +119,7 @@ DB_NAME=anilist_db
 
 ---
 
-## **Rotas Disponíveis**
+## **Rotas Públicas**
 
 ### **Rota `/search`**
 

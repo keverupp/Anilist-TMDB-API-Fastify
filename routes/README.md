@@ -1,29 +1,409 @@
-# Routes Folder
 
-Routes define the pathways within your application.
-Fastify's structure supports the modular monolith approach, where your
-application is organized into distinct, self-contained modules.
-This facilitates easier scaling and future transition to a microservice architecture.
-In the future you might want to independently deploy some of those.
+## 🛠️ Rotas de Autenticação e CIA
 
-In this folder you should define all the routes that define the endpoints
-of your web application.
-Each service is a [Fastify
-plugin](https://fastify.dev/docs/latest/Reference/Plugins/), it is
-encapsulated (it can have its own independent plugins) and it is
-typically stored in a file; be careful to group your routes logically,
-e.g. all `/users` routes in a `users.js` file. We have added
-a `root.js` file for you with a '/' root added.
+### 1. **Registro**
 
-If a single file becomes too large, create a folder and add a `index.js` file there:
-this file must be a Fastify plugin, and it will be loaded automatically
-by the application. You can now add as many files as you want inside that folder.
-In this way you can create complex routes within a single monolith,
-and eventually extract them.
+- **Endpoint**: `POST /register`
+- **Descrição**: Registra um novo usuário.
+- **Corpo da Requisição**:
 
-If you need to share functionality between routes, place that
-functionality into the `plugins` folder, and share it via
-[decorators](https://fastify.dev/docs/latest/Reference/Decorators/).
+  ```json
+  {
+    "username": "usuario123",
+    "email": "usuario@example.com",
+    "password": "senhaSegura123"
+  }
+  ```
 
-If you're a bit confused about using `async/await` to write routes, you would
-better take a look at [Promise resolution](https://fastify.dev/docs/latest/Reference/Routes/#promise-resolution) for more details.
+- **Respostas**:
+  - **201 Created**: Usuário registrado com sucesso.
+    ```json
+    {
+      "message": "Usuário registrado com sucesso.",
+      "user": {
+        "id": 1,
+        "username": "usuario123",
+        "email": "usuario@example.com"
+      }
+    }
+    ```
+  - **400 Bad Request**: Erro de validação (username curto, email inválido, senha curta).
+  - **500 Internal Server Error**: Erro interno do servidor.
+
+---
+
+### 2. **Login**
+
+- **Endpoint**: `POST /login`
+- **Descrição**: Autentica o usuário e retorna um token JWT.
+- **Corpo da Requisição**:
+
+  ```json
+  {
+    "email": "usuario@example.com",
+    "password": "senhaSegura123"
+  }
+  ```
+
+- **Respostas**:
+  - **200 OK**: Login bem-sucedido.
+    ```json
+    {
+      "message": "Login realizado com sucesso.",
+      "user": {
+        "id": 1,
+        "username": "usuario123",
+        "email": "usuario@example.com"
+      },
+      "token": "eyJhbGciOiJIUzI1NiIsInR..."
+    }
+    ```
+  - **401 Unauthorized**: Credenciais inválidas.
+  - **500 Internal Server Error**: Erro interno do servidor.
+
+---
+
+### 3. **Logout**
+
+- **Endpoint**: `POST /logout`
+- **Descrição**: Remove o token JWT da tabela `tokens`, invalidando-o.
+- **Corpo da Requisição**:
+
+  ```json
+  {
+    "token": "eyJhbGciOiJIUzI1NiIsInR..."
+  }
+  ```
+
+- **Respostas**:
+  - **200 OK**: Logout bem-sucedido.
+    ```json
+    {
+      "message": "Logout efetuado com sucesso."
+    }
+    ```
+  - **400 Bad Request**: Token não enviado.
+  - **404 Not Found**: Token não encontrado.
+  - **500 Internal Server Error**: Erro interno do servidor.
+
+---
+
+### 4. **Renovação de Token**
+
+- **Endpoint**: `POST /refreshToken`
+- **Descrição**: Gera um novo token JWT se o token atual for válido e ainda não tiver expirado.
+- **Corpo da Requisição**:
+
+  ```json
+  {
+    "token": "eyJhbGciOiJIUzI1NiIsInR..."
+  }
+  ```
+
+- **Respostas**:
+  - **200 OK**: Token renovado com sucesso.
+    ```json
+    {
+      "message": "Token renovado com sucesso.",
+      "token": "novoTokenAqui..."
+    }
+    ```
+  - **400 Bad Request**: Token não enviado.
+  - **401 Unauthorized**: Token inválido ou expirado.
+  - **500 Internal Server Error**: Erro interno do servidor.
+
+---
+
+## 🔒 Middleware
+
+### `authMiddleware.js`
+
+- **Descrição**: Middleware para proteger rotas que requerem autenticação.
+- **Funcionamento**:
+  - Valida o token JWT enviado no cabeçalho `Authorization`.
+  - Verifica se o token existe na tabela `tokens` e se não está expirado.
+  - Anexa o `user` ao objeto `req` se o token for válido.
+
+- **Uso**:
+
+  Em rotas protegidas, adicione o middleware:
+
+  ```javascript
+  fastify.get("/protected", { preHandler: authMiddleware }, async (req, reply) => {
+    return reply.send({ message: "Acesso autorizado.", user: req.user });
+  });
+  ```
+
+- **Respostas do Middleware**:
+  - **401 Unauthorized**: Token ausente, inválido ou expirado.
+
+Aqui está a documentação das rotas de comentários e reações:
+
+---
+
+## **Rotas de Comentários**
+
+### **1. Criar Comentário**
+- **Endpoint**: `POST /comments`
+- **Descrição**: Cria um novo comentário em um episódio ou anime.
+- **Autenticação**: Necessária.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <seu_token>",
+    "Content-Type": "application/json"
+  }
+  ```
+- **Body**:
+  ```json
+  {
+    "anime_id": 1,
+    "episode_id": 2,
+    "content": "Gostei muito do episódio!"
+  }
+  ```
+- **Respostas**:
+  - **201 Created**:
+    ```json
+    {
+      "message": "Comentário criado com sucesso.",
+      "commentId": 10
+    }
+    ```
+  - **400 Bad Request**:
+    ```json
+    {
+      "error": "Invalid data",
+      "message": "Anime ID e conteúdo são obrigatórios."
+    }
+    ```
+  - **500 Internal Server Error**:
+    ```json
+    {
+      "error": "Erro interno ao criar comentário."
+    }
+    ```
+
+---
+
+### **2. Responder a Comentário**
+- **Endpoint**: `POST /comments/:id`
+- **Descrição**: Cria uma resposta a um comentário específico.
+- **Autenticação**: Necessária.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <seu_token>",
+    "Content-Type": "application/json"
+  }
+  ```
+- **Body**:
+  ```json
+  {
+    "anime_id": 1,
+    "episode_id": 2,
+    "content": "Concordo com você!"
+  }
+  ```
+- **Respostas**:
+  - **201 Created**:
+    ```json
+    {
+      "message": "Comentário criado com sucesso.",
+      "commentId": 11
+    }
+    ```
+  - **404 Not Found**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "Comentário pai não encontrado."
+    }
+    ```
+  - **500 Internal Server Error**:
+    ```json
+    {
+      "error": "Erro interno ao criar comentário."
+    }
+    ```
+
+---
+
+### **3. Listar Comentários**
+- **Endpoint**: `GET /comments`
+- **Descrição**: Lista os comentários de um anime ou episódio, incluindo respostas aninhadas.
+- **Autenticação**: Necessária.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <seu_token>"
+  }
+  ```
+- **Query Parameters**:
+  - `anime_id` (obrigatório): ID do anime.
+  - `episode_id` (opcional): ID do episódio.
+- **Respostas**:
+  - **200 OK**:
+    ```json
+    [
+      {
+        "id": 1,
+        "anime_id": 1,
+        "episode_id": 2,
+        "parent_id": null,
+        "user_id": 1,
+        "content": "Gostei muito do episódio!",
+        "replies": [
+          {
+            "id": 2,
+            "anime_id": 1,
+            "episode_id": 2,
+            "parent_id": 1,
+            "user_id": 2,
+            "content": "Eu também gostei!"
+          }
+        ]
+      }
+    ]
+    ```
+  - **500 Internal Server Error**:
+    ```json
+    {
+      "error": "Erro interno ao listar comentários."
+    }
+    ```
+
+---
+
+### **4. Excluir Comentário**
+- **Endpoint**: `DELETE /comments/:id`
+- **Descrição**: Exclui um comentário ou resposta.
+- **Autenticação**: Necessária.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <seu_token>"
+  }
+  ```
+- **Respostas**:
+  - **200 OK**:
+    ```json
+    {
+      "message": "Comentário excluído com sucesso."
+    }
+    ```
+  - **403 Forbidden**:
+    ```json
+    {
+      "error": "Forbidden",
+      "message": "Você não tem permissão para excluir este comentário."
+    }
+    ```
+  - **404 Not Found**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "Comentário não encontrado."
+    }
+    ```
+  - **500 Internal Server Error**:
+    ```json
+    {
+      "error": "Erro interno ao excluir comentário."
+    }
+    ```
+
+---
+
+## **Rotas de Reações**
+
+### **1. Adicionar ou Atualizar Reação**
+- **Endpoint**: `POST /reactions`
+- **Descrição**: Adiciona ou atualiza uma reação (`like` ou `dislike`) a um comentário.
+- **Autenticação**: Necessária.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <seu_token>",
+    "Content-Type": "application/json"
+  }
+  ```
+- **Body**:
+  ```json
+  {
+    "comment_id": 1,
+    "type": "like"
+  }
+  ```
+- **Respostas**:
+  - **201 Created**:
+    ```json
+    {
+      "message": "Reação adicionada."
+    }
+    ```
+  - **200 OK**:
+    ```json
+    {
+      "message": "Reação atualizada."
+    }
+    ```
+  - **404 Not Found**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "Comentário não encontrado."
+    }
+    ```
+  - **500 Internal Server Error**:
+    ```json
+    {
+      "error": "Erro interno ao reagir ao comentário."
+    }
+    ```
+
+---
+
+### **2. Remover Reação**
+- **Endpoint**: `DELETE /reactions`
+- **Descrição**: Remove uma reação existente.
+- **Autenticação**: Necessária.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <seu_token>",
+    "Content-Type": "application/json"
+  }
+  ```
+- **Body**:
+  ```json
+  {
+    "comment_id": 1
+  }
+  ```
+- **Respostas**:
+  - **200 OK**:
+    ```json
+    {
+      "message": "Reação removida."
+    }
+    ```
+  - **404 Not Found**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "Reação não encontrada."
+    }
+    ```
+  - **500 Internal Server Error**:
+    ```json
+    {
+      "error": "Erro interno ao remover reação."
+    }
+    ```
+
+## 📌 Observações
+
+- Tokens expirados devem ser removidos da tabela `tokens` periodicamente.
+- O registro e login já incluem validações básicas para `username`, `email` e `password`. Validações mais complexas podem ser adicionadas conforme necessário.
+- Middleware pode ser aplicado globalmente ou em rotas específicas, dependendo do caso de uso.
