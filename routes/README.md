@@ -2,14 +2,14 @@
 
 ## Sumário
 
-- [Rotas de Autenticação e Gestão de Tokens](#rotas-de-autenticação-e-gestão-de-tokens)
+- [Rotas de Autenticação e Gestão de Tokens](#-rotas-de-autenticação-e-gestão-de-tokens)
   - [Registro](#1-registro)
   - [Login](#2-login)
   - [Logout](#3-logout)
   - [Renovação de Token](#4-renovação-de-token)
   - [Middleware de Autenticação](#middleware-de-autenticação)
 
-- [Rotas de Animes e Episódios](#rotas-de-animes-e-episódios)
+- [Rotas de Animes e Episódios](#-rotas-de-animes-e-episódios)
   - [Popular Gêneros](#1-popular-gêneros)
   - [Seguir/Deixar de Seguir um Anime](#2-seguirdeixar-de-seguir-um-anime)
   - [Informações de um Anime](#3-informações-de-um-anime)
@@ -17,20 +17,20 @@
   - [Episódios Recentes](#5-episódios-recentes)
   - [Listar Animes da Temporada](#6-listar-animes-da-temporada)
 
-- [Rotas de Comentários](#rotas-de-comentários)
+- [Rotas de Comentários](#-rotas-de-comentários)
   - [Criar Comentário](#1-criar-comentário)
   - [Responder a Comentário](#2-responder-a-comentário)
   - [Listar Comentários](#3-listar-comentários)
   - [Excluir Comentário](#4-excluir-comentário)
 
-- [Rotas de Reações](#rotas-de-reações)
+- [Rotas de Reações](#-rotas-de-reações)
   - [Adicionar/Atualizar/Remover Reação](#1-adicionaratualizarremover-reação)
 
-- [Rotas de Busca](#rotas-de-busca)
+- [Rotas de Busca](#-rotas-de-busca)
   - [Busca Local por Títulos](#1-busca-local-por-títulos)
   - [Busca na API Externa](#2-busca-na-api-externa)
 
-- [Rotas de Recuperação de Senha](#rotas-de-recuperação-de-senha)
+- [Rotas de Recuperação de Senha](#-rotas-de-recuperação-de-senha)
   - [Esqueci Minha Senha (Solicitar Redefinição)](#1-esqueci-minha-senha-solicitar-redefinição)
   - [Redefinir Senha](#2-redefinir-senha)
 
