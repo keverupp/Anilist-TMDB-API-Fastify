@@ -1,4 +1,4 @@
-# 📜 Documentação da API
+# 📜 Documentação das Rotas
 
 ## Sumário
 
@@ -8,7 +8,7 @@
   - [Logout](#3-logout)
   - [Renovação de Token](#4-renovação-de-token)
   - [Middleware de Autenticação](#middleware-de-autenticação)
-  
+
 - [Rotas de Animes e Episódios](#rotas-de-animes-e-episódios)
   - [Popular Gêneros](#1-popular-gêneros)
   - [Seguir/Deixar de Seguir um Anime](#2-seguirdeixar-de-seguir-um-anime)
@@ -16,25 +16,29 @@
   - [Listar Episódios de um Anime](#4-listar-episódios-de-um-anime)
   - [Episódios Recentes](#5-episódios-recentes)
   - [Listar Animes da Temporada](#6-listar-animes-da-temporada)
-  
+
 - [Rotas de Comentários](#rotas-de-comentários)
   - [Criar Comentário](#1-criar-comentário)
   - [Responder a Comentário](#2-responder-a-comentário)
   - [Listar Comentários](#3-listar-comentários)
   - [Excluir Comentário](#4-excluir-comentário)
-  
+
 - [Rotas de Reações](#rotas-de-reações)
   - [Adicionar/Atualizar/Remover Reação](#1-adicionaratualizarremover-reação)
-  
+
 - [Rotas de Busca](#rotas-de-busca)
   - [Busca Local por Títulos](#1-busca-local-por-títulos)
   - [Busca na API Externa](#2-busca-na-api-externa)
+
+- [Rotas de Recuperação de Senha](#rotas-de-recuperação-de-senha)
+  - [Esqueci Minha Senha (Solicitar Redefinição)](#1-esqueci-minha-senha-solicitar-redefinição)
+  - [Redefinir Senha](#2-redefinir-senha)
 
 - [Observações](#observações)
 
 ---
 
-## Rotas de Autenticação e Gestão de Tokens 🗂️
+## 🔒 Rotas de Autenticação e Gestão de Tokens
 
 ### 1. Registro
 - **Endpoint**: `POST /register`
@@ -100,7 +104,7 @@
 
 ---
 
-## Rotas de Animes e Episódios
+## 🍿 Rotas de Animes e Episódios
 
 ### 1. Popular Gêneros
 - **Endpoint**: `POST /populate-genres`
@@ -168,7 +172,7 @@
 
 ---
 
-## Rotas de Comentários
+## 💬 Rotas de Comentários
 
 ### 1. Criar Comentário
 - **Endpoint**: `POST /comments`
@@ -219,7 +223,7 @@
 ### 3. Listar Comentários
 - **Endpoint**: `GET /comments`
 - **Descrição**: Lista comentários de um anime ou episódio, com respostas aninhadas.
-- **Autenticação**: Conforme a lógica da sua aplicação. (Originalmente necessitava, mas pode ser público se desejado.)
+- **Autenticação**: Conforme a lógica da sua aplicação.
 - **Headers** (se exigir autenticação):
   ```json
   {
@@ -254,7 +258,7 @@ GET /comments?anime_id=171018&page=1&limit=1
 
 ---
 
-## Rotas de Reações
+## 👍 Rotas de Reações
 
 ### 1. Adicionar/Atualizar/Remover Reação
 - **Endpoint**: `POST /reactions`
@@ -275,11 +279,9 @@ GET /comments?anime_id=171018&page=1&limit=1
   }
   ```
 
-Para remover a reação, basta enviar o mesmo `comment_id` e `type` já existente. Caso a lógica interna detecte que a mesma reação já existe, ela será removida.
-
 ---
 
-## Rotas de Busca 🔎
+## 🔎 Rotas de Busca
 
 ### 1. Busca Local por Títulos
 - **Endpoint**: `GET /search`
@@ -314,10 +316,55 @@ GET /search?query=Dan
 
 ---
 
-## Observações 📌
+## 🔑 Rotas de Recuperação de Senha
+
+### 1. Esqueci Minha Senha (Solicitar Redefinição)
+- **Endpoint**: `POST /forgotPassword`
+- **Descrição**: Gera um token de redefinição de senha e envia um email para o endereço fornecido, caso o email esteja cadastrado.
+- **Autenticação**: Não necessária.
+- **Headers**:
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+- **Corpo da Requisição**:
+  ```json
+  {
+    "email": "usuario@example.com"
+  }
+  ```
+- **Observação**: Mesmo se o email não existir, a resposta será genérica.
+
+---
+
+### 2. Redefinir Senha
+- **Endpoint**: `POST /resetPassword`
+- **Descrição**: Redefine a senha do usuário usando um token de redefinição válido e não expirado.
+- **Autenticação**: Não necessária.
+- **Headers**:
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+- **Corpo da Requisição**:
+  ```json
+  {
+    "token": "token-de-redefinicao",
+    "new_password": "NovaSenhaSegura123"
+  }
+  ```
+- **Observação**: Se o token for inválido ou expirado, retornará erro. Caso contrário, a senha é atualizada e o token removido.
+
+---
+
+## 📌 Observações
 
 - Tokens expirados devem ser removidos da tabela `tokens` periodicamente.
 - O registro e login incluem validações básicas para `username`, `email` e `password`.
 - Autenticação pode ser adicionada ou removida em rotas conforme a necessidade do projeto.
 - Paginação está disponível em `/comments` via parâmetros `page` e `limit`.
 - Ajuste descrições de rotas conforme a lógica de negócio da sua aplicação.
+
+---
