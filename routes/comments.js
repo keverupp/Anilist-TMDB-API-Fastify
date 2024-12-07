@@ -9,7 +9,7 @@ async function commentRoutes(fastify, options) {
     fastify.post("/comments/:id", { preHandler: authenticate }, createComment);
   
     // Rota para listar comentários (protegida pelo AuthMiddleware)
-    fastify.get("/comments", { preHandler: authenticate }, getComments);
+    fastify.get("/comments", getComments);
     
     // Rota para excluir comentários (protegida pelo AuthMiddleware)
     fastify.delete("/comments/:id", { preHandler: authenticate }, deleteComment);

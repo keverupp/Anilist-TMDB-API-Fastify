@@ -1,12 +1,45 @@
+# 📜 Documentação da API
 
-## 🛠️ Rotas de Autenticação e CIA
+## Sumário
 
-### 1. **Registro**
+- [Rotas de Autenticação e Gestão de Tokens](#rotas-de-autenticação-e-gestão-de-tokens)
+  - [Registro](#1-registro)
+  - [Login](#2-login)
+  - [Logout](#3-logout)
+  - [Renovação de Token](#4-renovação-de-token)
+  - [Middleware de Autenticação](#middleware-de-autenticação)
+  
+- [Rotas de Animes e Episódios](#rotas-de-animes-e-episódios)
+  - [Popular Gêneros](#1-popular-gêneros)
+  - [Seguir/Deixar de Seguir um Anime](#2-seguirdeixar-de-seguir-um-anime)
+  - [Informações de um Anime](#3-informações-de-um-anime)
+  - [Listar Episódios de um Anime](#4-listar-episódios-de-um-anime)
+  - [Episódios Recentes](#5-episódios-recentes)
+  - [Listar Animes da Temporada](#6-listar-animes-da-temporada)
+  
+- [Rotas de Comentários](#rotas-de-comentários)
+  - [Criar Comentário](#1-criar-comentário)
+  - [Responder a Comentário](#2-responder-a-comentário)
+  - [Listar Comentários](#3-listar-comentários)
+  - [Excluir Comentário](#4-excluir-comentário)
+  
+- [Rotas de Reações](#rotas-de-reações)
+  - [Adicionar/Atualizar/Remover Reação](#1-adicionaratualizarremover-reação)
+  
+- [Rotas de Busca](#rotas-de-busca)
+  - [Busca Local por Títulos](#1-busca-local-por-títulos)
+  - [Busca na API Externa](#2-busca-na-api-externa)
 
+- [Observações](#observações)
+
+---
+
+## Rotas de Autenticação e Gestão de Tokens 🗂️
+
+### 1. Registro
 - **Endpoint**: `POST /register`
 - **Descrição**: Registra um novo usuário.
 - **Corpo da Requisição**:
-
   ```json
   {
     "username": "usuario123",
@@ -15,29 +48,12 @@
   }
   ```
 
-- **Respostas**:
-  - **201 Created**: Usuário registrado com sucesso.
-    ```json
-    {
-      "message": "Usuário registrado com sucesso.",
-      "user": {
-        "id": 1,
-        "username": "usuario123",
-        "email": "usuario@example.com"
-      }
-    }
-    ```
-  - **400 Bad Request**: Erro de validação (username curto, email inválido, senha curta).
-  - **500 Internal Server Error**: Erro interno do servidor.
-
 ---
 
-### 2. **Login**
-
+### 2. Login
 - **Endpoint**: `POST /login`
 - **Descrição**: Autentica o usuário e retorna um token JWT.
 - **Corpo da Requisição**:
-
   ```json
   {
     "email": "usuario@example.com",
@@ -45,107 +61,64 @@
   }
   ```
 
-- **Respostas**:
-  - **200 OK**: Login bem-sucedido.
-    ```json
-    {
-      "message": "Login realizado com sucesso.",
-      "user": {
-        "id": 1,
-        "username": "usuario123",
-        "email": "usuario@example.com"
-      },
-      "token": "eyJhbGciOiJIUzI1NiIsInR..."
-    }
-    ```
-  - **401 Unauthorized**: Credenciais inválidas.
-  - **500 Internal Server Error**: Erro interno do servidor.
-
 ---
 
-### 3. **Logout**
-
+### 3. Logout
 - **Endpoint**: `POST /logout`
-- **Descrição**: Remove o token JWT da tabela `tokens`, invalidando-o.
+- **Descrição**: Invalida o token JWT do usuário.
 - **Corpo da Requisição**:
-
   ```json
   {
     "token": "eyJhbGciOiJIUzI1NiIsInR..."
   }
   ```
 
-- **Respostas**:
-  - **200 OK**: Logout bem-sucedido.
-    ```json
-    {
-      "message": "Logout efetuado com sucesso."
-    }
-    ```
-  - **400 Bad Request**: Token não enviado.
-  - **404 Not Found**: Token não encontrado.
-  - **500 Internal Server Error**: Erro interno do servidor.
-
 ---
 
-### 4. **Renovação de Token**
-
+### 4. Renovação de Token
 - **Endpoint**: `POST /refreshToken`
-- **Descrição**: Gera um novo token JWT se o token atual for válido e ainda não tiver expirado.
+- **Descrição**: Gera um novo token JWT se o token atual for válido.
 - **Corpo da Requisição**:
-
   ```json
   {
     "token": "eyJhbGciOiJIUzI1NiIsInR..."
   }
   ```
 
-- **Respostas**:
-  - **200 OK**: Token renovado com sucesso.
-    ```json
-    {
-      "message": "Token renovado com sucesso.",
-      "token": "novoTokenAqui..."
-    }
-    ```
-  - **400 Bad Request**: Token não enviado.
-  - **401 Unauthorized**: Token inválido ou expirado.
-  - **500 Internal Server Error**: Erro interno do servidor.
-
 ---
 
-## 🔒 Middleware
+### Middleware de Autenticação
 
-### `authMiddleware.js`
-
-- **Descrição**: Middleware para proteger rotas que requerem autenticação.
+- **Arquivo**: `authMiddleware.js`
+- **Descrição**: Middleware para rotas que requerem autenticação.
 - **Funcionamento**:
-  - Valida o token JWT enviado no cabeçalho `Authorization`.
-  - Verifica se o token existe na tabela `tokens` e se não está expirado.
-  - Anexa o `user` ao objeto `req` se o token for válido.
-
-- **Uso**:
-
-  Em rotas protegidas, adicione o middleware:
-
-  ```javascript
-  fastify.get("/protected", { preHandler: authMiddleware }, async (req, reply) => {
-    return reply.send({ message: "Acesso autorizado.", user: req.user });
-  });
-  ```
-
-- **Respostas do Middleware**:
+  - Valida o token JWT no cabeçalho `Authorization`.
+  - Verifica se o token está na tabela `tokens` e não expirou.
+  - Anexa `req.user` se o token for válido.
+- **Resposta em caso de falha**:
   - **401 Unauthorized**: Token ausente, inválido ou expirado.
 
-Aqui está a documentação das rotas de comentários e reações:
+---
+
+## Rotas de Animes e Episódios
+
+### 1. Popular Gêneros
+- **Endpoint**: `POST /populate-genres`
+- **Descrição**: Popula a base de dados com gêneros de anime.
+- **Autenticação**: Não necessária (ajuste se necessário).
+- **Headers**:
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+- **Corpo da Requisição**: *(não exigido no exemplo)*
 
 ---
 
-## **Rotas de Comentários**
-
-### **1. Criar Comentário**
-- **Endpoint**: `POST /comments`
-- **Descrição**: Cria um novo comentário em um episódio ou anime.
+### 2. Seguir/Deixar de Seguir um Anime
+- **Endpoint**: `POST /anime/follow`
+- **Descrição**: Altera o status de seguir um anime pelo usuário autenticado.
 - **Autenticação**: Necessária.
 - **Headers**:
   ```json
@@ -154,7 +127,61 @@ Aqui está a documentação das rotas de comentários e reações:
     "Content-Type": "application/json"
   }
   ```
-- **Body**:
+- **Corpo da Requisição**:
+  ```json
+  {
+    "anime_id": 171018
+  }
+  ```
+
+---
+
+### 3. Informações de um Anime
+- **Endpoint**: `GET /anime/:id`
+- **Descrição**: Retorna informações detalhadas sobre um anime.
+- **Autenticação**: Não necessária (ajuste se necessário).
+- **Parâmetros de Rota**:
+  - `id`: ID do anime.
+
+---
+
+### 4. Listar Episódios de um Anime
+- **Endpoint**: `GET /episodes/:id`
+- **Descrição**: Retorna a lista de episódios de um anime específico.
+- **Autenticação**: Não necessária (ajuste se necessário).
+- **Parâmetros de Rota**:
+  - `id`: ID do anime.
+
+---
+
+### 5. Episódios Recentes
+- **Endpoint**: `GET /episodes/new`
+- **Descrição**: Retorna os episódios mais recentes adicionados.
+- **Autenticação**: Não necessária (ajuste se necessário).
+
+---
+
+### 6. Listar Animes da Temporada
+- **Endpoint**: `GET /season`
+- **Descrição**: Retorna a lista de animes da temporada atual.
+- **Autenticação**: Não necessária (ajuste se necessário).
+
+---
+
+## Rotas de Comentários
+
+### 1. Criar Comentário
+- **Endpoint**: `POST /comments`
+- **Descrição**: Cria um novo comentário em um anime ou episódio.
+- **Autenticação**: Necessária.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <seu_token>",
+    "Content-Type": "application/json"
+  }
+  ```
+- **Corpo da Requisição**:
   ```json
   {
     "anime_id": 1,
@@ -162,34 +189,15 @@ Aqui está a documentação das rotas de comentários e reações:
     "content": "Gostei muito do episódio!"
   }
   ```
-- **Respostas**:
-  - **201 Created**:
-    ```json
-    {
-      "message": "Comentário criado com sucesso.",
-      "commentId": 10
-    }
-    ```
-  - **400 Bad Request**:
-    ```json
-    {
-      "error": "Invalid data",
-      "message": "Anime ID e conteúdo são obrigatórios."
-    }
-    ```
-  - **500 Internal Server Error**:
-    ```json
-    {
-      "error": "Erro interno ao criar comentário."
-    }
-    ```
 
 ---
 
-### **2. Responder a Comentário**
+### 2. Responder a Comentário
 - **Endpoint**: `POST /comments/:id`
-- **Descrição**: Cria uma resposta a um comentário específico.
+- **Descrição**: Cria uma resposta a um comentário existente.
 - **Autenticação**: Necessária.
+- **Parâmetros de Rota**:
+  - `id`: ID do comentário a ser respondido.
 - **Headers**:
   ```json
   {
@@ -197,7 +205,7 @@ Aqui está a documentação das rotas de comentários e reações:
     "Content-Type": "application/json"
   }
   ```
-- **Body**:
+- **Corpo da Requisição**:
   ```json
   {
     "anime_id": 1,
@@ -205,35 +213,14 @@ Aqui está a documentação das rotas de comentários e reações:
     "content": "Concordo com você!"
   }
   ```
-- **Respostas**:
-  - **201 Created**:
-    ```json
-    {
-      "message": "Comentário criado com sucesso.",
-      "commentId": 11
-    }
-    ```
-  - **404 Not Found**:
-    ```json
-    {
-      "error": "Not Found",
-      "message": "Comentário pai não encontrado."
-    }
-    ```
-  - **500 Internal Server Error**:
-    ```json
-    {
-      "error": "Erro interno ao criar comentário."
-    }
-    ```
 
 ---
 
-### **3. Listar Comentários**
+### 3. Listar Comentários
 - **Endpoint**: `GET /comments`
-- **Descrição**: Lista os comentários de um anime ou episódio, incluindo respostas aninhadas.
-- **Autenticação**: Necessária.
-- **Headers**:
+- **Descrição**: Lista comentários de um anime ou episódio, com respostas aninhadas.
+- **Autenticação**: Conforme a lógica da sua aplicação. (Originalmente necessitava, mas pode ser público se desejado.)
+- **Headers** (se exigir autenticação):
   ```json
   {
     "Authorization": "Bearer <seu_token>"
@@ -242,84 +229,36 @@ Aqui está a documentação das rotas de comentários e reações:
 - **Query Parameters**:
   - `anime_id` (obrigatório): ID do anime.
   - `episode_id` (opcional): ID do episódio.
-- **Respostas**:
-  - **200 OK**:
-    ```json
-    [
-      {
-        "id": 1,
-        "anime_id": 1,
-        "episode_id": 2,
-        "parent_id": null,
-        "user_id": 1,
-        "content": "Gostei muito do episódio!",
-        "replies": [
-          {
-            "id": 2,
-            "anime_id": 1,
-            "episode_id": 2,
-            "parent_id": 1,
-            "user_id": 2,
-            "content": "Eu também gostei!"
-          }
-        ]
-      }
-    ]
-    ```
-  - **500 Internal Server Error**:
-    ```json
-    {
-      "error": "Erro interno ao listar comentários."
-    }
-    ```
+  - `page` (opcional): Página de resultados (ex: `?page=1`).
+  - `limit` (opcional): Limite de resultados por página (ex: `?limit=20`).
+
+Exemplo:  
+```
+GET /comments?anime_id=171018&page=1&limit=1
+```
 
 ---
 
-### **4. Excluir Comentário**
+### 4. Excluir Comentário
 - **Endpoint**: `DELETE /comments/:id`
 - **Descrição**: Exclui um comentário ou resposta.
 - **Autenticação**: Necessária.
+- **Parâmetros de Rota**:
+  - `id`: ID do comentário a ser excluído.
 - **Headers**:
   ```json
   {
     "Authorization": "Bearer <seu_token>"
   }
   ```
-- **Respostas**:
-  - **200 OK**:
-    ```json
-    {
-      "message": "Comentário excluído com sucesso."
-    }
-    ```
-  - **403 Forbidden**:
-    ```json
-    {
-      "error": "Forbidden",
-      "message": "Você não tem permissão para excluir este comentário."
-    }
-    ```
-  - **404 Not Found**:
-    ```json
-    {
-      "error": "Not Found",
-      "message": "Comentário não encontrado."
-    }
-    ```
-  - **500 Internal Server Error**:
-    ```json
-    {
-      "error": "Erro interno ao excluir comentário."
-    }
-    ```
 
 ---
 
-## **Rotas de Reações**
+## Rotas de Reações
 
-### **1. Adicionar ou Atualizar Reação**
+### 1. Adicionar/Atualizar/Remover Reação
 - **Endpoint**: `POST /reactions`
-- **Descrição**: Adiciona ou atualiza uma reação (`like` ou `dislike`) a um comentário.
+- **Descrição**: Adiciona, atualiza ou remove uma reação (`like` ou `dislike`) a um comentário.
 - **Autenticação**: Necessária.
 - **Headers**:
   ```json
@@ -328,82 +267,57 @@ Aqui está a documentação das rotas de comentários e reações:
     "Content-Type": "application/json"
   }
   ```
-- **Body**:
+- **Corpo da Requisição**:
   ```json
   {
     "comment_id": 1,
     "type": "like"
   }
   ```
-- **Respostas**:
-  - **201 Created**:
-    ```json
-    {
-      "message": "Reação adicionada."
-    }
-    ```
-  - **200 OK**:
-    ```json
-    {
-      "message": "Reação atualizada."
-    }
-    ```
-  - **404 Not Found**:
-    ```json
-    {
-      "error": "Not Found",
-      "message": "Comentário não encontrado."
-    }
-    ```
-  - **500 Internal Server Error**:
-    ```json
-    {
-      "error": "Erro interno ao reagir ao comentário."
-    }
-    ```
+
+Para remover a reação, basta enviar o mesmo `comment_id` e `type` já existente. Caso a lógica interna detecte que a mesma reação já existe, ela será removida.
 
 ---
 
-### **2. Remover Reação**
-- **Endpoint**: `DELETE /reactions`
-- **Descrição**: Remove uma reação existente.
-- **Autenticação**: Necessária.
+## Rotas de Busca 🔎
+
+### 1. Busca Local por Títulos
+- **Endpoint**: `GET /search`
+- **Descrição**: Busca animes pelo título no banco local.
+- **Autenticação**: Não necessária (ajuste se necessário).
+- **Query Parameters**:
+  - `query`: Termo de busca.
+  
+Exemplo:  
+```
+GET /search?query=Dan
+```
+
+---
+
+### 2. Busca na API Externa
+- **Endpoint**: `POST /search-api`
+- **Descrição**: Envia uma query para uma fonte externa e retorna resultados.
+- **Autenticação**: Não necessária (ajuste se necessário).
 - **Headers**:
   ```json
   {
-    "Authorization": "Bearer <seu_token>",
     "Content-Type": "application/json"
   }
   ```
-- **Body**:
+- **Corpo da Requisição**:
   ```json
   {
-    "comment_id": 1
+    "query": "Reirei Genso"
   }
   ```
-- **Respostas**:
-  - **200 OK**:
-    ```json
-    {
-      "message": "Reação removida."
-    }
-    ```
-  - **404 Not Found**:
-    ```json
-    {
-      "error": "Not Found",
-      "message": "Reação não encontrada."
-    }
-    ```
-  - **500 Internal Server Error**:
-    ```json
-    {
-      "error": "Erro interno ao remover reação."
-    }
-    ```
 
-## 📌 Observações
+---
+
+## Observações 📌
 
 - Tokens expirados devem ser removidos da tabela `tokens` periodicamente.
-- O registro e login já incluem validações básicas para `username`, `email` e `password`. Validações mais complexas podem ser adicionadas conforme necessário.
-- Middleware pode ser aplicado globalmente ou em rotas específicas, dependendo do caso de uso.
+- O registro e login incluem validações básicas para `username`, `email` e `password`.
+- Autenticação pode ser adicionada ou removida em rotas conforme a necessidade do projeto.
+- Paginação está disponível em `/comments` via parâmetros `page` e `limit`.
+- Ajuste descrições de rotas conforme a lógica de negócio da sua aplicação.

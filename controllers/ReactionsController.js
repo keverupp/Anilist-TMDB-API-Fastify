@@ -1,4 +1,5 @@
 const knex = require("knex")(require("../knexfile").development);
+const { notifyReaction } = require("../services/NotificationService");
 
 // Adicionar ou alterar reação
 async function reactToComment(req, reply) {
@@ -27,8 +28,13 @@ async function reactToComment(req, reply) {
     } else {
       // Criar nova reação
       await knex("reactions").insert({ comment_id, user_id, type });
-      return reply.status(201).send({ message: "Reação adicionada." });
     }
+
+     // Notificar o autor do comentário
+    await notifyReaction(comment_id, user_id);
+    
+    return reply.status(201).send({ message: "Reação adicionada." });
+
   } catch (error) {
     console.error("Erro ao reagir:", error);
     return reply.status(500).send({ error: "Erro interno ao reagir ao comentário." });

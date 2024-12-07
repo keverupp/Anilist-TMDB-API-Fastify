@@ -8,14 +8,7 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
 3. [Pré-requisitos](#pré-requisitos)
 4. [Instalação](#instalação)
 5. [Estrutura do Projeto](#estrutura-do-projeto)
-6. [Rotas Públicas](#rotas-públicas)
-   - [Rota `/search`](#rota-search)
-   - [Rota `/searchApi`](#rota-search-api)
-   - [Rota `/anime/:id`](#rota-animeid)
-   - [Rota `/episodes/:id`](#rota-episodesid)
-   - [Rota `/episodes/new`](#rota-episodesnew)
-   - [Rota `/season`](#rota-season)
-   - [Rota `/populate-genres`](#rota-populate-genres)
+6. [Rotas](#rotas)
 7. [Banco de Dados](#banco-de-dados)
 8. [Contribuindo](#contribuindo)
 9. [Licença](#licença)
@@ -119,179 +112,134 @@ DB_NAME=anilist_db
 
 ---
 
-## **Rotas Públicas**
+### **Rotas**
 
-### **Rota `/search`**
+## Documentação de Rotas
 
-- **Descrição**: Realiza uma busca por títulos de animes no banco de dados com base na query fornecida.
-- **Método**: `GET`
-- **Parâmetros de Query**:
-  - `query` (obrigatório): Termo a ser pesquisado.
-- **Exemplo de Resposta**:
-  ```json
-  [
-    {
-      "id": 1,
-      "english_title": "Example Title",
-      "native_title": "例のタイトル",
-      "romanji_title": "Rei no Taitoru"
-    }
-  ]
-  ```
-- **Notas**: A pesquisa é case-insensitive e busca em títulos em inglês, nativos e romanji.
+A documentação detalhada das rotas foi movida para o [README de `routes`](./routes/README.md) para manter a organização do projeto. Acesse o link para conferir todas as informações sobre as rotas disponíveis.
 
 ---
 
-### **Rota `/search-api`**
-
-- **Descrição**: Busca por animes na API do Anilist, armazena os resultados no banco de dados e retorna os títulos encontrados.
-- **Método**: `POST`
-- **Body**:
-  - `query` (obrigatório): Termo a ser pesquisado.
-- **Exemplo de Resposta**:
-  ```json
-  [
-    {
-      "id": 1,
-      "english_title": "Example Anime",
-      "native_title": "例のアニメ",
-      "romanji_title": "Rei no Anime"
-    }
-  ]
-  ```
-- **Notas**: Evita duplicatas no banco usando a cláusula `onConflict('id').ignore()`.
-
-### **Rota `/anime/:id`**
-
-- **Descrição**: Busca informações detalhadas de um anime pelo ID no banco local, caso não haja informações é feita a busca pela API Anilist, traduzido e salvo no banco para consultas futuras.
-- **Método**: `GET`
-- **Exemplo de Resposta**:
-  ```json
-  {
-    "id": 123,
-    "title": "Example Title",
-    "description": "Descrição traduzida",
-    "cover_image_url": "https://example.com/cover.jpg",
-    "banner_image_url": "https://example.com/banner.jpg",
-    "release_date": "2024-01-01",
-    "season": "WINTER",
-    "season_year": 2024,
-    "episodes_count": 12
-  }
-  ```
+### **Banco de Dados**
 
 ---
-
-### **Rota `/episodes/:id`**
-
-- **Descrição**: Busca todos os episódios de um anime pelo ID no banco local, caso não haja informações é feita a busca pela API Anilist, traduzido e salvo no banco para consultas futuras.
-- **Método**: `GET`
-- **Exemplo de Resposta**:
-  ```json
-  [
-    {
-      "anime_id": 123,
-      "episode_number": 1,
-      "title_english": "Episode 1 - Title",
-      "title_translated": "Episódio 1 - Título",
-      "url": "https://example.com/episode1",
-      "site": "Crunchyroll",
-      "image_url": "https://example.com/image1.jpg"
-    }
-  ]
-  ```
-
----
-
-### **Rota `/episodes/new`**
-
-- **Descrição**: Busca episódios mais recentes de animes da temporada atual.
-- **Método**: `GET`
-- **Exemplo de Resposta**:
-  ```json
-  {
-    "message": "Processamento de episódios concluído.",
-    "results": [
-      {
-        "anime_id": 123,
-        "status": "episodes_added",
-        "newEpisodes": [
-          {
-            "anime_id": 123,
-            "episode_number": 1,
-            "title_translated": "Episódio 1 - Título Traduzido"
-          }
-        ]
-      }
-    ]
-  }
-  ```
-
----
-
-### **Rota `/season`**
-
-- **Descrição**: Busca e salva no banco animes da temporada atual.
-- **Método**: `GET`
-- **Exemplo de Resposta**:
-  ```json
-  {
-    "message": "Animes da temporada atual processados com sucesso.",
-    "season": "WINTER",
-    "year": 2024,
-    "results": [
-      { "id": 123, "status": "added" },
-      { "id": 456, "status": "already_exists" }
-    ]
-  }
-  ```
-
----
-
-### **Rota `/populate-genres`**
-
-- **Descrição**: Popula a tabela `genres` com gêneros disponíveis na AniList.
-- **Método**: `POST`
-- **Exemplo de Resposta**:
-  ```json
-  { "message": "Gêneros adicionados com sucesso." }
-  ```
-
----
-
-## **Banco de Dados**
 
 ### **Tabelas**
 
-1. **Tabela `titles`**
-   - `id` (integer, primary): Identificador único do título.
-   - `english_title` (string, not nullable): Título em inglês.
-   - `native_title` (string, not nullable): Título no idioma nativo.
-   - `romanji_title` (string, not nullable): Título transliterado para Romanji.
-   - `created_at` (timestamp): Data e hora de criação do registro (gerado automaticamente).
-   - `updated_at` (timestamp): Data e hora da última atualização do registro (gerado automaticamente).
+---
 
-2. **Tabela `animes`**
-   - `id`: Identificador único do anime.
-   - `title`: Título do anime.
-   - `description`: Descrição traduzida.
-   - `episodes_count`: Número de episódios previstos.
-   - `season`: Estação (FALL, WINTER, SPRING, SUMMER).
-   - `season_year`: Ano da temporada.
-   - `is_current_season`: Indica se o anime é da temporada atual.
+1. **Tabela `activity_logs`**
+   - `id` (integer, primary): Identificador único do log de atividade.
+   - `action` (string): Ação realizada pelo usuário.
+   - `created_at` (timestamp with time zone): Data e hora da criação do log.
+   - `ip_address` (string): Endereço IP do usuário.
+   - `user_id` (integer, foreign): Identificador do usuário associado ao log.
 
-3. **Tabela `episodes`**
-   - `anime_id`: ID do anime relacionado.
-   - `episode_number`: Número do episódio.
-   - `title_english`: Título em inglês.
-   - `title_translated`: Título traduzido.
-   - `url`: URL do episódio.
-   - `site`: Site onde o episódio está disponível.
+2. **Tabela `anime_follows`**
+   - `id` (integer, primary): Identificador único do registro.
+   - `anime_id` (integer, foreign): Identificador do anime seguido.
+   - `user_id` (integer, foreign): Identificador do usuário que segue o anime.
 
-4. **Tabela `genres`**
-   - `id`: Identificador único do gênero.
-   - `name_en`: Nome do gênero em inglês.
-   - `name_pt`: Nome do gênero traduzido.
+3. **Tabela `anime_genres`**
+   - `anime_id` (integer, foreign): Identificador do anime.
+   - `genre_id` (integer, foreign): Identificador do gênero associado.
+
+4. **Tabela `animes`**
+   - `id` (integer, primary): Identificador único do anime.
+   - `title` (string): Título do anime.
+   - `description` (text): Descrição do anime.
+   - `episodes_count` (integer): Número de episódios.
+   - `genres` (string): Gêneros associados ao anime.
+   - `banner_image_url` (string): URL da imagem de banner.
+   - `cover_image_url` (string): URL da imagem de capa.
+   - `release_date` (date): Data de lançamento.
+   - `season` (string): Temporada (FALL, WINTER, SPRING, SUMMER).
+   - `season_year` (integer): Ano da temporada.
+   - `is_current_season` (boolean): Indica se pertence à temporada atual.
+   - `created_at` (timestamp with time zone): Data de criação.
+   - `updated_at` (timestamp with time zone): Data da última atualização.
+
+5. **Tabela `comments`**
+   - `id` (integer, primary): Identificador único do comentário.
+   - `anime_id` (integer, foreign): Identificador do anime.
+   - `episode_id` (integer, foreign): Identificador do episódio.
+   - `user_id` (integer, foreign): Identificador do usuário.
+   - `parent_id` (integer): Comentário pai (se for uma resposta).
+   - `content` (text): Conteúdo do comentário.
+   - `created_at` (timestamp with time zone): Data de criação.
+   - `updated_at` (timestamp with time zone): Data da última atualização.
+
+6. **Tabela `episodes`**
+   - `id` (integer, primary): Identificador único do episódio.
+   - `anime_id` (integer, foreign): Identificador do anime.
+   - `episode_number` (integer): Número do episódio.
+   - `title_english` (string): Título em inglês.
+   - `title_translated` (string): Título traduzido.
+   - `site` (string): Site de exibição.
+   - `url` (text): URL do episódio.
+   - `image_url` (string): URL da imagem do episódio.
+   - `created_at` (timestamp with time zone): Data de criação.
+
+7. **Tabela `genres`**
+   - `id` (integer, primary): Identificador único do gênero.
+   - `name_en` (string): Nome do gênero em inglês.
+   - `name_pt` (string): Nome do gênero em português.
+
+8. **Tabela `notifications`**
+   - `id` (integer, primary): Identificador único da notificação.
+   - `type` (string): Tipo de notificação.
+   - `related_id` (integer): Identificador do item relacionado.
+   - `user_id` (integer, foreign): Identificador do usuário.
+   - `read` (boolean): Indica se a notificação foi lida.
+   - `created_at` (timestamp with time zone): Data de criação.
+
+9. **Tabela `password_resets`**
+   - `id` (integer, primary): Identificador único do registro.
+   - `user_id` (integer, foreign): Identificador do usuário.
+   - `token` (string): Token de redefinição.
+   - `expires_at` (timestamp with time zone): Data de expiração do token.
+   - `created_at` (timestamp with time zone): Data de criação.
+
+10. **Tabela `reactions`**
+    - `id` (integer, primary): Identificador único da reação.
+    - `user_id` (integer, foreign): Identificador do usuário.
+    - `comment_id` (integer, foreign): Identificador do comentário.
+    - `type` (text): Tipo de reação.
+    - `created_at` (timestamp with time zone): Data de criação.
+
+11. **Tabela `titles`**
+    - `id` (integer, primary): Identificador único do título.
+    - `english_title` (string): Título em inglês.
+    - `native_title` (string): Título no idioma nativo.
+    - `romanji_title` (string): Título transliterado para Romanji.
+    - `created_at` (timestamp with time zone): Data de criação.
+    - `updated_at` (timestamp with time zone): Data de atualização.
+
+12. **Tabela `tokens`**
+    - `id` (integer, primary): Identificador único do token.
+    - `user_id` (integer, foreign): Identificador do usuário.
+    - `token` (string): Token de autenticação.
+    - `expires_at` (timestamp with time zone): Data de expiração do token.
+    - `created_at` (timestamp with time zone): Data de criação.
+
+13. **Tabela `user_preferences`**
+    - `id` (integer, primary): Identificador único das preferências.
+    - `user_id` (integer, foreign): Identificador do usuário.
+    - `notify_new_comments` (boolean): Notificar novos comentários.
+    - `notify_new_episodes` (boolean): Notificar novos episódios.
+    - `notify_reactions` (boolean): Notificar reações.
+    - `notify_replies` (boolean): Notificar respostas.
+
+14. **Tabela `users`**
+    - `id` (integer, primary): Identificador único do usuário.
+    - `username` (string): Nome de usuário.
+    - `name` (string): Nome completo.
+    - `email` (string): Endereço de e-mail.
+    - `password` (string): Senha do usuário.
+    - `avatar` (string): URL do avatar.
+    - `is_active` (boolean): Indica se a conta está ativa.
+    - `created_at` (timestamp with time zone): Data de criação.
+    - `updated_at` (timestamp with time zone): Data de atualização.
 
 ---
 
