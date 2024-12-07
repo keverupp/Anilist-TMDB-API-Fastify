@@ -1,4 +1,4 @@
-# **AniList API Integration**
+# **OtakuDiscuss v2**
 
 Este projeto é uma API construída com **Fastify** que utiliza a API do AniList para buscar informações sobre animes, episódios e temporadas. Ele também utiliza **Knex.js** para gerenciar o banco de dados e **DeepL** para traduzir informações.
 
