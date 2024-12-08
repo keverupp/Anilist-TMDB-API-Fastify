@@ -34,6 +34,12 @@
   - [Esqueci Minha Senha (Solicitar Redefinição)](#1-esqueci-minha-senha-solicitar-redefinição)
   - [Redefinir Senha](#2-redefinir-senha)
 
+- [Rotas de Usuário](#-rotas-de-usuário)  
+  - [Atualizar Avatar do Usuário](#1-atualizar-avatar-do-usuário)  
+  - [Buscar Detalhes do Usuário](#2-buscar-detalhes-do-usuário)  
+  - [Atualizar Informações do Usuário](#3-atualizar-informações-do-usuário)  
+  - [Atualizar Senha do Usuário](#4-atualizar-senha-do-usuário)
+
 - [Observações](#observações)
 
 ---
@@ -316,7 +322,7 @@ GET /search?query=Dan
 
 ---
 
-## 🔑 Rotas de Recuperação de Senha
+## 👤 Rotas de Recuperação de Senha
 
 ### 1. Esqueci Minha Senha (Solicitar Redefinição)
 - **Endpoint**: `POST /forgotPassword`
@@ -356,6 +362,100 @@ GET /search?query=Dan
   }
   ```
 - **Observação**: Se o token for inválido ou expirado, retornará erro. Caso contrário, a senha é atualizada e o token removido.
+
+## 🔑 Rotas de Informações do Usuario
+
+### 1. Atualizar Avatar do Usuário
+- **Endpoint**: `POST /user/avatar`
+- **Descrição**: Permite ao usuário atualizar sua imagem de avatar. A imagem enviada será carregada no Cloudinary, e o URL será salvo no banco de dados.
+- **Autenticação**: Necessária.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <seu-token>",
+    "Content-Type": "multipart/form-data"
+  }
+  ```
+- **Corpo da Requisição**:
+  - Tipo: `form-data`
+  - Campos:
+    - **file**: O arquivo de imagem que será usado como avatar. Deve ser um dos tipos permitidos (`image/jpeg`, `image/png`, `image/gif`).
+
+- **Observação**: 
+  - O arquivo não pode exceder 5 MB.
+  - Formatos não suportados serão rejeitados com uma mensagem de erro.
+  - Caso o upload para o Cloudinary falhe, a imagem não será atualizada.
+
+---
+
+### 2. Buscar Detalhes do Usuário
+- **Endpoint**: `GET /user/:id`
+- **Descrição**: Retorna informações públicas do usuário, como nome, avatar e descrição, com base no ID fornecido.
+- **Autenticação**: Não necessária.
+- **Headers**:
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+- **Corpo da Requisição**: Não aplicável.
+
+- **Resposta de Exemplo**:
+  ```json
+  {
+    "id": 1,
+    "username": "usuario_exemplo",
+    "avatar": "https://res.cloudinary.com/<seu-cloud-name>/image/upload/v1234567890/avatars/avatar_1.jpg",
+    "description": "Descrição do usuário."
+  }
+  ```
+
+- **Observação**:
+  - Apenas informações públicas são retornadas.
+  - Caso o ID do usuário não exista, será retornado um erro 404.
+
+---
+
+### 3. Atualizar Informações do Usuário
+- **Endpoint**: `PUT /user`
+- **Descrição**: Permite ao usuário atualizar informações de perfil, como nome, descrição ou outros campos permitidos.
+- **Autenticação**: Necessária.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <seu-token>",
+    "Content-Type": "application/json"
+  }
+  ```
+- **Corpo da Requisição**:
+  ```json
+  {
+    "username": "novo_nome"
+  }
+  ```
+  ---
+
+### 4. Atualizar Senha do Usuário
+- **Endpoint**: `PUT /user/password`
+- **Descrição**: Permite ao usuário atualizar senha.
+- **Autenticação**: Necessária.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <seu-token>",
+    "Content-Type": "application/json"
+  }
+  ```
+- **Corpo da Requisição**:
+  ```json
+  {
+  "currentPassword": "987654321",
+	"newPassword": "123456789"
+  }
+  ```
+---
+
+Se precisar de mais rotas ou ajustes, é só avisar! 🚀
 
 ---
 
