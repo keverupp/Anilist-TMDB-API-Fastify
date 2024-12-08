@@ -455,10 +455,6 @@ GET /search?query=Dan
   ```
 ---
 
-Se precisar de mais rotas ou ajustes, é só avisar! 🚀
-
----
-
 ## 📌 Observações
 
 - Tokens expirados devem ser removidos da tabela `tokens` periodicamente.
