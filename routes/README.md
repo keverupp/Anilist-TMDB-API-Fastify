@@ -27,8 +27,8 @@
   - [Adicionar/Atualizar/Remover Reação](#1-adicionaratualizarremover-reação)
 
 - [Rotas de Busca](#-rotas-de-busca)
-  - [Busca Local por Títulos](#1-busca-local-por-títulos)
-  - [Busca na API Externa](#2-busca-na-api-externa)
+  - [Buscar Títulos de Animes](#1-buscar-títulos-de-animes)
+  - [Buscar e Inserir Animes na Base Local](#2-buscar-e-inserir-animes-na-base-local)
 
 - [Rotas de Recuperação de Senha](#-rotas-de-recuperação-de-senha)
   - [Esqueci Minha Senha (Solicitar Redefinição)](#1-esqueci-minha-senha-solicitar-redefinição)
@@ -289,38 +289,110 @@ GET /comments?anime_id=171018&page=1&limit=1
 
 ## 🔎 Rotas de Busca
 
-### 1. Busca Local por Títulos
+### 1. Buscar Títulos de Animes
+
 - **Endpoint**: `GET /search`
-- **Descrição**: Busca animes pelo título no banco local.
-- **Autenticação**: Não necessária (ajuste se necessário).
-- **Query Parameters**:
-  - `query`: Termo de busca.
-  
-Exemplo:  
-```
-GET /search?query=Dan
-```
-
----
-
-### 2. Busca na API Externa
-- **Endpoint**: `POST /search-api`
-- **Descrição**: Envia uma query para uma fonte externa e retorna resultados.
-- **Autenticação**: Não necessária (ajuste se necessário).
+- **Descrição**: Busca títulos de animes na base de dados local. A busca verifica os títulos principais e os alternativos para retornar informações sobre os animes encontrados. Permite a personalização da resposta especificando os campos desejados.
+- **Autenticação**: Não necessária.
 - **Headers**:
   ```json
   {
     "Content-Type": "application/json"
   }
   ```
-- **Corpo da Requisição**:
-  ```json
-  {
-    "query": "Reirei Genso"
-  }
-  ```
+- **Parâmetros da Query**:
+  - **query** (obrigatório): A palavra-chave usada para buscar os títulos.
+    - Tipo: `string`
+    - Exemplo: `query=sousou`
+  - **fields** (opcional): Lista separada por vírgulas dos campos a serem retornados.
+    - Tipo: `string`
+    - Campos permitidos:
+      - `id`
+      - `english_title`
+      - `pt_title`
+      - `native_title`
+    - Exemplo: `fields=english_title`
+
+- **Observação**:
+  - Quando `fields` não for informado, todos os campos padrão serão retornados.
+  - A busca em `query` é insensível a maiúsculas e minúsculas.
 
 ---
+
+### 2. Buscar e Inserir Animes na Base Local
+
+- **Endpoint**: `GET /search-api`
+- **Descrição**: Busca animes na API do The Movie Database (TMDB) com base em um termo de consulta, insere os títulos principais e alternativos encontrados no banco de dados local e retorna os dados processados.
+- **Autenticação**: Não necessária.
+- **Headers**:
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+- **Parâmetros da Query**:
+  - **query** (obrigatório): A palavra-chave usada para buscar os animes na API.
+    - Tipo: `string`
+    - Exemplo: `query=naruto`
+
+- **Observação**:
+  - A busca é limitada ao gênero Animation (ID 16) no TMDB.
+  - Para cada anime encontrado, o título em português do Brasil (`pt-BR`) e os títulos alternativos são buscados.
+  - Apenas resultados válidos são inseridos no banco de dados.
+
+---
+
+### Exemplo de Respostas
+
+#### **1. Buscar Títulos de Animes**
+
+**Request**:
+```http
+GET /search?query=sousou&fields=english_title
+```
+
+**Response (200 OK)**:
+```json
+[
+    {
+        "english_title": "Frieren: Beyond Journey's End"
+    }
+]
+```
+
+---
+
+#### **2. Buscar e Inserir Animes na Base Local**
+
+**Request**:
+```http
+GET /search-api?query=naruto
+```
+
+**Response (200 OK)**:
+```json
+{
+    "message": "Animes e títulos alternativos processados com sucesso!",
+    "titles": [
+        {
+            "id": 20,
+            "english_title": "Naruto",
+            "native_title": "ナルト",
+            "pt_title": "Naruto"
+        }
+    ],
+    "alternative_titles": [
+        {
+            "anime_id": 20,
+            "iso_3166_1": "JP",
+            "title": "ナルト",
+            "type": null,
+            "created_at": "2024-12-08T17:30:00.000Z",
+            "updated_at": "2024-12-08T17:30:00.000Z"
+        }
+    ]
+}
+```
 
 ## 👤 Rotas de Recuperação de Senha
 

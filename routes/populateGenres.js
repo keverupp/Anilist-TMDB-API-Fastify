@@ -1,86 +1,70 @@
 const axios = require("axios");
 const knex = require("knex")(require("../knexfile").development);
+require("dotenv").config();
 
 async function genresRoutes(fastify, options) {
   fastify.post("/populate-genres", async (request, reply) => {
     try {
-      // Faz a requisição para a API AniList para buscar os gêneros
-      const anilistResponse = await axios.post("https://graphql.anilist.co", {
-        query: `
-          query {
-            GenreCollection
-          }
-        `
-      });
+      const TMDB_API_KEY = process.env.TMDB_API_KEY;
+      if (!TMDB_API_KEY) {
+        throw new Error("Chave API do TMDB não configurada no .env.");
+      }
 
-      const genres = anilistResponse.data?.data?.GenreCollection;
+      // Faz as requisições para obter gêneros em inglês e português
+      const [enResponse, ptResponse] = await Promise.all([
+        axios.get("https://api.themoviedb.org/3/genre/tv/list", {
+          params: { api_key: TMDB_API_KEY, language: "en-US" },
+        }),
+        axios.get("https://api.themoviedb.org/3/genre/tv/list", {
+          params: { api_key: TMDB_API_KEY, language: "pt-BR" },
+        }),
+      ]);
 
-      if (!genres || genres.length === 0) {
+      const genresEn = enResponse.data.genres;
+      const genresPt = ptResponse.data.genres;
+
+      if (!genresEn || !genresPt || genresEn.length === 0 || genresPt.length === 0) {
         return reply.status(404).send({
           error: "Nenhum gênero encontrado.",
-          message: "A API AniList não retornou gêneros."
+          message: "A API TMDB não retornou gêneros.",
         });
       }
 
-      // Traduz os gêneros e insere no banco de dados
-      const translatedGenres = await Promise.all(
-        genres.map(async (genre) => {
-          try {
-            const translation = await fastify.deeplTranslator.translateText(
-              genre,
-              "en", // Idioma de origem
-              "pt-BR" // Traduzir para português
-            );
-
-            // Retorna o gênero traduzido com o original
-            return {
-              name_en: genre,
-              name_pt: translation.text
-            };
-          } catch (error) {
-            fastify.log.error(`Erro ao traduzir gênero: ${genre}`, error);
-            // Retorna o gênero em inglês caso a tradução falhe
-            return {
-              name_en: genre,
-              name_pt: genre
-            };
-          }
-        })
-      );
+      // Mapeia os gêneros com traduções
+      const translatedGenres = genresEn.map((genreEn) => {
+        const genrePt = genresPt.find((g) => g.id === genreEn.id);
+        return {
+          id: genreEn.id, // Mantém o ID original do TMDB
+          name_en: genreEn.name,
+          name_pt: genrePt ? genrePt.name : genreEn.name, // Usa o nome em inglês como fallback
+        };
+      });
 
       // Insere os gêneros no banco de dados
       for (const genre of translatedGenres) {
         await knex("genres")
           .insert(genre)
-          .onConflict("name_en") // Evitar duplicatas com base no nome em inglês
-          .ignore();
+          .onConflict("id") // Evitar duplicatas com base no ID do TMDB
+          .merge(); // Atualiza o registro se já existir
       }
 
       reply.send({
         message: "Tabela de gêneros populada com sucesso.",
-        genres: translatedGenres
+        genres: translatedGenres,
       });
     } catch (error) {
       fastify.log.error(error);
 
-      // Tratamento de erros
       if (error.response && error.response.data) {
         return reply.status(500).send({
-          error: "Erro ao buscar gêneros na API AniList.",
+          error: "Erro ao buscar gêneros na API TMDB.",
           details: error.response.data,
         });
       }
 
       if (error.isAxiosError) {
         return reply.status(500).send({
-          error: "Erro de rede ao conectar à API AniList.",
-        });
-      }
-
-      if (error.message && error.message.includes("DEEPL")) {
-        return reply.status(500).send({
-          error: "Erro ao traduzir com o DeepL.",
-          details: error.message,
+          error: "Erro de rede ao conectar à API TMDB.",
         });
       }
 

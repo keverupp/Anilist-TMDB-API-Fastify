@@ -1,4 +1,4 @@
-const { toggleFollowAnime } = require("../controllers/AnimeController");
+const { toggleFollowAnime } = require("../controllers/FollowAnimeController");
 const { authenticate } = require("../middlewares/AuthMiddleware");
 
 async function animeRoutes(fastify, options) {

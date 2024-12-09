@@ -29,9 +29,13 @@
     "graphql-request": "^7.1.2",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
+    "kuromoji": "^0.1.2",
+    "kuroshiro": "^1.2.0",
+    "kuroshiro-analyzer-kuromoji": "^1.1.0",
     "nodemailer": "^6.9.16",
     "pg": "^8.13.1",
-    "streamifier": "^0.1.1"
+    "streamifier": "^0.1.1",
+    "wanakana": "^5.3.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

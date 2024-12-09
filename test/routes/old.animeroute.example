@@ -1,5 +1,5 @@
 const axios = require("axios");
-const knex = require("knex")(require("../knexfile").development);
+const knex = require("knex")(require("../../knexfile").development);
 
 async function animeRoutes(fastify, options) {
   fastify.get("/anime/:id", async (request, reply) => {
