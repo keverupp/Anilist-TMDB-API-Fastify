@@ -84,10 +84,12 @@ const insertAnimeSeasonRelation = async (animeId, seasonId) => {
   }
 };
 
-async function updateAnimeWithAnilistData(animeId, data) {
-  return knex('animes').where({ id: animeId }).update(data);
-};
-
+async function getEnglishTitleFromTitles(animeId) {
+  return knex("titles")
+    .select("english_title")
+    .where("id", animeId)
+    .first();
+}
 
 
 // Exportando funções específicas
@@ -99,5 +101,5 @@ module.exports = {
   insertAnimeGenreRelation,
   upsertSeason,
   insertAnimeSeasonRelation,
-  updateAnimeWithAnilistData,
+  getEnglishTitleFromTitles,
 };

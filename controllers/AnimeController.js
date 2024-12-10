@@ -6,6 +6,7 @@ const {
   insertAnimeGenreRelation,
   upsertSeason,
   insertAnimeSeasonRelation,
+  getEnglishTitleFromTitles,
 } = require("../models/animeModel");
 const axios = require("axios");
 
@@ -20,18 +21,21 @@ const isValidId = (id) => {
 };
 
 /**
- * Extrai e formata os dados do anime provenientes da API TMDB.
+ * Formata os dados do anime provenientes da API TMDB e AniList.
  * @param {object} data - Dados brutos do anime da API TMDB.
+ * @param {object} aniListInfo - Dados adicionais da AniList.
  * @returns {object} - Dados formatados do anime para inserção no banco.
  */
-const formatAnimeData = (data) => ({
+const formatAnimeData = (data, aniListInfo = {}) => ({
   id: data.id,
   name: data.name || "N/A",
   overview: data.overview || "Descrição não disponível.",
   poster_path: data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null,
   backdrop_path: data.backdrop_path ? `https://image.tmdb.org/t/p/w1280${data.backdrop_path}` : null,
   first_air_date: data.first_air_date || null,
-  is_current_season: false,
+  is_current_season: aniListInfo.is_current_season || false, // AniList info
+  anilist_id: aniListInfo.anilist_id || null, // AniList ID
+  banner_path: aniListInfo.banner_path || null, // Banner do AniList
   episodes_count: data.number_of_episodes || null,
   adult: data.adult || false,
   in_production: data.in_production || false,
@@ -47,6 +51,41 @@ const formatAnimeData = (data) => ({
   episode_run_time: data.episode_run_time ? data.episode_run_time[0] || null : null,
   type: data.type || null,
 });
+
+/**
+ * Busca informações do AniList com base no título em inglês.
+ * @param {string} englishTitle - O título em inglês do anime.
+ * @returns {object} - Dados do AniList formatados.
+ */
+async function fetchAniListInfo(englishTitle) {
+  const query = `
+    query ($search: String) {
+      Media(search: $search, type: ANIME) {
+        id
+        bannerImage
+        nextAiringEpisode {
+          airingAt
+        }
+      }
+    }
+  `;
+
+  const variables = { search: englishTitle };
+
+  const response = await axios.post(
+    "https://graphql.anilist.co",
+    { query, variables },
+    { headers: { "Content-Type": "application/json" } }
+  );
+
+  const data = response.data.data.Media;
+
+  return {
+    anilist_id: data.id,
+    banner_path: data.bannerImage,
+    is_current_season: !!data.nextAiringEpisode,
+  };
+}
 
 /**
  * Processa e salva os gêneros associados ao anime.
@@ -70,6 +109,7 @@ const processGenres = async (genres, animeId, logger) => {
  * Processa e salva as temporadas associadas ao anime.
  * @param {array} seasons - Array de temporadas do anime.
  * @param {number} animeId - ID do anime.
+ * @param {object} logger - Objeto de logging (ex: req.log).
  */
 const processSeasons = async (seasons, animeId, logger) => {
   const seasonPromises = seasons.map(async (season) => {
@@ -87,10 +127,10 @@ const processSeasons = async (seasons, animeId, logger) => {
     }
   });
   await Promise.all(seasonPromises);
-}
+};
 
 /**
- * Controlador para obter informações de um anime.
+ * Controlador para obter informações de um anime, incluindo integração com TMDB e AniList.
  * @param {object} req - Objeto de requisição.
  * @param {object} reply - Objeto de resposta.
  */
@@ -115,14 +155,27 @@ async function getAnime(req, reply) {
       return reply.send({ ...anime, genres });
     }
 
-    // Busca informações do anime na API TMDB
+    // Obtém o título em inglês do banco
+    const titleInfo = await getEnglishTitleFromTitles(animeId);
+    if (!titleInfo || !titleInfo.english_title) {
+      throw new Error(`Título em inglês não encontrado para o anime com ID ${animeId}.`);
+    }
+
+    const englishTitle = titleInfo.english_title;
+
+    // Busca informações do TMDB
     const { TMDB_API_KEY } = process.env;
     const tmdbResponse = await axios.get(`https://api.themoviedb.org/3/tv/${animeId}`, {
       params: { api_key: TMDB_API_KEY, language: "pt-BR" },
     });
 
     const animeData = tmdbResponse.data;
-    const formattedAnime = formatAnimeData(animeData);
+
+    // Busca informações do AniList
+    const aniListInfo = await fetchAniListInfo(englishTitle);
+
+    // Combina as informações do TMDB e AniList
+    const formattedAnime = formatAnimeData(animeData, aniListInfo);
 
     // Salva o anime no banco
     await insertAnime(formattedAnime);
@@ -143,7 +196,7 @@ async function getAnime(req, reply) {
 
     if (error.response && error.response.data) {
       return reply.status(500).send({
-        error: "Erro ao buscar dados da API TMDB.",
+        error: "Erro ao buscar dados da API externa.",
         details: error.response.data,
       });
     }

@@ -37,16 +37,10 @@ const findTitleById = async (animeId) => {
       .first();
 };
 
-async function findTitleByAnimeId(animeId) {
-  return knex('titles').select('english_title').where({ anime_id: animeId }).first();
-};
-
-
 
 module.exports = {
   insertTitles,
   findTitles,
   findTitleById,
   findAnimeIdByAlternativeTitle,
-  findTitleByAnimeId,
 };

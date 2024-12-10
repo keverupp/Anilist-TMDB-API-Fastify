@@ -34,7 +34,6 @@ Este projeto tem como objetivo final ser uma plataforma completa de animes em Po
 - **Knex.js**: Query builder para interagir com o banco de dados relacional.
 - **PostgreSQL**: Banco de dados relacional usado para persistência de dados.
 - **Axios**: Cliente HTTP usado para requisições, como à API AniList.
-- **DeepL**: API de tradução utilizada para traduzir títulos e descrições.
 - **GraphQL Request**: Cliente leve para realizar requisições GraphQL.
 - **Argon2**: Biblioteca para hashing de senhas.
 - **jsonwebtoken**: Utilizado para autenticação baseada em tokens JWT.
