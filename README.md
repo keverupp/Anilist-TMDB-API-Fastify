@@ -24,7 +24,7 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
 - [x] **Rotas Inserção Animes (descrição, temporadas, etc.) via ID na API**
   - Implementar rotas para busca e inserção de detalhes de animes utilizando o ID fornecido pela API.
 
-- [ ] **Permissões de Usuários e Middleware**
+- [x] **Permissões de Usuários e Middleware**
   - Criar middleware para controle de permissões.
   - Configurar diferentes níveis de acesso baseados em funções.
 
@@ -34,7 +34,7 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
 - [ ] **Rotas de Configuração de Preferências**
   - Criar endpoints para permitir que usuários personalizem suas preferências.
 
-- [ ] **Rotas Editar Comentários**
+- [x] **Rotas Editar Comentários**
   - Implementar funcionalidades para que usuários possam editar seus comentários.
 
 - [ ] **Rota Listar Animes Seguidos**
@@ -46,11 +46,9 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
 - [ ] **Rota de Reportar (qualquer conteúdo)**
   - Implementar sistema de reporte para conteúdos inadequados ou suspeitos.
 
----
-
 ### Progresso Atual
-- Itens concluídos: 2/8
-- Itens pendentes: 6/8
+- Itens concluídos: 5/8
+- Itens pendentes: 3/8
 
 ---
 
@@ -110,11 +108,11 @@ Além disso, configure um arquivo `.env` seguindo o `.env.example`
      ```
    - Execute as migrations:
      ```bash
-     npx knex migrate:latest
+     npm run migrate
      ```
    - Execute as seeds:
      ```bash
-     npx knex seed:latest
+     npm run seed
      ```
 
 4. Inicie o servidor:

@@ -442,92 +442,258 @@
 
 ## 💬 Rotas de Comentários
 
+### Documentação das Rotas de Comentários
+
+---
+
 ### 1. Criar Comentário
 
 - **Endpoint**: `POST /comments`
 - **Descrição**: Cria um novo comentário em um anime ou episódio.
-- **Autenticação**: Necessária.
+- **Autenticação**: Obrigatória.
 - **Headers**:
   ```json
   {
-    "Authorization": "Bearer <seu_token>",
+    "Authorization": "Bearer <token_do_usuario>",
     "Content-Type": "application/json"
   }
   ```
 - **Corpo da Requisição**:
   ```json
   {
-    "anime_id": 1,
-    "episode_id": 2,
-    "content": "Gostei muito do episódio!"
+    "anime_id": 123,
+    "episode_id": 1,
+    "content": "Este é um comentário."
   }
   ```
+  - **anime_id** (obrigatório): ID do anime associado ao comentário.
+  - **episode_id** (opcional): ID do episódio, se o comentário for específico para um episódio.
+  - **content** (obrigatório): O texto do comentário.
+
+- **Respostas**:
+  - **201 (Criado)**:
+    ```json
+    {
+      "message": "Comentário criado com sucesso.",
+      "commentId": 1
+    }
+    ```
+  - **400 (Erro de Validação)**:
+    ```json
+    {
+      "error": "Bad Request",
+      "message": "Anime ID e conteúdo são obrigatórios."
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro interno ao criar comentário."
+    }
+    ```
 
 ---
 
-### 2. Responder a Comentário
+### 2. Responder Comentário
 
 - **Endpoint**: `POST /comments/:id`
 - **Descrição**: Cria uma resposta a um comentário existente.
-- **Autenticação**: Necessária.
-- **Parâmetros de Rota**:
-  - `id`: ID do comentário a ser respondido.
+- **Autenticação**: Obrigatória.
 - **Headers**:
   ```json
   {
-    "Authorization": "Bearer <seu_token>",
+    "Authorization": "Bearer <token_do_usuario>",
     "Content-Type": "application/json"
   }
   ```
+- **Parâmetros da Rota**:
+  - **id** (obrigatório): ID do comentário pai.
+
 - **Corpo da Requisição**:
   ```json
   {
-    "anime_id": 1,
-    "episode_id": 2,
-    "content": "Concordo com você!"
+    "content": "Esta é uma resposta ao comentário."
   }
   ```
+
+- **Respostas**:
+  - **201 (Criado)**:
+    ```json
+    {
+      "message": "Resposta criada com sucesso.",
+      "commentId": 2
+    }
+    ```
+  - **404 (Comentário Pai Não Encontrado)**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "Comentário pai não encontrado."
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro interno ao criar comentário."
+    }
+    ```
 
 ---
 
 ### 3. Listar Comentários
 
 - **Endpoint**: `GET /comments`
-- **Descrição**: Lista comentários de um anime ou episódio, com respostas aninhadas.
-- **Autenticação**: Conforme a lógica da sua aplicação.
-- **Headers** (se exigir autenticação):
+- **Descrição**: Retorna os comentários de um anime ou episódio, com respostas aninhadas e suporte à paginação.
+- **Autenticação**: Não necessária.
+- **Headers**:
   ```json
   {
-    "Authorization": "Bearer <seu_token>"
+    "Content-Type": "application/json"
   }
   ```
-- **Query Parameters**:
-  - `anime_id` (obrigatório): ID do anime.
-  - `episode_id` (opcional): ID do episódio.
-  - `page` (opcional): Página de resultados (ex: `?page=1`).
-  - `limit` (opcional): Limite de resultados por página (ex: `?limit=20`).
+- **Parâmetros da Query**:
+  - **anime_id** (obrigatório): ID do anime.
+    - Tipo: `integer`
+  - **episode_id** (opcional): ID do episódio.
+    - Tipo: `integer`
+  - **page** (opcional): Número da página.
+    - Tipo: `integer`
+    - Valor padrão: `1`
+  - **limit** (opcional): Limite de comentários por página.
+    - Tipo: `integer`
+    - Valor padrão: `20`
 
-Exemplo:
-
-```
-GET /comments?anime_id=171018&page=1&limit=1
-```
+- **Respostas**:
+  - **200 (Sucesso)**:
+    ```json
+    {
+      "page": 1,
+      "limit": 20,
+      "total": 5,
+      "total_pages": 1,
+      "comments": [
+        {
+          "id": 1,
+          "content": "Este é um comentário.",
+          "replies": [
+            {
+              "id": 2,
+              "content": "Esta é uma resposta ao comentário."
+            }
+          ]
+        }
+      ]
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro interno ao listar comentários."
+    }
+    ```
 
 ---
 
 ### 4. Excluir Comentário
 
 - **Endpoint**: `DELETE /comments/:id`
-- **Descrição**: Exclui um comentário ou resposta.
-- **Autenticação**: Necessária.
-- **Parâmetros de Rota**:
-  - `id`: ID do comentário a ser excluído.
+- **Descrição**: Exclui um comentário ou resposta. Apenas o criador do comentário ou um administrador pode excluir.
+- **Autenticação**: Obrigatória.
 - **Headers**:
   ```json
   {
-    "Authorization": "Bearer <seu_token>"
+    "Authorization": "Bearer <token_do_usuario>"
   }
   ```
+- **Parâmetros da Rota**:
+  - **id** (obrigatório): ID do comentário a ser excluído.
+
+- **Respostas**:
+  - **200 (Sucesso)**:
+    ```json
+    {
+      "message": "Comentário excluído com sucesso."
+    }
+    ```
+  - **403 (Sem Permissão)**:
+    ```json
+    {
+      "error": "Forbidden",
+      "message": "Você não tem permissão para excluir este comentário."
+    }
+    ```
+  - **404 (Comentário Não Encontrado)**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "Comentário não encontrado."
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro interno ao excluir comentário."
+    }
+    ```
+
+---
+
+### 5. Editar Comentário
+
+- **Endpoint**: `PUT /comments/:id`
+- **Descrição**: Edita um comentário. Apenas o criador do comentário ou um administrador pode editar.
+- **Autenticação**: Obrigatória.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <token_do_usuario>",
+    "Content-Type": "application/json"
+  }
+  ```
+- **Parâmetros da Rota**:
+  - **id** (obrigatório): ID do comentário a ser editado.
+
+- **Corpo da Requisição**:
+  ```json
+  {
+    "content": "Conteúdo atualizado do comentário."
+  }
+  ```
+
+- **Respostas**:
+  - **200 (Sucesso)**:
+    ```json
+    {
+      "message": "Comentário atualizado com sucesso."
+    }
+    ```
+  - **403 (Sem Permissão)**:
+    ```json
+    {
+      "error": "Forbidden",
+      "message": "Você não tem permissão para editar este comentário."
+    }
+    ```
+  - **404 (Comentário Não Encontrado)**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "Comentário não encontrado."
+    }
+    ```
+  - **400 (Erro de Validação)**:
+    ```json
+    {
+      "error": "Bad Request",
+      "message": "O conteúdo do comentário não pode estar vazio."
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro interno ao editar comentário."
+    }
+    ```
 
 ---
 

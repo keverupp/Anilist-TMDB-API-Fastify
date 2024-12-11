@@ -9,7 +9,10 @@
   "scripts": {
     "dev": "nodemon --watch . --ext js,json --exec \"node dev.js\"",
     "start": "fastify start -l info app.js",
-    "test": "node --test test/**/*.test.js"
+    "test": "node --test test/**/*.test.js",
+    "migrate": "npx knex migrate:latest",
+    "rollback": "npx knex migrate:rollback --all",
+    "seed": "npx knex seed:run"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +24,6 @@
     "argon2": "^0.41.1",
     "axios": "^1.7.8",
     "cloudinary": "^2.5.1",
-    "deepl-node": "^1.15.0",
     "dotenv": "^16.4.5",
     "fastify": "^5.0.0",
     "fastify-cli": "^7.0.1",

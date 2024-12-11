@@ -29,34 +29,52 @@ async function register(req, reply) {
     // Hash da senha
     const hashedPassword = await argon2.hash(password);
 
-    // Criar o usuário
-    const [newUserId] = await knex("users")
-      .insert({
-        username,
-        email,
-        password: hashedPassword,
-        created_at: new Date(),
-      })
-      .returning("id");
+    // Iniciar uma transação para garantir consistência
+    const newUser = await knex.transaction(async (trx) => {
+      // Criar o usuário
+      const [newUserId] = await trx("users")
+        .insert({
+          username,
+          email,
+          password: hashedPassword,
+          created_at: new Date(),
+        })
+        .returning("id");
+
       const userId = newUserId.id || newUserId;
 
-    // Criar preferências padrão para o usuário
-    await knex("user_preferences").insert({
-      user_id: userId,
-      notify_replies: true,
-      notify_reactions: true,
-      notify_new_comments: false,
-      notify_new_episodes: true,
+      // Verificar se o papel padrão 'user' existe
+      const role = await trx("roles").where({ name: "user" }).first();
+      if (!role) {
+        throw new Error("Papel padrão 'user' não configurado no banco de dados.");
+      }
+
+      // Atribuir o papel padrão ao usuário
+      await trx("user_roles").insert({
+        user_id: userId,
+        role_id: role.id,
+      });
+
+      // Criar preferências padrão para o usuário
+      await trx("user_preferences").insert({
+        user_id: userId,
+        notify_replies: true,
+        notify_reactions: true,
+        notify_new_comments: false,
+        notify_new_episodes: true,
+      });
+
+      return {
+        id: userId,
+        username,
+        email,
+      };
     });
 
     // Retornar sucesso
     return reply.status(201).send({
       message: "Usuário registrado com sucesso.",
-      user: {
-        id: newUserId,
-        username,
-        email,
-      },
+      user: newUser,
     });
   } catch (error) {
     console.error("Erro ao registrar usuário:", error);
