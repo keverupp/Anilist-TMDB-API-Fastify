@@ -12,14 +12,13 @@
 
 - [Rotas de Animes e Episódios](#-rotas-de-animes-e-episódios)
 
-  - [Popular Gêneros](#1-popular-gêneros)
-  - [Seguir/Deixar de Seguir um Anime](#2-seguirdeixar-de-seguir-um-anime)
-  - [Informações de um Anime](#3-informações-de-um-anime)
-  - [Listar Episódios de um Anime](#4-importar-episódios-de-um-anime)
-  - [Episódios Recentes](#5-listar-episódios-de-um-anime-com-paginação)
-  - [Atualizar Episódios com Runtime Nulo](#6-atualizar-episódios-com-runtime-nulo)
-  - [Adicionar Vídeos de um Anime](#7-adicionar-vídeos-de-um-anime)
-  - [Consultar Vídeos](#8-consultar-vídeos)
+  - [Seguir/Deixar de Seguir um Anime](#1-seguirdeixar-de-seguir-um-anime)
+  - [Informações de um Anime](#2-informações-de-um-anime)
+  - [Listar Episódios de um Anime](#3-importar-episódios-de-um-anime)
+  - [Episódios Recentes](#4-listar-episódios-de-um-anime-com-paginação)
+  - [Atualizar Episódios com Runtime Nulo](#5-atualizar-episódios-com-runtime-nulo)
+  - [Adicionar Vídeos de um Anime](#6-adicionar-vídeos-de-um-anime)
+  - [Consultar Vídeos](#7-consultar-vídeos)
 
 - [Rotas de Comentários](#-rotas-de-comentários)
 
@@ -125,22 +124,7 @@
 
 ## 🍿 Rotas de Animes e Episódios
 
-### 1. Popular Gêneros
-
-- **Endpoint**: `POST /populate-genres`
-- **Descrição**: Popula a base de dados com gêneros de anime.
-- **Autenticação**: Não necessária (ajuste se necessário).
-- **Headers**:
-  ```json
-  {
-    "Content-Type": "application/json"
-  }
-  ```
-- **Corpo da Requisição**: _(não exigido no exemplo)_
-
----
-
-### 2. Seguir/Deixar de Seguir um Anime
+### 1. Seguir/Deixar de Seguir um Anime
 
 - **Endpoint**: `POST /anime/follow`
 - **Descrição**: Altera o status de seguir um anime pelo usuário autenticado.
@@ -161,7 +145,7 @@
 
 ---
 
-### 3. Informações de um Anime
+### 2. Informações de um Anime
 
 - **Endpoint**: `GET /anime/:id`
 - **Descrição**: Retorna informações detalhadas sobre um anime.
@@ -171,7 +155,7 @@
 
 ---
 
-### 4. Importar Episódios de um Anime
+### 3. Importar Episódios de um Anime
 
 - **Endpoint**: `POST /anime/:animeId/episodes`
 - **Descrição**: Importa os episódios de um anime da API do TMDB e os salva na base de dados local, associando-os às temporadas previamente cadastradas.
@@ -209,7 +193,7 @@
 
 ---
 
-### 5. Listar Episódios de um Anime com Paginação
+### 4. Listar Episódios de um Anime com Paginação
 
 - **Endpoint**: `GET /anime/:animeId/episodes`
 - **Descrição**: Retorna os episódios de um anime previamente importados, com suporte a paginação.
@@ -279,7 +263,7 @@
 
 ---
 
-  ### 6. Atualizar Episódios com Runtime Nulo
+  ### 5. Atualizar Episódios com Runtime Nulo
 
 - **Endpoint**: `PUT /episodes/update-runtime`
 - **Descrição**: Busca todos os episódios com a coluna `runtime` como `null` na base de dados, consulta a API do TMDB para obter informações completas sobre esses episódios e atualiza as informações no banco de dados.
@@ -334,7 +318,7 @@
 
 ---
 
-### 7. Adicionar Vídeos de um Anime
+### 6. Adicionar Vídeos de um Anime
 
 - **Endpoint**: `POST /tv/:series_id/videos`
 - **Descrição**: Busca os vídeos de um Anime na API do TMDB e os armazena na base de dados. Evita duplicação utilizando a chave `key` como referência única.
@@ -394,7 +378,7 @@
 
 ---
 
-### 8. Consultar Vídeos
+### 7. Consultar Vídeos
 
 - **Endpoint**: `GET /videos`
 - **Descrição**: Retorna os vídeos armazenados no banco de dados. Permite filtrar por anime (`show_id`) e suporte à paginação.
