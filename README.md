@@ -31,7 +31,7 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
 - [x] **Seeds para Permissões**
   - Adicionar seeds para popular o banco de dados com permissões padrão.
 
-- [ ] **Rotas de Configuração de Preferências**
+- [x] **Rotas de Configuração de Preferências**
   - Criar endpoints para permitir que usuários personalizem suas preferências.
 
 - [x] **Rotas Editar Comentários**
@@ -40,7 +40,10 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
 - [x] **Rota Listar Animes Seguidos**
   - Criar rota para listar todos os animes seguidos pelo usuário.
 
-- [ ] **Rota Marcar Notificação como Lida**
+- [x] **Rota Para listar Notificações**
+  - Criar rota para listar as notificações do usuário.
+
+- [x] **Rota Marcar Notificação como Lida**
   - Criar rota para ler notificações do usuário.
 
 - [ ] **Rota Marcar Solicitação como Lida**
@@ -50,8 +53,9 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
   - Implementar sistema de reporte para conteúdos inadequados ou suspeitos.
 
 ### Progresso Atual
-- Itens concluídos: 6/10
-- Itens pendentes: 4/10
+- Itens concluídos: 8/11
+- Itens pendentes: 2/11
+
 
 ---
 

@@ -1,4 +1,5 @@
 const userController = require("../controllers/userController");
+const { getUserPreferences, updateUserPreferences } = require("../controllers/PreferencesController");
 const { authenticate } = require("../middlewares/AuthMiddleware");
 const argon2 = require("argon2"); // caso use argon2 para hash da senha
 
@@ -25,11 +26,7 @@ module.exports = async (fastify) => {
       const currentUserId = request.user.id; // ID do usuário autenticado (do token)
 
       try {
-        // Chama o controlador e passa os IDs
-        const user = await userController.getSensitiveUserInfo(
-          id,
-          currentUserId
-        );
+        const user = await userController.getSensitiveUserInfo(id, currentUserId);
         return reply.send(user);
       } catch (error) {
         return reply.status(403).send({ error: error.message });
@@ -37,19 +34,16 @@ module.exports = async (fastify) => {
     }
   );
 
+  // Rota para atualizar informações do usuário
   fastify.put(
     "/user",
     { preHandler: authenticate },
     async (request, reply) => {
-      const userId = request.user.id; // ID do usuário autenticado
-      const { username } = request.body; // Dados enviados pelo cliente
-  
+      const userId = request.user.id;
+      const { username } = request.body;
+
       try {
-        // Atualiza as informações no banco
-        const updatedUser = await userController.updateUser(userId, {
-          username,
-        });
-  
+        const updatedUser = await userController.updateUser(userId, { username });
         return reply.send({ message: "Informações atualizadas com sucesso!", updatedUser });
       } catch (error) {
         console.error("Erro ao atualizar informações do usuário:", error);
@@ -58,15 +52,15 @@ module.exports = async (fastify) => {
     }
   );
 
+  // Rota para alterar a senha do usuário
   fastify.put(
     "/user/password",
     { preHandler: authenticate },
     async (request, reply) => {
-      const userId = request.user.id; // ID do usuário autenticado
+      const userId = request.user.id;
       const { currentPassword, newPassword } = request.body;
-  
+
       try {
-        // Chama o controlador para alterar a senha
         await userController.changePassword(userId, currentPassword, newPassword);
         return reply.send({ message: "Senha alterada com sucesso!" });
       } catch (error) {
@@ -75,7 +69,18 @@ module.exports = async (fastify) => {
       }
     }
   );
- 
+
+  // Rota para listar preferências do usuário
+  fastify.get(
+    "/user/preferences",
+    { preHandler: authenticate },
+    getUserPreferences
+  );
+
+  // Rota para atualizar preferências do usuário
+  fastify.put(
+    "/user/preferences",
+    { preHandler: authenticate },
+    updateUserPreferences
+  );
 };
-
-

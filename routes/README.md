@@ -13,12 +13,13 @@
 - [Rotas de Animes e Episódios](#-rotas-de-animes-e-episódios)
 
   - [Seguir/Deixar de Seguir um Anime](#1-seguirdeixar-de-seguir-um-anime)
-  - [Informações de um Anime](#2-informações-de-um-anime)
-  - [Listar Episódios de um Anime](#3-importar-episódios-de-um-anime)
-  - [Episódios Recentes](#4-listar-episódios-de-um-anime-com-paginação)
-  - [Atualizar Episódios com Runtime Nulo](#5-atualizar-episódios-com-runtime-nulo)
-  - [Adicionar Vídeos de um Anime](#6-adicionar-vídeos-de-um-anime)
-  - [Consultar Vídeos](#7-consultar-vídeos)
+  - [Seguir/Deixar de Seguir um Anime](#2-listar-animes-seguidos)
+  - [Informações de um Anime](#3-informações-de-um-anime)
+  - [Listar Episódios de um Anime](#4-importar-episódios-de-um-anime)
+  - [Episódios Recentes](#5-listar-episódios-de-um-anime-com-paginação)
+  - [Atualizar Episódios com Runtime Nulo](#6-atualizar-episódios-com-runtime-nulo)
+  - [Adicionar Vídeos de um Anime](#7-adicionar-vídeos-de-um-anime)
+  - [Consultar Vídeos](#8-consultar-vídeos)
 
 - [Rotas de Comentários](#-rotas-de-comentários)
 
@@ -47,6 +48,14 @@
   - [Buscar Detalhes do Usuário](#2-buscar-detalhes-do-usuário)
   - [Atualizar Informações do Usuário](#3-atualizar-informações-do-usuário)
   - [Atualizar Senha do Usuário](#4-atualizar-senha-do-usuário)
+  - [Listar Preferências do Usuário](#5-listar-preferências-do-usuário)
+  - [Atualizar Preferências do Usuário](#6-atualizar-preferências-do-usuário)
+
+- [Rotas de Notificações](#-rotas-de-notificações)
+  - [Listar Notificações](#1-listar-notificações)
+  - [Marcar Notificação como Lida](#2-marcar-notificação-como-lida)
+
+
 
 - [Observações](#observações)
 
@@ -127,25 +136,99 @@
 ### 1. Seguir/Deixar de Seguir um Anime
 
 - **Endpoint**: `POST /anime/follow`
-- **Descrição**: Altera o status de seguir um anime pelo usuário autenticado.
-- **Autenticação**: Necessária.
+- **Descrição**: Alterna entre seguir e deixar de seguir um anime. Se o anime já está sendo seguido, a rota cancela o "seguir". Caso contrário, o anime será seguido.
+- **Autenticação**: Obrigatória.
 - **Headers**:
   ```json
   {
-    "Authorization": "Bearer <seu_token>",
+    "Authorization": "Bearer <token_do_usuario>",
     "Content-Type": "application/json"
   }
   ```
 - **Corpo da Requisição**:
   ```json
   {
-    "anime_id": 171018
+    "anime_id": 123
   }
   ```
+  - **anime_id** (obrigatório): ID do anime que o usuário deseja seguir ou deixar de seguir.
+
+- **Respostas**:
+  - **201 (Sucesso ao seguir)**:
+    ```json
+    {
+      "message": "Anime seguido com sucesso."
+    }
+    ```
+  - **200 (Sucesso ao deixar de seguir)**:
+    ```json
+    {
+      "message": "Você parou de seguir o anime."
+    }
+    ```
+  - **400 (Erro de Validação)**:
+    ```json
+    {
+      "error": "Bad Request",
+      "message": "ID do anime é obrigatório."
+    }
+    ```
+  - **404 (Anime Não Encontrado)**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "O anime não foi encontrado."
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro ao alternar o estado de seguir anime."
+    }
+    ```
 
 ---
 
-### 2. Informações de um Anime
+### 2. Listar Animes Seguidos
+
+- **Endpoint**: `GET /anime/followed`
+- **Descrição**: Retorna a lista de animes que o usuário está seguindo.
+- **Autenticação**: Obrigatória.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <token_do_usuario>"
+  }
+  ```
+- **Respostas**:
+  - **200 (Sucesso)**:
+    ```json
+    {
+      "message": "Lista de animes seguidos.",
+      "animes": [
+        {
+          "id": 1,
+          "name": "Naruto",
+          "poster_path": "https://example.com/naruto.jpg"
+        },
+        {
+          "id": 2,
+          "name": "One Piece",
+          "poster_path": "https://example.com/one_piece.jpg"
+        }
+      ]
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro ao listar animes seguidos."
+    }
+    ```
+
+---
+
+### 3. Informações de um Anime
 
 - **Endpoint**: `GET /anime/:id`
 - **Descrição**: Retorna informações detalhadas sobre um anime.
@@ -155,7 +238,7 @@
 
 ---
 
-### 3. Importar Episódios de um Anime
+### 4. Importar Episódios de um Anime
 
 - **Endpoint**: `POST /anime/:animeId/episodes`
 - **Descrição**: Importa os episódios de um anime da API do TMDB e os salva na base de dados local, associando-os às temporadas previamente cadastradas.
@@ -193,7 +276,7 @@
 
 ---
 
-### 4. Listar Episódios de um Anime com Paginação
+### 5. Listar Episódios de um Anime com Paginação
 
 - **Endpoint**: `GET /anime/:animeId/episodes`
 - **Descrição**: Retorna os episódios de um anime previamente importados, com suporte a paginação.
@@ -263,7 +346,7 @@
 
 ---
 
-  ### 5. Atualizar Episódios com Runtime Nulo
+  ### 6. Atualizar Episódios com Runtime Nulo
 
 - **Endpoint**: `PUT /episodes/update-runtime`
 - **Descrição**: Busca todos os episódios com a coluna `runtime` como `null` na base de dados, consulta a API do TMDB para obter informações completas sobre esses episódios e atualiza as informações no banco de dados.
@@ -318,7 +401,7 @@
 
 ---
 
-### 6. Adicionar Vídeos de um Anime
+### 7. Adicionar Vídeos de um Anime
 
 - **Endpoint**: `POST /tv/:series_id/videos`
 - **Descrição**: Busca os vídeos de um Anime na API do TMDB e os armazena na base de dados. Evita duplicação utilizando a chave `key` como referência única.
@@ -378,7 +461,7 @@
 
 ---
 
-### 7. Consultar Vídeos
+### 8. Consultar Vídeos
 
 - **Endpoint**: `GET /videos`
 - **Descrição**: Retorna os vídeos armazenados no banco de dados. Permite filtrar por anime (`show_id`) e suporte à paginação.
@@ -877,7 +960,7 @@ GET /search-api?query=naruto
   ```
 - **Observação**: Se o token for inválido ou expirado, retornará erro. Caso contrário, a senha é atualizada e o token removido.
 
-## 🔑 Rotas de Informações do Usuario
+## 🔑 Rotas de Usuário
 
 ### 1. Atualizar Avatar do Usuário
 
@@ -973,6 +1056,196 @@ GET /search-api?query=naruto
     "newPassword": "123456789"
   }
   ```
+
+### 5. Listar Preferências do Usuário
+
+- **Endpoint**: `GET /user/preferences`
+- **Descrição**: Retorna as preferências de notificação configuradas pelo usuário autenticado.
+- **Autenticação**: Obrigatória.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <token_do_usuario>"
+  }
+  ```
+- **Respostas**:
+  - **200 (Sucesso)**:
+    ```json
+    {
+      "message": "Preferências do usuário recuperadas com sucesso.",
+      "preferences": {
+        "notify_replies": true,
+        "notify_reactions": true,
+        "notify_new_comments": false,
+        "notify_new_episodes": false
+      }
+    }
+    ```
+  - **404 (Não Encontrado)**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "Preferências do usuário não encontradas."
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro ao listar preferências do usuário."
+    }
+    ```
+
+---
+
+### 6. Atualizar Preferências do Usuário
+
+- **Endpoint**: `PUT /user/preferences`
+- **Descrição**: Atualiza as preferências de notificação do usuário autenticado.
+- **Autenticação**: Obrigatória.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <token_do_usuario>",
+    "Content-Type": "application/json"
+  }
+  ```
+- **Corpo da Requisição**:
+  - Envie apenas os campos que deseja atualizar.
+  ```json
+  {
+    "notify_replies": true,
+    "notify_reactions": false,
+    "notify_new_comments": true,
+    "notify_new_episodes": false
+  }
+  ```
+  - **notify_replies** (opcional): Receber notificações de respostas.
+    - Tipo: `boolean`
+    - Valor padrão: `true`
+  - **notify_reactions** (opcional): Receber notificações de reações.
+    - Tipo: `boolean`
+    - Valor padrão: `true`
+  - **notify_new_comments** (opcional): Receber notificações de novos comentários.
+    - Tipo: `boolean`
+    - Valor padrão: `false`
+  - **notify_new_episodes** (opcional): Receber notificações de novos episódios.
+    - Tipo: `boolean`
+    - Valor padrão: `false`
+
+- **Respostas**:
+  - **200 (Sucesso)**:
+    ```json
+    {
+      "message": "Preferências do usuário atualizadas com sucesso."
+    }
+    ```
+  - **404 (Não Encontrado)**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "Preferências do usuário não encontradas."
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro ao atualizar preferências do usuário."
+    }
+    ```
+
+---
+
+## 🔔 Rotas de Notificações
+
+### 1. Listar Notificações
+
+- **Endpoint**: `GET /notifications`
+- **Descrição**: Retorna as notificações do usuário autenticado, incluindo informações relacionadas ao comentário (como `anime_id` ou `episode_id`).
+- **Autenticação**: Obrigatória.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <token_do_usuario>"
+  }
+  ```
+- **Respostas**:
+  - **200 (Sucesso)**:
+    ```json
+    {
+      "message": "Notificações recuperadas com sucesso.",
+      "notifications": [
+        {
+          "id": 36,
+          "user_id": 9,
+          "type": "new_comment",
+          "related_id": 63,
+          "read": true,
+          "created_at": "2024-12-12T13:42:53.715Z",
+          "anime_id": 123,
+          "episode_id": null
+        }
+      ]
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro ao listar notificações."
+    }
+    ```
+
+---
+
+### 2. Marcar Notificação como Lida
+
+- **Endpoint**: `PUT /notifications/:id/read`
+- **Descrição**: Marca uma notificação específica como lida.
+- **Autenticação**: Obrigatória.
+- **Headers**:
+  ```json
+  {
+    "Authorization": "Bearer <token_do_usuario>"
+  }
+  ```
+- **Parâmetros da Rota**:
+  - **id** (obrigatório): ID da notificação que será marcada como lida.
+
+- **Respostas**:
+  - **200 (Sucesso)**:
+    ```json
+    {
+      "message": "Notificação marcada como lida com sucesso."
+    }
+    ```
+  - **404 (Não Encontrado)**:
+    ```json
+    {
+      "error": "Not Found",
+      "message": "Notificação não encontrada ou você não tem permissão."
+    }
+    ```
+  - **500 (Erro Interno)**:
+    ```json
+    {
+      "error": "Erro ao marcar notificação como lida."
+    }
+    ```
+
+---
+
+### Exemplos de Uso no Frontend
+
+1. **Redirecionar para o Anime**:
+   - Caso `anime_id` esteja presente:
+     ```javascript
+     const redirectUrl = `/anime/${notification.anime_id}#comment-${notification.related_id}`;
+     ```
+
+2. **Redirecionar para o Episódio**:
+   - Caso `episode_id` também esteja presente:
+     ```javascript
+     const redirectUrl = `/anime/${notification.anime_id}/episode/${notification.episode_id}#comment-${notification.related_id}`;
+     ```
 
 ---
 
