@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/banner_readme.png" alt="Banner do Projeto">
+  <img src="./assets/logo.png" alt="Banner do Projeto">
 </p>
 
 Este projeto é uma API construída com **Fastify** que utiliza a API do AniList para buscar informações sobre animes, episódios e temporadas. Ele também utiliza **Knex.js** para gerenciar o banco de dados.
@@ -37,8 +37,11 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
 - [x] **Rotas Editar Comentários**
   - Implementar funcionalidades para que usuários possam editar seus comentários.
 
-- [ ] **Rota Listar Animes Seguidos**
+- [x] **Rota Listar Animes Seguidos**
   - Criar rota para listar todos os animes seguidos pelo usuário.
+
+- [ ] **Rota Marcar Notificação como Lida**
+  - Criar rota para ler notificações do usuário.
 
 - [ ] **Rota Marcar Solicitação como Lida**
   - Permitir que administradores ou usuários responsáveis possam marcar solicitações como lidas.
@@ -47,8 +50,8 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
   - Implementar sistema de reporte para conteúdos inadequados ou suspeitos.
 
 ### Progresso Atual
-- Itens concluídos: 5/8
-- Itens pendentes: 3/8
+- Itens concluídos: 6/10
+- Itens pendentes: 4/10
 
 ---
 

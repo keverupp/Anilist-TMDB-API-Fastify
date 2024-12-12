@@ -28,9 +28,7 @@ async function toggleFollowAnime(req, reply) {
 
     if (existingFollow) {
       // Remover o "seguir"
-      await knex("anime_follows")
-        .where({ anime_id, user_id })
-        .del();
+      await knex("anime_follows").where({ anime_id, user_id }).del();
 
       return reply.status(200).send({
         message: "Você parou de seguir o anime.",
@@ -54,4 +52,30 @@ async function toggleFollowAnime(req, reply) {
   }
 }
 
-module.exports = { toggleFollowAnime };
+async function listFollowedAnimes(req, reply) {
+  const user_id = req.user.id;
+
+  try {
+    // Consultar os animes seguidos pelo usuário
+    const followedAnimes = await knex("anime_follows")
+      .join("animes", "anime_follows.anime_id", "animes.id")
+      .where("anime_follows.user_id", user_id)
+      .select(
+        "animes.id",
+        "animes.name",
+        "animes.poster_path"
+      );
+
+    return reply.status(200).send({
+      message: "Lista de animes seguidos.",
+      animes: followedAnimes,
+    });
+  } catch (error) {
+    console.error("Erro ao listar animes seguidos:", error);
+    return reply.status(500).send({
+      error: "Erro ao listar animes seguidos.",
+    });
+  }
+}
+
+module.exports = { toggleFollowAnime, listFollowedAnimes };
