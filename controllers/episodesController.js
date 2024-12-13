@@ -1,6 +1,7 @@
-const { getAnimeSeasons } = require('../models/animeSeasonsModel');
-const { findEpisode, createEpisode, getEpisodesByAnimeId, getEpisodesWithNullRuntime, updateEpisodeInfo } = require('../models/episodesModel');
+const { getAnimeSeasons, getAnimeSeasonId } = require('../models/animeSeasonsModel');
+const { findEpisode, createEpisode, getEpisodesWithNullRuntime, updateEpisodeInfo } = require('../models/episodesModel');
 const axios = require('axios');
+const knex = require("knex")(require("../knexfile").development);
 const apiKey = process.env.TMDB_API_KEY;
 
 async function fetchEpisodes(request, reply) {
@@ -51,26 +52,88 @@ async function fetchEpisodes(request, reply) {
 
 async function listEpisodes(request, reply) {
   const { animeId } = request.params;
-  const { page = 1, limit = 10 } = request.query;
+  const { page = 1, limit = 10, fields, season, year } = request.query;
 
   try {
-    const { episodes, total } = await getEpisodesByAnimeId(animeId, parseInt(page), parseInt(limit));
+    // Obter o anime_season_id com base nos parâmetros fornecidos
+    const animeSeason = await getAnimeSeasonId(animeId, season, year);
+
+    if (!animeSeason) {
+      return reply.status(404).send({ error: 'Temporada não encontrada.' });
+    }
+
+    const animeSeasonId = animeSeason.anime_season_id;
+
+    // Lista de campos permitidos
+    const allowedFields = [
+      "id",
+      "episode_number",
+      "name",
+      "overview",
+      "still_path",
+      "created_at",
+      "production_code",
+      "url",
+      "air_date",
+      "vote_average",
+      "vote_count",
+      "season_number",
+      "episode_type",
+      "runtime",
+      "anime_season_id",
+      "tmdb_id",
+      "show_id",
+      "updated_at",
+    ];
+
+    // Processar os campos selecionados ou usar os padrões
+    const selectedFields = fields
+      ? fields.split(",").map((field) => field.trim())
+      : allowedFields;
+
+    // Validar campos
+    const invalidFields = selectedFields.filter((field) => !allowedFields.includes(field));
+    if (invalidFields.length > 0) {
+      return reply.status(400).send({
+        error: "Campos inválidos selecionados.",
+        invalidFields,
+      });
+    }
+
+    // Paginação
+    const offset = (page - 1) * limit;
+
+    // Buscar episódios com os campos selecionados
+    const episodes = await knex("episodes")
+      .where({ anime_season_id: animeSeasonId })
+      .select(selectedFields)
+      .orderBy("episode_number", "asc")
+      .limit(limit)
+      .offset(offset);
+
+    // Contar o total de episódios
+    const [{ count: total }] = await knex("episodes")
+      .where({ anime_season_id: animeSeasonId })
+      .count("id as count");
 
     const totalPages = Math.ceil(total / limit);
 
+    // Responder com os dados paginados
     reply.send({
       animeId,
+      season,
+      year,
       episodes,
       pagination: {
-        total,
+        total: parseInt(total, 10),
         totalPages,
-        currentPage: parseInt(page),
-        perPage: parseInt(limit),
+        currentPage: parseInt(page, 10),
+        perPage: parseInt(limit, 10),
       },
     });
   } catch (error) {
     console.error(error);
-    reply.status(500).send({ error: 'Erro ao listar episódios.' });
+    reply.status(500).send({ error: "Erro ao listar episódios." });
   }
 }
 

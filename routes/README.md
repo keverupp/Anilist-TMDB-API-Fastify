@@ -276,10 +276,10 @@
 
 ---
 
-### 5. Listar Episódios de um Anime com Paginação
+### 5. Listar Episódios de um Anime com Paginação e Filtro de Temporada
 
 - **Endpoint**: `GET /anime/:animeId/episodes`
-- **Descrição**: Retorna os episódios de um anime previamente importados, com suporte a paginação.
+- **Descrição**: Retorna os episódios de um anime previamente importados, com suporte a paginação e filtro de temporada.
 - **Autenticação**: Não necessária.
 - **Headers**:
   ```json
@@ -295,6 +295,12 @@
 
 - **Parâmetros da Query**:
 
+  - **season** (opcional): Número da temporada do anime.
+    - Tipo: `integer`
+    - Exemplo: `season=2`
+  - **year** (opcional): Ano de lançamento da temporada.
+    - Tipo: `integer`
+    - Exemplo: `year=2022`
   - **page** (opcional): O número da página que deseja visualizar.
     - Tipo: `integer`
     - Valor padrão: `1`
@@ -310,13 +316,15 @@
     ```json
     {
       "animeId": 240411,
+      "season": 2,
+      "year": 2022,
       "episodes": [
         {
           "id": 1,
           "name": "Episódio 1",
           "episode_number": 1,
           "overview": "Introdução ao anime.",
-          "air_date": "2024-01-01",
+          "air_date": "2022-01-01",
           "vote_average": 8.5,
           "vote_count": 100,
           "still_path": "/image.jpg",
@@ -332,17 +340,25 @@
       }
     }
     ```
-  - **Código 500** (em caso de erro):
+  - **Código 404** (quando a temporada não é encontrada):
+    ```json
+    {
+      "error": "Temporada não encontrada."
+    }
+    ```
+  - **Código 500** (em caso de erro interno):
     ```json
     {
       "error": "Erro ao listar episódios."
     }
     ```
 
-- **Observação**:
+- **Observações**:
 
+  - É possível filtrar os episódios por temporada usando os parâmetros `season` (número da temporada) e `year` (ano de lançamento).
+  - Caso nenhum filtro de temporada seja fornecido, retorna os episódios da primeira temporada encontrada no banco de dados.
   - Os episódios são retornados em ordem crescente de número do episódio (`episode_number`).
-  - O total de episódios e o número de páginas são incluídos na resposta para auxiliar na paginação.
+  - A resposta inclui informações de paginação, como total de episódios (`total`), total de páginas (`totalPages`), página atual (`currentPage`), e número de itens por página (`perPage`).
 
 ---
 
