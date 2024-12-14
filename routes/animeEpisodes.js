@@ -1,7 +1,7 @@
 const {
   fetchEpisodes,
   listEpisodes,
-  updateEpisodesRuntime,
+  updatePendingEpisodes,
 } = require("../controllers/episodesController");
 
 async function episodeRoutes(fastify, options) {
@@ -12,7 +12,7 @@ async function episodeRoutes(fastify, options) {
   fastify.get("/anime/:animeId/episodes", listEpisodes);
 
   // Rota para atualizar episódios com runtime nulo
-  fastify.put("/episodes/update-runtime", updateEpisodesRuntime);
+  fastify.post('/episodes/update-pending', updatePendingEpisodes);
 }
 
 module.exports = episodeRoutes;

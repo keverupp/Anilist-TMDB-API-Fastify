@@ -43,28 +43,6 @@ async function getEpisodesByAnimeId(animeId, page = 1, limit = 10) {
   return { episodes, total: parseInt(count, 10) };
 }
 
-// Buscar episódios com runtime nulo
-async function getEpisodesWithNullRuntime() {
-  return await knex('episodes')
-    .select(
-      'episodes.id',
-      'episodes.anime_season_id',
-      'episodes.episode_number',
-      'episodes.tmdb_id',
-      'episodes.show_id',
-      'seasons.season as season_number'
-    )
-    .join('anime_seasons', 'episodes.anime_season_id', 'anime_seasons.id')
-    .join('seasons', 'anime_seasons.season_id', 'seasons.id')
-    .whereNull('episodes.runtime');
-}
-
-// Atualizar informações completas de um episódio
-async function updateEpisodeInfo(id, updatedData) {
-  await knex('episodes')
-    .where({ id })
-    .update({ ...updatedData, updated_at: knex.fn.now() });
-}
 
 
-module.exports = { findEpisode, createEpisode, getEpisodesByAnimeId, updateEpisodeInfo, getEpisodesWithNullRuntime };
+module.exports = { findEpisode, createEpisode, getEpisodesByAnimeId };

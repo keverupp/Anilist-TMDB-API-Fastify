@@ -18,17 +18,18 @@ const upsert = async (table, conflictColumn, data) => {
     .merge();
 };
 
-// Função para buscar gêneros associados a um anime
+// Função para buscar gêneros associados a um anime pelo ID do TMDB
 const findGenresByAnimeId = async (animeId) => {
   return knex("anime_genres")
-    .join("genres", "anime_genres.genre_id", "genres.id")
+    .join("genres", "anime_genres.genre_id", "genres.id") // Associar pelo ID
     .where("anime_genres.anime_id", animeId)
-    .select("genres.name_en", "genres.name_pt");
+    .select("genres.id as tmdb_id", "genres.name_en", "genres.name_pt");
 };
 
+
 // Função para buscar gênero pelo nome
-const findGenreByName = async (name) => {
-  return knex("genres").where("name_pt", name).first();
+const findGenreById = async (id) => {
+  return knex("genres").where("id", id).first(); // Busca pelo ID do TMDB
 };
 
 // Função para inserir relação entre anime e gênero
@@ -97,7 +98,7 @@ module.exports = {
   findAnimeById: (id) => findById("animes", id),
   insertAnime: (anime) => insert("animes", anime),
   findGenresByAnimeId,
-  findGenreByName,
+  findGenreById,
   insertAnimeGenreRelation,
   upsertSeason,
   insertAnimeSeasonRelation,

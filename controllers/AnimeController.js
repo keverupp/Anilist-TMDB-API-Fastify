@@ -2,7 +2,7 @@ const {
   findAnimeById,
   insertAnime,
   findGenresByAnimeId,
-  findGenreByName,
+  findGenreById,
   insertAnimeGenreRelation,
   upsertSeason,
   insertAnimeSeasonRelation,
@@ -93,16 +93,25 @@ async function fetchAniListInfo(englishTitle) {
  * @param {number} animeId - ID do anime.
  * @param {object} logger - Objeto de logging (ex: req.log).
  */
+
 const processGenres = async (genres, animeId, logger) => {
   await Promise.all(genres.map(async (genre) => {
-    const existingGenre = await findGenreByName(genre.name);
-    if (existingGenre) {
-      await insertAnimeGenreRelation(animeId, existingGenre.id);
-    } else {
-      logger.warn(`Gênero não encontrado no banco: ${genre.name}`);
+    try {
+      // Procurar pelo gênero diretamente pelo ID do TMDB
+      const existingGenre = await findGenreById(genre.id); // Usando o ID do TMDB
+      if (existingGenre) {
+        // Inserir relação entre anime e gênero
+        await insertAnimeGenreRelation(animeId, existingGenre.id);
+      } else {
+        // Logar aviso caso o gênero não exista no banco
+        logger.warn(`Gênero não encontrado no banco: ID ${genre.id}, Nome: ${genre.name}`);
+      }
+    } catch (error) {
+      logger.error(`Erro ao processar gênero: ID ${genre.id}, Nome: ${genre.name}`, error);
     }
   }));
 };
+
 
 /**
  * Processa e salva as temporadas associadas ao anime.
