@@ -33,9 +33,9 @@ const formatAnimeData = (data, aniListInfo = {}) => ({
   poster_path: data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null,
   backdrop_path: data.backdrop_path ? `https://image.tmdb.org/t/p/w1280${data.backdrop_path}` : null,
   first_air_date: data.first_air_date || null,
-  is_current_season: aniListInfo.is_current_season || false, // AniList info
-  anilist_id: aniListInfo.anilist_id || null, // AniList ID
-  banner_path: aniListInfo.banner_path || null, // Banner do AniList
+  is_current_season: aniListInfo.is_current_season || false, 
+  anilist_id: aniListInfo.anilist_id || null,
+  banner_path: aniListInfo.banner_path || null,
   episodes_count: data.number_of_episodes || null,
   adult: data.adult || false,
   in_production: data.in_production || false,
@@ -69,7 +69,7 @@ async function fetchAniListInfo(englishTitle) {
       }
     }
   `;
-
+  
   const variables = { search: englishTitle };
 
   const response = await axios.post(
@@ -94,15 +94,14 @@ async function fetchAniListInfo(englishTitle) {
  * @param {object} logger - Objeto de logging (ex: req.log).
  */
 const processGenres = async (genres, animeId, logger) => {
-  const genrePromises = genres.map(async (genre) => {
+  await Promise.all(genres.map(async (genre) => {
     const existingGenre = await findGenreByName(genre.name);
     if (existingGenre) {
       await insertAnimeGenreRelation(animeId, existingGenre.id);
     } else {
       logger.warn(`Gênero não encontrado no banco: ${genre.name}`);
     }
-  });
-  await Promise.all(genrePromises);
+  }));
 };
 
 /**
@@ -112,7 +111,7 @@ const processGenres = async (genres, animeId, logger) => {
  * @param {object} logger - Objeto de logging (ex: req.log).
  */
 const processSeasons = async (seasons, animeId, logger) => {
-  const seasonPromises = seasons.map(async (season) => {
+  await Promise.all(seasons.map(async (season) => {
     try {
       const seasonId = await upsertSeason({
         id: season.id,
@@ -120,13 +119,11 @@ const processSeasons = async (seasons, animeId, logger) => {
         season_number: season.season_number,
         air_date: season.air_date,
       });
-
       await insertAnimeSeasonRelation(animeId, seasonId);
     } catch (error) {
       logger.error(`Erro ao processar temporada: ${season.name}`, error.message);
     }
-  });
-  await Promise.all(seasonPromises);
+  }));
 };
 
 /**
@@ -148,14 +145,13 @@ async function getAnime(req, reply) {
   try {
     const animeId = Number(id);
 
-    // Verifica se o anime já está no banco de dados
+    // Verifica se o anime já existe no banco
     let anime = await findAnimeById(animeId);
     if (anime) {
       const genres = await findGenresByAnimeId(animeId);
       return reply.send({ ...anime, genres });
     }
 
-    // Obtém o título em inglês do banco
     const titleInfo = await getEnglishTitleFromTitles(animeId);
     if (!titleInfo || !titleInfo.english_title) {
       throw new Error(`Título em inglês não encontrado para o anime com ID ${animeId}.`);
@@ -165,22 +161,18 @@ async function getAnime(req, reply) {
 
     // Busca informações do TMDB
     const { TMDB_API_KEY } = process.env;
-    const tmdbResponse = await axios.get(`https://api.themoviedb.org/3/tv/${animeId}`, {
+    const { data: animeData } = await axios.get(`https://api.themoviedb.org/3/tv/${animeId}`, {
       params: { api_key: TMDB_API_KEY, language: "pt-BR" },
     });
-
-    const animeData = tmdbResponse.data;
 
     // Busca informações do AniList
     const aniListInfo = await fetchAniListInfo(englishTitle);
 
-    // Combina as informações do TMDB e AniList
+    // Formata e insere o anime no banco
     const formattedAnime = formatAnimeData(animeData, aniListInfo);
-
-    // Salva o anime no banco
     await insertAnime(formattedAnime);
 
-    // Processa e salva gêneros e temporadas em paralelo
+    // Processa gêneros e temporadas em paralelo
     await Promise.all([
       processGenres(animeData.genres || [], animeId, req.log),
       processSeasons(animeData.seasons || [], animeId, req.log),
@@ -189,7 +181,6 @@ async function getAnime(req, reply) {
     // Recupera gêneros associados para retorno
     const genres = await findGenresByAnimeId(animeId);
 
-    // Retorna os dados salvos
     return reply.send({ ...formattedAnime, genres });
   } catch (error) {
     req.log.error(error);
