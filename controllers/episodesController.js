@@ -64,6 +64,15 @@ async function listEpisodes(request, reply) {
 
     const animeSeasonId = animeSeason.anime_season_id;
 
+    // Buscar o anilist_id na tabela anime
+    const anime = await knex("animes").where({ id: animeId }).first("anilist_id");
+
+    if (!anime) {
+      return reply.status(404).send({ error: "Anime não encontrado." });
+    }
+
+    const anilistId = anime.anilist_id;
+
     // Lista de campos permitidos
     const allowedFields = [
       "id",
@@ -72,13 +81,9 @@ async function listEpisodes(request, reply) {
       "overview",
       "still_path",
       "created_at",
-      "production_code",
-      "url",
       "air_date",
       "vote_average",
       "vote_count",
-      "season_number",
-      "episode_type",
       "runtime",
       "anime_season_id",
       "tmdb_id",
@@ -111,6 +116,12 @@ async function listEpisodes(request, reply) {
       .limit(limit)
       .offset(offset);
 
+    // Adicionar o campo `episode_url` a cada episódio
+    const episodesWithUrl = episodes.map((episode) => ({
+      ...episode,
+      episode_url: `https://www.miruro.online/watch?id=${anilistId}&ep=${episode.episode_number}`,
+    }));
+
     // Contar o total de episódios
     const [{ count: total }] = await knex("episodes")
       .where({ anime_season_id: animeSeasonId })
@@ -123,7 +134,7 @@ async function listEpisodes(request, reply) {
       animeId,
       season,
       year,
-      episodes,
+      episodes: episodesWithUrl,
       pagination: {
         total: parseInt(total, 10),
         totalPages,
@@ -136,6 +147,7 @@ async function listEpisodes(request, reply) {
     reply.status(500).send({ error: "Erro ao listar episódios." });
   }
 }
+
 
 async function updateEpisodesRuntime(request, reply) {
   try {
