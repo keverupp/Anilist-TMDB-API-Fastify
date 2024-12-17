@@ -20,6 +20,8 @@
   - [Atualizar Episódios com Runtime Nulo](#6-atualizar-episódios-com-runtime-nulo)
   - [Adicionar Vídeos de um Anime](#7-adicionar-vídeos-de-um-anime)
   - [Consultar Vídeos](#8-consultar-vídeos)
+  - [Atualizar Episódios Pendentes](#9-atualizar-episódios-pendentes)
+  - [Listar Animes com Status `Returning Series`](#10-listar-animes-com-status-Returning-Series)
 
 - [Rotas de Comentários](#-rotas-de-comentários)
 
@@ -538,6 +540,117 @@
   - A resposta inclui metadados de paginação (`total`, `totalPages`, `currentPage`, `perPage`).
 
 ---
+
+### 9. Atualizar Episódios Pendentes
+
+- **Endpoint**: `POST /episodes/update-pending`
+    
+- **Descrição**: Verifica episódios marcados como pendentes de atualização e atualiza as informações com dados da API TMDB, caso tenham sido lançados.
+    
+- **Autenticação**: Não necessária.
+    
+- **Headers**:
+    
+    ```json
+    {
+      "Content-Type": "application/json"
+    }
+    ```
+    
+- **Processo**:
+    
+    - Busca episódios com `is_pending_update = true` e cuja `air_date` seja anterior ou igual à data atual.
+    - Verifica as informações mais recentes do episódio na API TMDB usando `show_id`, número da temporada e número do episódio.
+    - Atualiza o episódio no banco de dados com os dados retornados da API e desmarca o episódio como pendente (`is_pending_update = false`).
+- **Resposta**:
+    
+    - **Código 200** (quando os episódios foram atualizados com sucesso):
+        
+        ```json
+        {
+          "message": "Episódios pendentes atualizados com sucesso!"
+        }
+        ```
+        
+    - **Código 200** (quando não há episódios pendentes a serem atualizados):
+        
+        ```json
+        {
+          "message": "Nenhum episódio pendente foi lançado."
+        }
+        ```
+        
+    - **Código 500** (em caso de erro interno):
+        
+        ```json
+        {
+          "error": "Erro ao atualizar episódios pendentes."
+        }
+        ```
+        
+- **Observações**:
+    
+    - Episódios que não são encontrados na API TMDB (404) são desmarcados como pendentes para evitar verificações futuras.
+    - Certifique-se de que a API TMDB está acessível e configurada corretamente.
+
+---
+
+### 10. Listar Animes com Status `Returning Series`
+
+- **Endpoint**: `GET /animes/returning-series`
+    
+- **Descrição**: Retorna uma lista de animes com status `Returning Series` da tabela `animes`.
+    
+- **Autenticação**: Não necessária.
+    
+- **Headers**:
+    
+    ```json
+    {
+      "Content-Type": "application/json"
+    }
+    ```
+    
+- **Resposta**:
+    
+    - **Código 200**:
+        
+        ```json
+        {
+          "data": [
+            {
+              "id": 1,
+              "name": "Anime Exemplo",
+              "overview": "Uma descrição do anime exemplo.",
+              "banner_path": "/path/to/banner.jpg",
+              "poster_path": "/path/to/poster.jpg"
+            },
+            {
+              "id": 2,
+              "name": "Outro Anime",
+              "overview": "Descrição de outro anime.",
+              "banner_path": "/path/to/another-banner.jpg",
+              "poster_path": "/path/to/another-poster.jpg"
+            }
+          ]
+        }
+        ```
+        
+    - **Código 500** (em caso de erro interno):
+        
+        ```json
+        {
+          "error": "Erro ao listar animes."
+        }
+        ```
+        
+- **Observações**:
+    
+    - Retorna apenas os campos `id`, `name`, `overview` e `banner_path` de cada anime.
+    - Certifique-se de que o campo `status` na tabela `animes` está corretamente preenchido como `Returning Series`.
+
+---
+
 
 ## 💬 Rotas de Comentários
 

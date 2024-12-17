@@ -162,6 +162,8 @@ A lógica no front-end segue uma série de etapas. Antes de começar, é fundame
 1. **Popular animes iniciais**  
    Primeiramente, devemos popular a base com os animes mais famosos e lançamentos atuais (através das rotas). Isso garantirá uma página inicial adequada para começar. Após essa etapa, a população da base de animes será feita pelos próprios usuários, também utilizando as rotas disponíveis.
 
+   Iremos usar a rota  `/animes/returning-series` para exibir informações dos animes que estão em lançamento, assim poderemos ter uma pagina inicial decente.
+
 2. **Busca e inserção de títulos**
    - O sistema contará com uma barra de pesquisa na navbar ou na página inicial.  
    - Quando o usuário realizar uma busca, utilizaremos inicialmente a [rota de busca local](./routes/readme.md#1-buscar-títulos-de-animes) para listar os títulos disponíveis na base local.  
