@@ -1,19 +1,18 @@
-'use strict'
+const fastify = require("fastify")({ logger: true });
+const app = require("./app"); // Substitua pelo caminho correto para o módulo do seu servidor
 
-const fastify = require('fastify')({ logger: true })
-const app = require('./app') // importa o plugin do app.js
-
-async function start() {
+(async () => {
   try {
-    // Registra o plugin
-    await fastify.register(app)
-    // Inicia o servidor
-    await fastify.listen({ port: 3000 })
-    console.log('Servidor rodando em modo desenvolvimento!')
-  } catch (err) {
-    fastify.log.error(err)
-    process.exit(1)
-  }
-}
+    // Registre os plugins e rotas
+    await app(fastify, {});
 
-start()
+    // Inicie o servidor em todas as interfaces, na porta 3000
+    const port = process.env.PORT || 3000;
+    await fastify.listen({ port, host: "0.0.0.0" });
+
+    console.log(`Server is running on: http://${fastify.server.address().address}:${port}`);
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+})();

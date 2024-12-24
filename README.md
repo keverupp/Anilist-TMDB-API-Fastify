@@ -2,7 +2,7 @@
   <img src="./assets/logo.png" alt="Banner do Projeto">
 </p>
 
-Este projeto é uma API construída com **Fastify** que utiliza a API do AniList para buscar informações sobre animes, episódios e temporadas. Ele também utiliza **Knex.js** para gerenciar o banco de dados.
+Este projeto é uma API construída com **Fastify** que utiliza a API do TMDB e AniList para buscar informações sobre animes, episódios e temporadas. Ele também utiliza **Knex.js** para gerenciar o banco de dados.
 
 ## **Índice**
 1.  [Visão Geral](#visão-geral)
@@ -53,7 +53,7 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do AniList
   - Implementar sistema de reporte para conteúdos inadequados ou suspeitos.
 
 ### Progresso Atual
-- Itens concluídos: 8/11
+- Itens concluídos: 9/11
 - Itens pendentes: 2/11
 
 
