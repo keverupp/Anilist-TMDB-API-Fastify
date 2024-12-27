@@ -15,13 +15,15 @@
   - [Seguir/Deixar de Seguir um Anime](#1-seguirdeixar-de-seguir-um-anime)
   - [Seguir/Deixar de Seguir um Anime](#2-listar-animes-seguidos)
   - [Informações de um Anime](#3-informações-de-um-anime)
-  - [Listar Episódios de um Anime](#4-importar-episódios-de-um-anime)
-  - [Episódios Recentes](#5-listar-episódios-de-um-anime-com-paginação)
-  - [Atualizar Episódios com Runtime Nulo](#6-atualizar-episódios-com-runtime-nulo)
-  - [Adicionar Vídeos de um Anime](#7-adicionar-vídeos-de-um-anime)
-  - [Consultar Vídeos](#8-consultar-vídeos)
-  - [Atualizar Episódios Pendentes](#9-atualizar-episódios-pendentes)
-  - [Listar Animes com Status `Returning Series`](#10-listar-animes-com-status-Returning-Series)
+  - [Listar Todos os Animes](#4-listar-todos-os-animes)
+  - [Listar Temporadas de um Anime](#5-listar-temporadas-de-um-anime)
+  - [Listar Episódios de um Anime](#6-importar-episódios-de-um-anime)
+  - [Episódios Recentes](#7-listar-episódios-de-um-anime-com-paginação)
+  - [Atualizar Episódios com Runtime Nulo](#8-atualizar-episódios-com-runtime-nulo)
+  - [Adicionar Vídeos de um Anime](#9-adicionar-vídeos-de-um-anime)
+  - [Consultar Vídeos](#10-consultar-vídeos)
+  - [Atualizar Episódios Pendentes](#11-atualizar-episódios-pendentes)
+  - [Listar Animes com Status `Returning Series`](#12-listar-animes-com-status-Returning-Series)
 
 - [Rotas de Comentários](#-rotas-de-comentários)
 
@@ -240,7 +242,169 @@
 
 ---
 
-### 4. Importar Episódios de um Anime
+### Documentação das Rotas
+
+---
+
+### 4. **Listar Todos os Animes**
+
+- **Endpoint**: `GET /animes`
+- **Descrição**: Lista todos os animes no banco de dados com suporte a filtros, paginação e campos personalizados.
+- **Autenticação**: Não necessária.
+
+#### **Query Parameters**:
+
+| Parâmetro | Tipo     | Obrigatório | Descrição                                                                                         | Exemplo            |
+|-----------|----------|-------------|---------------------------------------------------------------------------------------------------|--------------------|
+| `page`    | `number` | Não          | Número da página para paginação. Valor padrão: `1`.                                              | `?page=2`          |
+| `limit`   | `number` | Não          | Quantidade de registros por página. Valor padrão: `10`.                                          | `?limit=5`         |
+| `name`    | `string` | Não          | Nome parcial ou completo do anime para filtrar resultados.                                       | `?name=Naruto`     |
+| `status`  | `string` | Não          | Status do anime para filtrar resultados (`Finalizado`, `Continuando`, etc.).                     | `?status=Finalizado` |
+| `fields`  | `string` | Não          | Campos a serem retornados, separados por vírgulas. Caso não seja especificado, retorna todos.    | `?fields=id,name`  |
+
+#### **Respostas**:
+
+**200 (Sucesso)**:
+```json
+{
+  "animes": [
+    {
+      "id": 1,
+      "name": "Naruto",
+      "overview": "A história de um ninja...",
+      "poster_path": "/naruto-poster.jpg",
+      "backdrop_path": "/naruto-backdrop.jpg",
+      "first_air_date": "2002-10-03",
+      "is_current_season": false,
+      "episodes_count": 220,
+      "adult": false,
+      "in_production": false,
+      "homepage": "https://www.naruto.com",
+      "vote_average": 8.5,
+      "vote_count": 1234,
+      "original_name": "ナルト",
+      "original_language": "ja",
+      "number_of_seasons": 5,
+      "number_of_episodes": 220,
+      "popularity": 100.0,
+      "status": "Finalizado",
+      "episode_run_time": 25,
+      "type": "Anime"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "totalPages": 10,
+    "currentPage": 1,
+    "perPage": 10
+  }
+}
+```
+
+**400 (Erro de Validação)**:
+```json
+{
+  "error": "Parâmetro inválido",
+  "message": "O ID deve ser um número válido e positivo."
+}
+```
+
+**500 (Erro Interno)**:
+```json
+{
+  "error": "Erro ao buscar animes."
+}
+```
+
+#### **Observações**:
+- Quando `fields` é usado, apenas os campos especificados são retornados.
+- Parâmetros opcionais permitem personalização dos resultados, como filtro por nome ou status.
+
+---
+
+### 5. **Listar Temporadas de um Anime**
+
+- **Endpoint**: `GET /animes/:anime_id/seasons`
+- **Descrição**: Lista todas as temporadas de um anime específico com suporte a paginação.
+- **Autenticação**: Não necessária.
+
+#### **Parâmetros da Rota**:
+
+| Parâmetro  | Tipo     | Obrigatório | Descrição                                                                                  | Exemplo     |
+|------------|----------|-------------|--------------------------------------------------------------------------------------------|-------------|
+| `anime_id` | `number` | Sim          | ID do anime cujas temporadas serão listadas.                                               | `/animes/1` |
+
+#### **Query Parameters**:
+
+| Parâmetro | Tipo     | Obrigatório | Descrição                                             | Exemplo       |
+|-----------|----------|-------------|-------------------------------------------------------|---------------|
+| `page`    | `number` | Não          | Número da página para paginação. Valor padrão: `1`.   | `?page=2`     |
+| `limit`   | `number` | Não          | Quantidade de registros por página. Valor padrão: `10`.| `?limit=5`    |
+
+#### **Respostas**:
+
+**200 (Sucesso)**:
+```json
+{
+  "seasons": [
+    {
+      "id": 1,
+      "name": "Demon Slayer - Entertainment District Arc",
+      "season": "Winter",
+      "year": 2023,
+      "air_date": "2023-01-08",
+      "created_at": "2022-12-01T00:00:00.000Z",
+      "updated_at": "2023-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Demon Slayer - Swordsmith Village Arc",
+      "season": "Spring",
+      "year": 2023,
+      "air_date": "2023-04-09",
+      "created_at": "2023-01-15T00:00:00.000Z",
+      "updated_at": "2023-04-01T00:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "total": 20,
+    "totalPages": 2,
+    "currentPage": 1,
+    "perPage": 10
+  }
+}
+```
+
+**400 (Erro de Validação)**:
+```json
+{
+  "error": "Parâmetro inválido",
+  "message": "O ID do anime deve ser um número válido e positivo."
+}
+```
+
+**404 (Nenhuma Temporada Encontrada)**:
+```json
+{
+  "message": "Nenhuma temporada encontrada para este anime."
+}
+```
+
+**500 (Erro Interno)**:
+```json
+{
+  "error": "Erro ao buscar temporadas."
+}
+```
+
+#### **Observações**:
+- O parâmetro `anime_id` deve ser um número válido e positivo.
+- Responde com `404` caso o `anime_id` seja válido, mas nenhuma temporada seja encontrada.
+- Usa a tabela intermediária `anime_seasons` para associar animes e temporadas.
+
+--- 
+
+### 6. Importar Episódios de um Anime
 
 - **Endpoint**: `POST /anime/:animeId/episodes`
 - **Descrição**: Importa os episódios de um anime da API do TMDB e os salva na base de dados local, associando-os às temporadas previamente cadastradas.
@@ -278,7 +442,7 @@
 
 ---
 
-### 5. Listar Episódios de um Anime com Paginação e Filtro de Temporada
+### 7. Listar Episódios de um Anime com Paginação e Filtro de Temporada
 
 - **Endpoint**: `GET /anime/:animeId/episodes`
 - **Descrição**: Retorna os episódios de um anime previamente importados, com suporte a paginação e filtro de temporada.
@@ -364,7 +528,7 @@
 
 ---
 
-  ### 6. Atualizar Episódios com Runtime Nulo
+  ### 8. Atualizar Episódios com Runtime Nulo
 
 - **Endpoint**: `PUT /episodes/update-runtime`
 - **Descrição**: Busca todos os episódios com a coluna `runtime` como `null` na base de dados, consulta a API do TMDB para obter informações completas sobre esses episódios e atualiza as informações no banco de dados.
@@ -419,10 +583,10 @@
 
 ---
 
-### 7. Adicionar Vídeos de um Anime
+### 9. Adicionar Vídeos de uma Série ou Anime
 
 - **Endpoint**: `POST /tv/:series_id/videos`
-- **Descrição**: Busca os vídeos de um Anime na API do TMDB e os armazena na base de dados. Evita duplicação utilizando a chave `key` como referência única.
+- **Descrição**: Busca vídeos de uma série ou anime na API do TMDB e os salva no banco de dados. Utiliza a chave `key` para evitar duplicação.
 - **Autenticação**: Não necessária.
 - **Headers**:
   ```json
@@ -431,12 +595,12 @@
   }
   ```
 - **Parâmetros da Rota**:
-  - **series_id** (obrigatório): O ID do anime na API do TMDB.
+  - **series_id** (obrigatório): ID da série ou anime na API do TMDB.
     - Tipo: `integer`
     - Exemplo: `/tv/240411/videos`
 
 - **Respostas**:
-  - **Código 201 (Sucesso)**:
+  - **201 (Criado)**:
     ```json
     {
       "message": "Vídeos inseridos com sucesso!",
@@ -454,35 +618,35 @@
       ]
     }
     ```
-  - **Código 404 (Nenhum vídeo encontrado)**:
+  - **404 (Não Encontrado)**:
     ```json
     {
       "message": "Nenhum vídeo encontrado para esta série."
     }
     ```
-  - **Código 400 (Nenhum vídeo válido)**:
+  - **400 (Nenhum Vídeo Válido)**:
     ```json
     {
       "message": "Nenhum vídeo válido encontrado para inserir."
     }
     ```
-  - **Código 500 (Erro Interno)**:
+  - **500 (Erro Interno)**:
     ```json
     {
       "error": "Erro ao buscar e inserir vídeos."
     }
     ```
 
-- **Observação**:
-  - Apenas vídeos oficiais e válidos são inseridos no banco.
-  - Se o vídeo já existir no banco (baseado no campo `key`), ele será ignorado automaticamente.
+- **Observações**:
+  - Apenas vídeos válidos e oficiais serão armazenados.
+  - Vídeos duplicados (baseados na chave `key`) serão ignorados automaticamente.
 
 ---
 
-### 8. Consultar Vídeos
+### 10. Consultar Vídeos
 
-- **Endpoint**: `GET /videos`
-- **Descrição**: Retorna os vídeos armazenados no banco de dados. Permite filtrar por anime (`show_id`) e suporte à paginação.
+- **Endpoint**: `GET /anime/videos`
+- **Descrição**: Recupera vídeos armazenados no banco de dados, com suporte a filtros e paginação.
 - **Autenticação**: Não necessária.
 - **Headers**:
   ```json
@@ -490,21 +654,21 @@
     "Content-Type": "application/json"
   }
   ```
-- **Parâmetros da Query**:
-  - **show_id** (opcional): ID da série para filtrar os vídeos.
+- **Parâmetros de Query**:
+  - **show_id** (opcional): Filtra vídeos de um anime ou série específico.
     - Tipo: `integer`
     - Exemplo: `show_id=240411`
-  - **page** (opcional): Página atual da consulta.
+  - **page** (opcional): Página atual para paginação.
     - Tipo: `integer`
-    - Valor padrão: `1`
+    - Padrão: `1`
     - Exemplo: `page=2`
   - **limit** (opcional): Quantidade de vídeos por página.
     - Tipo: `integer`
-    - Valor padrão: `10`
+    - Padrão: `10`
     - Exemplo: `limit=5`
 
 - **Respostas**:
-  - **Código 200 (Sucesso)**:
+  - **200 (Sucesso)**:
     ```json
     {
       "videos": [
@@ -528,20 +692,20 @@
       }
     }
     ```
-  - **Código 500 (Erro Interno)**:
+  - **500 (Erro Interno)**:
     ```json
     {
       "error": "Erro ao buscar vídeos."
     }
     ```
 
-- **Observação**:
-  - Se `show_id` não for fornecido, retorna todos os vídeos disponíveis.
-  - A resposta inclui metadados de paginação (`total`, `totalPages`, `currentPage`, `perPage`).
+- **Observações**:
+  - Caso `show_id` não seja especificado, retorna todos os vídeos disponíveis.
+  - A resposta inclui informações de paginação: `total`, `totalPages`, `currentPage`, `perPage`.
 
 ---
 
-### 9. Atualizar Episódios Pendentes
+### 11. Atualizar Episódios Pendentes
 
 - **Endpoint**: `POST /episodes/update-pending`
     
@@ -595,7 +759,7 @@
 
 ---
 
-### 10. Listar Animes com Status `Returning Series`
+### 12. Listar Animes com Status `Returning Series`
 
 - **Endpoint**: `GET /animes/returning-series`
     

@@ -5,7 +5,7 @@ async function videoRoutes(fastify, options) {
   fastify.post('/anime/:series_id/videos', fetchAndStoreVideos);
 
   // Rota para consultar vídeos
-  fastify.get('/videos', getVideos);
+  fastify.get('/anime/videos', getVideos);
 }
 
 module.exports = videoRoutes;

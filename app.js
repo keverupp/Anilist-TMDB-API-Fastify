@@ -7,6 +7,13 @@ const swaggerUi = require("@fastify/swagger-ui");
 require("dotenv").config();
 
 module.exports = async function (fastify, opts) {
+  // Configurar CORS
+  fastify.register(require("@fastify/cors"), {
+    origin: "*", // Permite todas as origens
+    methods: ["GET", "POST", "PUT", "DELETE"], // Permite esses métodos
+    allowedHeaders: ["Content-Type", "Authorization"], // Cabeçalhos permitidos
+  });
+
   // Registra o plugin @fastify/multipart para suporte a uploads de arquivos
   fastify.register(require("@fastify/multipart"), {
     limits: {

@@ -19,6 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "@fastify/autoload": "^6.0.0",
+    "@fastify/cors": "^10.0.1",
     "@fastify/multipart": "^9.0.1",
     "@fastify/sensible": "^6.0.0",
     "@fastify/swagger": "^9.4.0",
@@ -42,8 +43,8 @@
     "wanakana": "^5.3.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "nodemon": "^3.1.7"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

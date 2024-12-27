@@ -52,9 +52,15 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do TMDB e 
 - [ ] **Rota de Reportar (qualquer conteúdo)**
   - Implementar sistema de reporte para conteúdos inadequados ou suspeitos.
 
+- [ ] **Rota para Listar Temporadas(URGENTE)**
+  - Rota que consulta nome, quantidade e outras informações das temporadas do anime.
+
+- [ ] **Ajuste README Routes**
+  - Ajuste nas Rotas como Videos, returning series e etc.
+
 ### Progresso Atual
-- Itens concluídos: 9/11
-- Itens pendentes: 2/11
+- Itens concluídos: 9/13
+- Itens pendentes: 4/13
 
 
 ---
