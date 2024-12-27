@@ -12,7 +12,8 @@
     "test": "node --test test/**/*.test.js",
     "migrate": "npx knex migrate:latest",
     "rollback": "npx knex migrate:rollback --all",
-    "seed": "npx knex seed:run"
+    "seed": "npx knex seed:run",
+    "local": "node vercel.js"
   },
   "keywords": [],
   "author": "",
