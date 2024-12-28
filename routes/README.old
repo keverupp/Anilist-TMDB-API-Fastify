@@ -10,41 +10,36 @@
   - [Renovação de Token](#4-renovação-de-token)
   - [Middleware de Autenticação](#middleware-de-autenticação)
 
-- [Rotas de Busca](#-rotas-de-busca)
+- [Rotas de Animes e Episódios](#-rotas-de-animes-e-episódios)
 
-  - [Buscar Títulos de Animes](#1-buscar-títulos-de-animes)
-  - [Buscar e Inserir Animes na Base Local](#2-buscar-e-inserir-animes-na-base-local)
-
-- [Rotas de Animes](#-rotas-de-animes)
-
-  - [Gerenciar Anime Seguido](#1-gerenciar-anime-seguido)
-  - [Listar Animes Seguidos](#2-listar-animes-seguidos)
+  - [Seguir/Deixar de Seguir um Anime](#1-seguirdeixar-de-seguir-um-anime)
+  - [Seguir/Deixar de Seguir um Anime](#2-listar-animes-seguidos)
   - [Informações de um Anime](#3-informações-de-um-anime)
   - [Listar Todos os Animes](#4-listar-todos-os-animes)
-  - [Listar Animes com Status `Returning Series`](#5-listar-animes-com-status-returning-series)
-
-- [Rotas de Episódios](#-rotas-de-episódios)
-
-  - [Importar Episódios de um Anime](#1-importar-episódios-de-um-anime)
-  - [Listar Episódios de um Anime com Paginação e Filtro de Temporada](#2-listar-episódios-de-um-anime-com-paginação-e-filtro-de-temporada)
-  - [Atualizar Episódios com Runtime Nulo](#3-atualizar-episódios-com-runtime-nulo)
-
-- [Rotas de Vídeos](#-rotas-de-vídeos)
-
-  - [Adicionar Vídeos de um Anime](#1-adicionar-vídeos-de-um-anime)
-  - [Consultar Vídeos](#2-consultar-vídeos)
+  - [Listar Temporadas de um Anime](#5-listar-temporadas-de-um-anime)
+  - [Listar Episódios de um Anime](#6-importar-episódios-de-um-anime)
+  - [Episódios Recentes](#7-listar-episódios-de-um-anime-com-paginação)
+  - [Atualizar Episódios com Runtime Nulo](#8-atualizar-episódios-com-runtime-nulo)
+  - [Adicionar Vídeos de um Anime](#9-adicionar-vídeos-de-um-anime)
+  - [Consultar Vídeos](#10-consultar-vídeos)
+  - [Atualizar Episódios Pendentes](#11-atualizar-episódios-pendentes)
+  - [Listar Animes com Status `Returning Series`](#12-listar-animes-com-status-Returning-Series)
 
 - [Rotas de Comentários](#-rotas-de-comentários)
 
   - [Criar Comentário](#1-criar-comentário)
-  - [Responder a Comentário](#2-responder-comentário)
+  - [Responder a Comentário](#2-responder-a-comentário)
   - [Listar Comentários](#3-listar-comentários)
-  - [Editar Comentário](#4-editar-comentário)
-  - [Excluir Comentário](#5-excluir-comentário)
+  - [Excluir Comentário](#4-excluir-comentário)
 
 - [Rotas de Reações](#-rotas-de-reações)
 
-  - [Adicionar/Atualizar/Remover Reação](#1-adicionar-atualizar-remover-reação)
+  - [Adicionar/Atualizar/Remover Reação](#1-adicionaratualizarremover-reação)
+
+- [Rotas de Busca](#-rotas-de-busca)
+
+  - [Buscar Títulos de Animes](#1-buscar-títulos-de-animes)
+  - [Buscar e Inserir Animes na Base Local](#2-buscar-e-inserir-animes-na-base-local)
 
 - [Rotas de Recuperação de Senha](#-rotas-de-recuperação-de-senha)
 
@@ -136,124 +131,9 @@
 
 ---
 
-## 🔎 Rotas de Busca
+## 🍿 Rotas de Animes e Episódios
 
-### 1. Buscar Títulos de Animes
-
-- **Endpoint**: `GET /search`
-- **Descrição**: Busca títulos de animes na base de dados local. A busca verifica os títulos principais e os alternativos para retornar informações sobre os animes encontrados. Permite a personalização da resposta especificando os campos desejados.
-- **Autenticação**: Não necessária.
-- **Headers**:
-  ```json
-  {
-    "Content-Type": "application/json"
-  }
-  ```
-- **Parâmetros da Query**:
-
-  - **query** (obrigatório): A palavra-chave usada para buscar os títulos.
-    - Tipo: `string`
-    - Exemplo: `query=sousou`
-  - **fields** (opcional): Lista separada por vírgulas dos campos a serem retornados.
-    - Tipo: `string`
-    - Campos permitidos:
-      - `id`
-      - `english_title`
-      - `pt_title`
-      - `native_title`
-    - Exemplo: `fields=english_title`
-
-- **Observação**:
-  - Quando `fields` não for informado, todos os campos padrão serão retornados.
-  - A busca em `query` é insensível a maiúsculas e minúsculas.
-
----
-
-### 2. Buscar e Inserir Animes na Base Local
-
-- **Endpoint**: `GET /search-api`
-- **Descrição**: Busca animes na API do The Movie Database (TMDB) com base em um termo de consulta, insere os títulos principais e alternativos encontrados no banco de dados local e retorna os dados processados.
-- **Autenticação**: Não necessária.
-- **Headers**:
-  ```json
-  {
-    "Content-Type": "application/json"
-  }
-  ```
-- **Parâmetros da Query**:
-
-  - **query** (obrigatório): A palavra-chave usada para buscar os animes na API.
-    - Tipo: `string`
-    - Exemplo: `query=naruto`
-
-- **Observação**:
-  - A busca é limitada ao gênero Animation (ID 16) no TMDB.
-  - Para cada anime encontrado, o título em português do Brasil (`pt-BR`) e os títulos alternativos são buscados.
-  - Apenas resultados válidos são inseridos no banco de dados.
-
----
-
-### Exemplo de Respostas
-
-#### **1. Buscar Títulos de Animes**
-
-**Request**:
-
-```http
-GET /search?query=sousou&fields=english_title
-```
-
-**Response (200 OK)**:
-
-```json
-[
-  {
-    "english_title": "Frieren: Beyond Journey's End"
-  }
-]
-```
-
----
-
-#### **2. Buscar e Inserir Animes na Base Local**
-
-**Request**:
-
-```http
-GET /search-api?query=naruto
-```
-
-**Response (200 OK)**:
-
-```json
-{
-  "message": "Animes e títulos alternativos processados com sucesso!",
-  "titles": [
-    {
-      "id": 20,
-      "english_title": "Naruto",
-      "native_title": "ナルト",
-      "pt_title": "Naruto"
-    }
-  ],
-  "alternative_titles": [
-    {
-      "anime_id": 20,
-      "iso_3166_1": "JP",
-      "title": "ナルト",
-      "type": null,
-      "created_at": "2024-12-08T17:30:00.000Z",
-      "updated_at": "2024-12-08T17:30:00.000Z"
-    }
-  ]
-}
-```
-
----
-
-## 🍿 Rotas de Animes
-
-### 1. Gerenciar Anime Seguido
+### 1. Seguir/Deixar de Seguir um Anime
 
 - **Endpoint**: `POST /anime/follow`
 - **Descrição**: Alterna entre seguir e deixar de seguir um anime. Se o anime já está sendo seguido, a rota cancela o "seguir". Caso contrário, o anime será seguido.
@@ -442,53 +322,96 @@ GET /search-api?query=naruto
 - Quando `fields` é usado, apenas os campos especificados são retornados.
 - Parâmetros opcionais permitem personalização dos resultados, como filtro por nome ou status.
 
-### 5. Listar Animes com Status `Returning Series`
+---
 
-- **Endpoint**: `GET /animes/returning-series`
-- **Descrição**: Retorna uma lista de animes com status `Returning Series` da tabela `animes`.
+### 5. **Listar Temporadas de um Anime**
+
+- **Endpoint**: `GET /animes/:anime_id/seasons`
+- **Descrição**: Lista todas as temporadas de um anime específico com suporte a paginação.
 - **Autenticação**: Não necessária.
-- **Headers**:
-  ```json
-  {
-    "Content-Type": "application/json"
+
+#### **Parâmetros da Rota**:
+
+| Parâmetro  | Tipo     | Obrigatório | Descrição                                    | Exemplo     |
+| ---------- | -------- | ----------- | -------------------------------------------- | ----------- |
+| `anime_id` | `number` | Sim         | ID do anime cujas temporadas serão listadas. | `/animes/1` |
+
+#### **Query Parameters**:
+
+| Parâmetro | Tipo     | Obrigatório | Descrição                                               | Exemplo    |
+| --------- | -------- | ----------- | ------------------------------------------------------- | ---------- |
+| `page`    | `number` | Não         | Número da página para paginação. Valor padrão: `1`.     | `?page=2`  |
+| `limit`   | `number` | Não         | Quantidade de registros por página. Valor padrão: `10`. | `?limit=5` |
+
+#### **Respostas**:
+
+**200 (Sucesso)**:
+
+```json
+{
+  "seasons": [
+    {
+      "id": 1,
+      "name": "Demon Slayer - Entertainment District Arc",
+      "season": "Winter",
+      "year": 2023,
+      "air_date": "2023-01-08",
+      "created_at": "2022-12-01T00:00:00.000Z",
+      "updated_at": "2023-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Demon Slayer - Swordsmith Village Arc",
+      "season": "Spring",
+      "year": 2023,
+      "air_date": "2023-04-09",
+      "created_at": "2023-01-15T00:00:00.000Z",
+      "updated_at": "2023-04-01T00:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "total": 20,
+    "totalPages": 2,
+    "currentPage": 1,
+    "perPage": 10
   }
-  ```
-- **Resposta**:
-  - **Código 200**:
-    ```json
-    {
-      "data": [
-        {
-          "id": 1,
-          "name": "Anime Exemplo",
-          "overview": "Uma descrição do anime exemplo.",
-          "banner_path": "/path/to/banner.jpg",
-          "poster_path": "/path/to/poster.jpg"
-        },
-        {
-          "id": 2,
-          "name": "Outro Anime",
-          "overview": "Descrição de outro anime.",
-          "banner_path": "/path/to/another-banner.jpg",
-          "poster_path": "/path/to/another-poster.jpg"
-        }
-      ]
-    }
-    ```
-  - **Código 500** (em caso de erro interno):
-    ```json
-    {
-      "error": "Erro ao listar animes."
-    }
-    ```
-- **Observações**:
-  - Retorna apenas os campos `id`, `name`, `overview` e `banner_path` de cada anime.
+}
+```
+
+**400 (Erro de Validação)**:
+
+```json
+{
+  "error": "Parâmetro inválido",
+  "message": "O ID do anime deve ser um número válido e positivo."
+}
+```
+
+**404 (Nenhuma Temporada Encontrada)**:
+
+```json
+{
+  "message": "Nenhuma temporada encontrada para este anime."
+}
+```
+
+**500 (Erro Interno)**:
+
+```json
+{
+  "error": "Erro ao buscar temporadas."
+}
+```
+
+#### **Observações**:
+
+- O parâmetro `anime_id` deve ser um número válido e positivo.
+- Responde com `404` caso o `anime_id` seja válido, mas nenhuma temporada seja encontrada.
+- Usa a tabela intermediária `anime_seasons` para associar animes e temporadas.
 
 ---
 
-## 🎥 Rotas de Episódios
-
-### 1. Importar Episódios de um Anime
+### 6. Importar Episódios de um Anime
 
 - **Endpoint**: `POST /anime/:animeId/episodes`
 - **Descrição**: Importa os episódios de um anime da API do TMDB e os salva na base de dados local, associando-os às temporadas previamente cadastradas.
@@ -526,7 +449,7 @@ GET /search-api?query=naruto
 
 ---
 
-### 2. Listar Episódios de um Anime com Paginação e Filtro de Temporada
+### 7. Listar Episódios de um Anime com Paginação e Filtro de Temporada
 
 - **Endpoint**: `GET /anime/:animeId/episodes`
 - **Descrição**: Retorna os episódios de um anime previamente importados, com suporte a paginação e filtro de temporada.
@@ -612,9 +535,9 @@ GET /search-api?query=naruto
 
 ---
 
-### 3. Atualizar Episódios com Runtime Nulo
+### 8. Atualizar Episódios com Runtime Nulo
 
-- **Endpoint**: `PUT /episodes/update-pending`
+- **Endpoint**: `PUT /episodes/update-runtime`
 - **Descrição**: Busca todos os episódios com a coluna `runtime` como `null` na base de dados, consulta a API do TMDB para obter informações completas sobre esses episódios e atualiza as informações no banco de dados.
 - **Autenticação**: Não necessária.
 - **Headers**:
@@ -665,9 +588,7 @@ GET /search-api?query=naruto
 
 ---
 
-## 📺 Rotas de Vídeos
-
-### 1. Adicionar Vídeos de um Anime
+### 9. Adicionar Vídeos de um Anime
 
 - **Endpoint**: `POST /tv/:series_id/videos`
 - **Descrição**: Busca vídeos de uma série ou anime na API do TMDB e os salva no banco de dados. Utiliza a chave `key` para evitar duplicação.
@@ -729,7 +650,7 @@ GET /search-api?query=naruto
 
 ---
 
-### 2. Consultar Vídeos
+### 10. Consultar Vídeos
 
 - **Endpoint**: `GET /anime/videos`
 - **Descrição**: Recupera vídeos armazenados no banco de dados, com suporte a filtros e paginação.
@@ -793,7 +714,94 @@ GET /search-api?query=naruto
 
 ---
 
+### 11. Atualizar Episódios Pendentes
+
+- **Endpoint**: `POST /episodes/update-pending`
+- **Descrição**: Verifica episódios marcados como pendentes de atualização e atualiza as informações com dados da API TMDB, caso tenham sido lançados.
+- **Autenticação**: Não necessária.
+- **Headers**:
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+- **Processo**:
+  - Busca episódios com `is_pending_update = true` e cuja `air_date` seja anterior ou igual à data atual.
+  - Verifica as informações mais recentes do episódio na API TMDB usando `show_id`, número da temporada e número do episódio.
+  - Atualiza o episódio no banco de dados com os dados retornados da API e desmarca o episódio como pendente (`is_pending_update = false`).
+- **Resposta**:
+  - **Código 200** (quando os episódios foram atualizados com sucesso):
+    ```json
+    {
+      "message": "Episódios pendentes atualizados com sucesso!"
+    }
+    ```
+  - **Código 200** (quando não há episódios pendentes a serem atualizados):
+    ```json
+    {
+      "message": "Nenhum episódio pendente foi lançado."
+    }
+    ```
+  - **Código 500** (em caso de erro interno):
+    ```json
+    {
+      "error": "Erro ao atualizar episódios pendentes."
+    }
+    ```
+- **Observações**:
+  - Episódios que não são encontrados na API TMDB (404) são desmarcados como pendentes para evitar verificações futuras.
+
+---
+
+### 12. Listar Animes com Status `Returning Series`
+
+- **Endpoint**: `GET /animes/returning-series`
+- **Descrição**: Retorna uma lista de animes com status `Returning Series` da tabela `animes`.
+- **Autenticação**: Não necessária.
+- **Headers**:
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+- **Resposta**:
+  - **Código 200**:
+    ```json
+    {
+      "data": [
+        {
+          "id": 1,
+          "name": "Anime Exemplo",
+          "overview": "Uma descrição do anime exemplo.",
+          "banner_path": "/path/to/banner.jpg",
+          "poster_path": "/path/to/poster.jpg"
+        },
+        {
+          "id": 2,
+          "name": "Outro Anime",
+          "overview": "Descrição de outro anime.",
+          "banner_path": "/path/to/another-banner.jpg",
+          "poster_path": "/path/to/another-poster.jpg"
+        }
+      ]
+    }
+    ```
+  - **Código 500** (em caso de erro interno):
+    ```json
+    {
+      "error": "Erro ao listar animes."
+    }
+    ```
+- **Observações**:
+  - Retorna apenas os campos `id`, `name`, `overview` e `banner_path` de cada anime.
+
+---
+
 ## 💬 Rotas de Comentários
+
+### Documentação das Rotas de Comentários
+
+---
 
 ### 1. Criar Comentário
 
@@ -1078,7 +1086,120 @@ GET /search-api?query=naruto
 
 ---
 
-## 🔑 Rotas de Recuperação de Senha
+## 🔎 Rotas de Busca
+
+### 1. Buscar Títulos de Animes
+
+- **Endpoint**: `GET /search`
+- **Descrição**: Busca títulos de animes na base de dados local. A busca verifica os títulos principais e os alternativos para retornar informações sobre os animes encontrados. Permite a personalização da resposta especificando os campos desejados.
+- **Autenticação**: Não necessária.
+- **Headers**:
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+- **Parâmetros da Query**:
+
+  - **query** (obrigatório): A palavra-chave usada para buscar os títulos.
+    - Tipo: `string`
+    - Exemplo: `query=sousou`
+  - **fields** (opcional): Lista separada por vírgulas dos campos a serem retornados.
+    - Tipo: `string`
+    - Campos permitidos:
+      - `id`
+      - `english_title`
+      - `pt_title`
+      - `native_title`
+    - Exemplo: `fields=english_title`
+
+- **Observação**:
+  - Quando `fields` não for informado, todos os campos padrão serão retornados.
+  - A busca em `query` é insensível a maiúsculas e minúsculas.
+
+---
+
+### 2. Buscar e Inserir Animes na Base Local
+
+- **Endpoint**: `GET /search-api`
+- **Descrição**: Busca animes na API do The Movie Database (TMDB) com base em um termo de consulta, insere os títulos principais e alternativos encontrados no banco de dados local e retorna os dados processados.
+- **Autenticação**: Não necessária.
+- **Headers**:
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+- **Parâmetros da Query**:
+
+  - **query** (obrigatório): A palavra-chave usada para buscar os animes na API.
+    - Tipo: `string`
+    - Exemplo: `query=naruto`
+
+- **Observação**:
+  - A busca é limitada ao gênero Animation (ID 16) no TMDB.
+  - Para cada anime encontrado, o título em português do Brasil (`pt-BR`) e os títulos alternativos são buscados.
+  - Apenas resultados válidos são inseridos no banco de dados.
+
+---
+
+### Exemplo de Respostas
+
+#### **1. Buscar Títulos de Animes**
+
+**Request**:
+
+```http
+GET /search?query=sousou&fields=english_title
+```
+
+**Response (200 OK)**:
+
+```json
+[
+  {
+    "english_title": "Frieren: Beyond Journey's End"
+  }
+]
+```
+
+---
+
+#### **2. Buscar e Inserir Animes na Base Local**
+
+**Request**:
+
+```http
+GET /search-api?query=naruto
+```
+
+**Response (200 OK)**:
+
+```json
+{
+  "message": "Animes e títulos alternativos processados com sucesso!",
+  "titles": [
+    {
+      "id": 20,
+      "english_title": "Naruto",
+      "native_title": "ナルト",
+      "pt_title": "Naruto"
+    }
+  ],
+  "alternative_titles": [
+    {
+      "anime_id": 20,
+      "iso_3166_1": "JP",
+      "title": "ナルト",
+      "type": null,
+      "created_at": "2024-12-08T17:30:00.000Z",
+      "updated_at": "2024-12-08T17:30:00.000Z"
+    }
+  ]
+}
+```
+
+## 👤 Rotas de Recuperação de Senha
 
 ### 1. Esqueci Minha Senha (Solicitar Redefinição)
 
@@ -1121,9 +1242,7 @@ GET /search-api?query=naruto
   ```
 - **Observação**: Se o token for inválido ou expirado, retornará erro. Caso contrário, a senha é atualizada e o token removido.
 
----
-
-## 👤 Rotas de Usuário
+## 🔑 Rotas de Usuário
 
 ### 1. Atualizar Avatar do Usuário
 
@@ -1416,3 +1535,5 @@ GET /search-api?query=naruto
      ```
 
 ---
+
+## 🔔 Rotas de Notificações

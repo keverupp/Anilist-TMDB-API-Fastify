@@ -2,17 +2,17 @@
   <img src="./assets/logo.png" alt="Banner do Projeto">
 </p>
 
-Este projeto é uma API construída com **Fastify** que utiliza a API do TMDB e AniList para buscar informações sobre animes, episódios e temporadas. Ele também utiliza **Knex.js** para gerenciar o banco de dados.
+Este projeto é uma API construída com **Fastify** (quase totalmente por IA) que utiliza a API do TMDB e AniList para buscar informações sobre animes, episódios e temporadas. Ele também utiliza **Knex.js** para gerenciar o banco de dados.
 
 ## **Índice**
 1.  [Visão Geral](#visão-geral)
 2.  [Tecnologias Usadas](#tecnologias-usadas)
 3.  [Pré-requisitos](#pré-requisitos)
 4.  [Instalação](#instalação)
-5.  [Estrutura do Projeto](#estrutura-do-projeto)
-6.  [Rotas](#rotas)
-7.  [Banco de Dados](#banco-de-dados) *documentação do banco em construção*
-8.  [Lógica no Front-end](#lógica-no-front-end)
+5.  [Rotas](#rotas)
+6.  [Banco de Dados](#banco-de-dados) *documentação do banco em construção*
+7.  [Lógica no Front-end](#lógica-no-front-end)
+8.  [Observações](#observações-e-comentários)
 9.  [Contribuindo](#contribuindo)
 10. [Licença](#licença)
 
@@ -58,9 +58,12 @@ Este projeto é uma API construída com **Fastify** que utiliza a API do TMDB e 
 - [ ] **Ajuste README Routes**
   - Ajuste nas Rotas como Videos, returning series e etc.
 
+- [ ] **Template para E-mail**
+  - Criação de um template personalizado para envio de emails de recuperação de senha e etc.
+
 ### Progresso Atual
-- Itens concluídos: 9/13
-- Itens pendentes: 4/13
+- Itens concluídos: 9/14
+- Itens pendentes: 4/14
 
 
 ---
@@ -135,22 +138,6 @@ Além disso, configure um arquivo `.env` seguindo o `.env.example`
 
 ---
 
-## **Estrutura do Projeto**
-
-```plaintext
-├── knexfile.js          # Configurações do Knex
-├── controllers/         # Controladores da API
-├── middlewares/         # Middlewares da aplicação
-├── migrations/          # Arquivos de migração do banco de dados
-├── routes/              # Definição das rotas da API
-├── services/            # Serviços auxiliares
-├── package.json         # Dependências do projeto
-├── README.md            # Documentação do projeto
-└── .env                 # Configurações de ambiente
-```
-
----
-
 ### **Rotas**
 
 ## Documentação de Rotas
@@ -182,7 +169,7 @@ A lógica no front-end segue uma série de etapas. Antes de começar, é fundame
    - Durante essa etapa, além das informações básicas do anime, também serão inseridas as temporadas e a quantidade de episódios disponíveis.
 
 4. **Vídeos do anime**  
-   - Na página do anime, utilizaremos a [rota de vídeos](./routes/readme.md#7-consultar-vídeos) para exibir conteúdos adicionais, como aberturas, encerramentos e outros vídeos oficiais.
+   - Na página do anime, utilizaremos a [rota de vídeos](./routes/readme.md#9-adicionar-vídeos-de-um-anime) para exibir conteúdos adicionais, como aberturas, encerramentos e outros vídeos oficiais.
 
 ### Fluxo principal
 
@@ -191,6 +178,16 @@ As etapas fundamentais incluem:
 - Consulta de informações detalhadas do anime usando o ID.  
 
 Essas ações são essenciais para inserir temporadas e IDs necessários para o funcionamento das rotas subsequentes.
+
+---
+
+## **Observações e Comentários**
+
+As migrations foram configuradas para funcionar no Postgres. Como alguns bancos, como o MySQL, oferecem menos suporte para certos tipos de dados, é possível que ocorram erros ao tentar usar outro banco de dados. No entanto, as migrations e seeds foram testadas e funcionam tranquilamente no Postgres.
+
+A chave do Anilist é fácil de encontrar diretamente na página deles. Já a do TMDB exige cadastro e aprovação, mas geralmente isso não é um problema. O limite de requisições no TMDB é bem maior e já traz os dados em português, o que facilita bastante. Um ponto de atenção é que, no caso de animes com várias temporadas, o TMDB agrupa tudo em uma única entrada, enquanto o Anilist separa por temporada. Isso permite ter capas, banners e descrições diferentes para cada temporada. Pretendo revisar esse aspecto no futuro.
+
+O repositório ficará público, já que utilizo para estudos e acredito que contribuições (se houver) são sempre bem-vindas. Como todo o projeto foi desenvolvido com a ajuda de IA (ChatGPT), é normal que existam falhas e redundâncias no código. Vou corrigindo e melhorando conforme avanço nos estudos.
 
 ---
 
