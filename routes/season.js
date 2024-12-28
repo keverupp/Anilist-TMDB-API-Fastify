@@ -13,7 +13,7 @@ async function seasonRoutes(fastify, options) {
   fastify.get('/seasons/:id', getSeason); // Buscar temporada por ID
   fastify.put('/seasons/:id', editSeason); // Atualizar temporada por ID
   fastify.delete('/seasons/:id', removeSeason); // Excluir temporada por ID
-  fastify.get('/animes/:anime_id/seasons', getSeasonsByAnimeId);
+  fastify.get('/anime/:anime_id/seasons', getSeasonsByAnimeId);
 }
 
 module.exports = seasonRoutes;

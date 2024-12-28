@@ -22,6 +22,7 @@
   - [Informações de um Anime](#3-informações-de-um-anime)
   - [Listar Todos os Animes](#4-listar-todos-os-animes)
   - [Listar Animes com Status `Returning Series`](#5-listar-animes-com-status-returning-series)
+  - [Listar Temporadas de um Anime](#6-listar-temporadas-de-um-anime)
 
 - [Rotas de Episódios](#-rotas-de-episódios)
 
@@ -442,10 +443,12 @@ GET /search-api?query=naruto
 - Quando `fields` é usado, apenas os campos especificados são retornados.
 - Parâmetros opcionais permitem personalização dos resultados, como filtro por nome ou status.
 
+---
+
 ### 5. Listar Animes com Status `Returning Series`
 
 - **Endpoint**: `GET /animes/returning-series`
-- **Descrição**: Retorna uma lista de animes com status `Returning Series` da tabela `animes`.
+- **Descrição**: Retorna uma lista de animes com status `Returning Series` da tabela `animes`. Suporta opções para limitar o número de resultados, selecionar campos específicos e paginação.
 - **Autenticação**: Não necessária.
 - **Headers**:
   ```json
@@ -453,6 +456,11 @@ GET /search-api?query=naruto
     "Content-Type": "application/json"
   }
   ```
+- **Query Parameters**:
+  - `limit` (opcional): Número máximo de resultados por página. Padrão: `10`. Exemplo: `limit=5`.
+  - `page` (opcional): Número da página a ser retornada. Padrão: `1`. Exemplo: `page=2`.
+  - `fields` (opcional): Lista de campos a serem retornados, separados por vírgula. Exemplo: `fields=id,name,overview`.
+
 - **Resposta**:
   - **Código 200**:
     ```json
@@ -472,17 +480,128 @@ GET /search-api?query=naruto
           "banner_path": "/path/to/another-banner.jpg",
           "poster_path": "/path/to/another-poster.jpg"
         }
-      ]
+      ],
+      "meta": {
+        "limit": 5,
+        "page": 1,
+        "count": 2
+      }
     }
     ```
+    - **`data`**: Lista de animes conforme os filtros e paginação.
+    - **`meta`**: Informações sobre a paginação:
+      - `limit`: Número máximo de itens por página.
+      - `page`: Página atual.
+      - `count`: Número de itens retornados na página.
+
   - **Código 500** (em caso de erro interno):
     ```json
     {
       "error": "Erro ao listar animes."
     }
     ```
+
+- **Exemplos de uso**:
+  - **Retornar os campos padrão com no máximo 5 resultados na página 1**:
+    ```
+    GET /animes/returning-series?limit=5&page=1
+    ```
+  - **Retornar apenas os campos `id` e `name` na página 2 com 10 resultados por página**:
+    ```
+    GET /animes/returning-series?fields=id,name&limit=10&page=2
+    ```
+  - **Retornar todos os campos padrão para a página 3 com limite de 8 resultados por página**:
+    ```
+    GET /animes/returning-series?limit=8&page=3
+    ```
+
 - **Observações**:
-  - Retorna apenas os campos `id`, `name`, `overview` e `banner_path` de cada anime.
+  - Se `fields` não for fornecido, os campos padrão serão retornados:
+    - `id`, `name`, `original_name`, `overview`, `poster_path`, `banner_path`, `backdrop_path`.
+  - Se `limit` não for fornecido, o padrão será 10.
+  - Se `page` não for fornecido, o padrão será 1.
+  - A resposta incluirá metadados úteis para navegação paginada.
+
+--- 
+
+### 5. **Listar Temporadas de um Anime**
+
+- **Endpoint**: `GET /animes/:anime_id/seasons`
+- **Descrição**: Lista todas as temporadas de um anime específico com suporte a paginação.
+- **Autenticação**: Não necessária.
+
+#### **Parâmetros da Rota**:
+
+| Parâmetro  | Tipo     | Obrigatório | Descrição                                    | Exemplo     |
+| ---------- | -------- | ----------- | -------------------------------------------- | ----------- |
+| `anime_id` | `number` | Sim         | ID do anime cujas temporadas serão listadas. | `/animes/1` |
+
+#### **Query Parameters**:
+
+| Parâmetro | Tipo     | Obrigatório | Descrição                                               | Exemplo    |
+| --------- | -------- | ----------- | ------------------------------------------------------- | ---------- |
+| `page`    | `number` | Não         | Número da página para paginação. Valor padrão: `1`.     | `?page=2`  |
+| `limit`   | `number` | Não         | Quantidade de registros por página. Valor padrão: `10`. | `?limit=5` |
+
+#### **Respostas**:
+
+**200 (Sucesso)**:
+
+```json
+{
+  "seasons": [
+    {
+      "id": 1,
+      "name": "Demon Slayer - Entertainment District Arc",
+      "season": "Winter",
+      "year": 2023,
+      "air_date": "2023-01-08",
+      "created_at": "2022-12-01T00:00:00.000Z",
+      "updated_at": "2023-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Demon Slayer - Swordsmith Village Arc",
+      "season": "Spring",
+      "year": 2023,
+      "air_date": "2023-04-09",
+      "created_at": "2023-01-15T00:00:00.000Z",
+      "updated_at": "2023-04-01T00:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "total": 20,
+    "totalPages": 2,
+    "currentPage": 1,
+    "perPage": 10
+  }
+}
+```
+
+**400 (Erro de Validação)**:
+
+```json
+{
+  "error": "Parâmetro inválido",
+  "message": "O ID do anime deve ser um número válido e positivo."
+}
+```
+
+**404 (Nenhuma Temporada Encontrada)**:
+
+```json
+{
+  "message": "Nenhuma temporada encontrada para este anime."
+}
+```
+
+**500 (Erro Interno)**:
+
+```json
+{
+  "error": "Erro ao buscar temporadas."
+}
+```
 
 ---
 
@@ -669,8 +788,8 @@ GET /search-api?query=naruto
 
 ### 1. Adicionar Vídeos de um Anime
 
-- **Endpoint**: `POST /tv/:series_id/videos`
-- **Descrição**: Busca vídeos de uma série ou anime na API do TMDB e os salva no banco de dados. Utiliza a chave `key` para evitar duplicação.
+- **Endpoint**: `POST /tv/:anime_id/videos`
+- **Descrição**: Busca vídeos de um anime na API do TMDB e os salva no banco de dados. Utiliza a chave `key` para evitar duplicação.
 - **Autenticação**: Não necessária.
 - **Headers**:
   ```json
@@ -680,7 +799,7 @@ GET /search-api?query=naruto
   ```
 - **Parâmetros da Rota**:
 
-  - **series_id** (obrigatório): ID da série ou anime na API do TMDB.
+  - **anime_id** (obrigatório): ID do anime na API do TMDB.
     - Tipo: `integer`
     - Exemplo: `/tv/240411/videos`
 
@@ -742,7 +861,7 @@ GET /search-api?query=naruto
   ```
 - **Parâmetros de Query**:
 
-  - **show_id** (opcional): Filtra vídeos de um anime ou série específico.
+  - **show_id** (opcional): Filtra vídeos de um anime específico.
     - Tipo: `integer`
     - Exemplo: `show_id=240411`
   - **page** (opcional): Página atual para paginação.

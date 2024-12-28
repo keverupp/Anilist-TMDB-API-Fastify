@@ -4,6 +4,7 @@ const path = require("node:path");
 const AutoLoad = require("@fastify/autoload");
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
+
 require("dotenv").config();
 
 module.exports = async function (fastify, opts) {
