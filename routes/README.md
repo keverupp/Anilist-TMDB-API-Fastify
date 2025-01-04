@@ -368,18 +368,19 @@ GET /search-api?query=naruto
 ### 4. **Listar Todos os Animes**
 
 - **Endpoint**: `GET /animes`
-- **Descrição**: Lista todos os animes no banco de dados com suporte a filtros, paginação e campos personalizados.
+- **Descrição**: Lista todos os animes no banco de dados com suporte a filtros, paginação, campos personalizados, e gêneros. A busca inclui nomes alternativos.
 - **Autenticação**: Não necessária.
 
 #### **Query Parameters**:
 
-| Parâmetro | Tipo     | Obrigatório | Descrição                                                                                     | Exemplo              |
-| --------- | -------- | ----------- | --------------------------------------------------------------------------------------------- | -------------------- |
-| `page`    | `number` | Não         | Número da página para paginação. Valor padrão: `1`.                                           | `?page=2`            |
-| `limit`   | `number` | Não         | Quantidade de registros por página. Valor padrão: `10`.                                       | `?limit=5`           |
-| `name`    | `string` | Não         | Nome parcial ou completo do anime para filtrar resultados.                                    | `?name=Naruto`       |
-| `status`  | `string` | Não         | Status do anime para filtrar resultados (`Finalizado`, `Continuando`, etc.).                  | `?status=Finalizado` |
-| `fields`  | `string` | Não         | Campos a serem retornados, separados por vírgulas. Caso não seja especificado, retorna todos. | `?fields=id,name`    |
+| Parâmetro | Tipo     | Obrigatório | Descrição                                                                                     | Exemplo                     |
+| --------- | -------- | ----------- | --------------------------------------------------------------------------------------------- | --------------------------- |
+| `page`    | `number` | Não         | Número da página para paginação. Valor padrão: `1`.                                           | `?page=2`                   |
+| `limit`   | `number` | Não         | Quantidade de registros por página. Valor padrão: `10`.                                       | `?limit=5`                  |
+| `name`    | `string` | Não         | Nome parcial ou completo do anime ou de títulos alternativos para filtrar resultados.         | `?name=sousou`              |
+| `status`  | `string` | Não         | Status do anime para filtrar resultados (`Finalizado`, `Continuando`, etc.).                  | `?status=Finalizado`        |
+| `fields`  | `string` | Não         | Campos a serem retornados, separados por vírgulas. Caso não seja especificado, retorna todos. | `?fields=id,name`           |
+| `genres`  | `string` | Não         | Lista de gêneros separados por vírgulas para filtrar animes.                                  | `?genres=Drama,Fantasia`    |
 
 #### **Respostas**:
 
@@ -394,6 +395,7 @@ GET /search-api?query=naruto
       "overview": "A história de um ninja...",
       "poster_path": "/naruto-poster.jpg",
       "backdrop_path": "/naruto-backdrop.jpg",
+      "banner_path": "/naruto-banner.jpg",
       "first_air_date": "2002-10-03",
       "is_current_season": false,
       "episodes_count": 220,
@@ -426,7 +428,7 @@ GET /search-api?query=naruto
 ```json
 {
   "error": "Parâmetro inválido",
-  "message": "O ID deve ser um número válido e positivo."
+  "message": "O parâmetro 'genres' não encontrou resultados correspondentes."
 }
 ```
 
@@ -440,10 +442,23 @@ GET /search-api?query=naruto
 
 #### **Observações**:
 
-- Quando `fields` é usado, apenas os campos especificados são retornados.
-- Parâmetros opcionais permitem personalização dos resultados, como filtro por nome ou status.
+- **Busca por Nome**:
+  - O parâmetro `name` busca pelo nome do anime (`animes.name`) e também por títulos alternativos (`alternative_titles.title`).
+  - Caso não encontre resultados em nenhum dos campos, a resposta será uma lista vazia.
+- **Busca por Gêneros**:
+  - O parâmetro `genres` filtra os animes que pertencem a todos os gêneros listados (condição AND).
+  - Os gêneros são comparados com base no campo `name_pt` da tabela `genres`.
+  - Caso nenhum gênero correspondente seja encontrado, a resposta será um erro 404.
+- **Campos Personalizados**:
+  - Quando `fields` é usado, apenas os campos especificados são retornados, desde que sejam válidos e existam na tabela `animes`.
+  - Exemplo: `?fields=id,name` retorna somente `id` e `name`.
+- **Evitar Ambiguidade**:
+  - Todos os campos selecionados são explicitamente associados à tabela correspondente para evitar erros de ambiguidade em consultas SQL.
+- **Paginação**:
+  - O resultado padrão é paginado com base nos parâmetros `page` e `limit`. Caso não sejam fornecidos, `page=1` e `limit=10` serão usados como padrão.
 
----
+
+--- 
 
 ### 5. Listar Animes com Status `Returning Series`
 
@@ -524,7 +539,7 @@ GET /search-api?query=naruto
 
 --- 
 
-### 5. **Listar Temporadas de um Anime**
+### 6. **Listar Temporadas de um Anime**
 
 - **Endpoint**: `GET /animes/:anime_id/seasons`
 - **Descrição**: Lista todas as temporadas de um anime específico com suporte a paginação.
@@ -604,6 +619,8 @@ GET /search-api?query=naruto
 ```
 
 ---
+
+
 
 ## 🎥 Rotas de Episódios
 
