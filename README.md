@@ -159,17 +159,17 @@ A lógica no front-end segue uma série de etapas. Antes de começar, é fundame
 
 2. **Busca e inserção de títulos**
    - O sistema contará com uma barra de pesquisa na navbar ou na página inicial.  
-   - Quando o usuário realizar uma busca, utilizaremos inicialmente a [rota de busca local](./routes/readme.md#1-buscar-títulos-de-animes) para listar os títulos disponíveis na base local.  
-   - Caso o título desejado não esteja presente, aparecerá a opção **"carregar mais"**, que acionará a [rota de busca na API](./routes/readme.md#2-buscar-e-inserir-animes-na-base-local). Essa rota buscará o título na API e o inserirá na base local para consultas futuras.  
+   - Quando o usuário realizar uma busca, utilizaremos inicialmente a [rota de busca local](./routes/README.md#1-buscar-títulos-de-animes) para listar os títulos disponíveis na base local.  
+   - Caso o título desejado não esteja presente, aparecerá a opção **"carregar mais"**, que acionará a [rota de busca na API](./routes/README.md#2-buscar-e-inserir-animes-na-base-local). Essa rota buscará o título na API e o inserirá na base local para consultas futuras.  
    - Dessa forma, a base local será enriquecida gradualmente com os títulos buscados, reduzindo a necessidade de futuras consultas na API. Este processo será similar para animes.
 
 3. **Detalhes do anime**  
-   - Ao selecionar um título, usaremos seu ID para consultar as informações detalhadas do anime através da [rota de informações de um anime](./routes/readme.md#2-informações-de-um-anime).  
+   - Ao selecionar um título, usaremos seu ID para consultar as informações detalhadas do anime através da [rota de informações de um anime](./routes/README.md#2-informações-de-um-anime).  
    - Essa rota verificará inicialmente se as informações já estão na base local. Caso contrário, fará uma busca na API.  
    - Durante essa etapa, além das informações básicas do anime, também serão inseridas as temporadas e a quantidade de episódios disponíveis.
 
 4. **Vídeos do anime**  
-   - Na página do anime, utilizaremos a [rota de vídeos](./routes/readme.md#9-adicionar-vídeos-de-um-anime) para exibir conteúdos adicionais, como aberturas, encerramentos e outros vídeos oficiais.
+   - Na página do anime, utilizaremos a [rota de vídeos](./routes/README.md#9-adicionar-vídeos-de-um-anime) para exibir conteúdos adicionais, como aberturas, encerramentos e outros vídeos oficiais.
 
 ### Fluxo principal
 

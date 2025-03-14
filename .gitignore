@@ -61,3 +61,5 @@ profile*
 .env
 
 *.tar
+
+docker-compose.yml

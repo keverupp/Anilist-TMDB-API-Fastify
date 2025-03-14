@@ -1,20 +1,24 @@
-# 1. Use a imagem oficial do Node.js como base
-FROM node:alpine
+FROM node:20-alpine
 
-# 2. Configure o diretório de trabalho dentro do contêiner
+# Define o diretório de trabalho
 WORKDIR /app
 
-# 3. Copie os arquivos do projeto para o contêiner
+# Instala o netcat para aguardar o PostgreSQL
+RUN apk add --no-cache netcat-openbsd
+
+# Copia os arquivos de dependências e instala
 COPY package*.json ./
+RUN npm install
 
-# 4. Instale as dependências de produção
-RUN npm install --only=production
-
-# 5. Copie o restante dos arquivos do projeto
+# Copia o restante do código para o container
 COPY . .
 
-# 6. Exponha a porta em que o servidor será executado
+# Copia o script de entrypoint e dá permissão de execução
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+# Expõe a porta que a aplicação utiliza
 EXPOSE 3000
 
-# 7. Comando para iniciar o servidor
-CMD ["npm", "start"]
+# Comando de inicialização: aguarda o DB, executa migrations/seeds e inicia o app
+CMD ["./entrypoint.sh"]

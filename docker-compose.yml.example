@@ -1,0 +1,28 @@
+services:
+  app:
+    container_name: otaku_api
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app               # Monta o código-fonte para refletir alterações em tempo real
+      - /app/node_modules    # Evita sobrescrever os módulos instalados no container
+    env_file: 
+      - .env                 # Arquivo com as variáveis de ambiente
+    depends_on:
+      - postgres
+
+  postgres:
+    container_name: otaku_postgres
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: seu_usuario     # Altere conforme necessário
+      POSTGRES_PASSWORD: sua_senha   # Altere conforme necessário
+      POSTGRES_DB: anilist_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
