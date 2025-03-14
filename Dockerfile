@@ -21,4 +21,5 @@ RUN chmod +x entrypoint.sh
 EXPOSE 3000
 
 # Comando de inicialização: aguarda o DB, executa migrations/seeds e inicia o app
-CMD ["./entrypoint.sh"]
+CMD ["/bin/sh", "./entrypoint.sh"]
+
