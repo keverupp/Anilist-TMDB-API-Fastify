@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/logo.png" alt="Banner do Projeto">
+  <img src="./assets/logo_full.png" alt="Banner do Projeto">
 </p>
 
 Este projeto é uma API construída com **Fastify** (quase totalmente por IA) que utiliza a API do TMDB e AniList para buscar informações sobre animes, episódios e temporadas. Ele também utiliza **Knex.js** para gerenciar o banco de dados.
