@@ -13,11 +13,13 @@
   - [Redefinição de Senha](#52-redefinição-de-senha)
 - [Middleware de Autenticação](#middleware-de-autenticação)
 
-- [Rotas de Busca](#-rotas-de-busca)
+---
+- [Rotas de Busca](#-rotas-de-busca) 
 
   - [Buscar Títulos de Animes](#1-buscar-títulos-de-animes)
   - [Buscar e Inserir Animes na Base Local](#2-buscar-e-inserir-animes-na-base-local)
 
+---
 - [Rotas de Animes](#-rotas-de-animes)
 
   - [Gerenciar Anime Seguido](#1-gerenciar-anime-seguido)
@@ -27,17 +29,20 @@
   - [Listar Animes com Status `Returning Series`](#5-listar-animes-com-status-returning-series)
   - [Listar Temporadas de um Anime](#6-listar-temporadas-de-um-anime)
 
+---
 - [Rotas de Episódios](#-rotas-de-episódios)
 
   - [Importar Episódios de um Anime](#1-importar-episódios-de-um-anime)
   - [Listar Episódios de um Anime com Paginação e Filtro de Temporada](#2-listar-episódios-de-um-anime-com-paginação-e-filtro-de-temporada)
   - [Atualizar Episódios com Runtime Nulo](#3-atualizar-episódios-com-runtime-nulo)
 
+---
 - [Rotas de Vídeos](#-rotas-de-vídeos)
 
   - [Adicionar Vídeos de um Anime](#1-adicionar-vídeos-de-um-anime)
   - [Consultar Vídeos](#2-consultar-vídeos)
 
+---
 - [Rotas de Comentários](#-rotas-de-comentários)
 
   - [Criar Comentário](#1-criar-comentário)
@@ -46,15 +51,12 @@
   - [Editar Comentário](#4-editar-comentário)
   - [Excluir Comentário](#5-excluir-comentário)
 
+---
 - [Rotas de Reações](#-rotas-de-reações)
 
   - [Adicionar/Atualizar/Remover Reação](#1-adicionar-atualizar-remover-reação)
 
-- [Rotas de Recuperação de Senha](#-rotas-de-recuperação-de-senha)
-
-  - [Esqueci Minha Senha (Solicitar Redefinição)](#1-esqueci-minha-senha-solicitar-redefinição)
-  - [Redefinir Senha](#2-redefinir-senha)
-
+---
 - [Rotas de Usuário](#-rotas-de-usuário)
 
   - [Atualizar Avatar do Usuário](#1-atualizar-avatar-do-usuário)
@@ -64,13 +66,10 @@
   - [Listar Preferências do Usuário](#5-listar-preferências-do-usuário)
   - [Atualizar Preferências do Usuário](#6-atualizar-preferências-do-usuário)
 
+---
 - [Rotas de Notificações](#-rotas-de-notificações)
   - [Listar Notificações](#1-listar-notificações)
   - [Marcar Notificação como Lida](#2-marcar-notificação-como-lida)
-
----
-
-Aqui está a documentação atualizada com as rotas de recuperação de senha seguindo o mesmo padrão:
 
 ---
 
@@ -195,6 +194,7 @@ Aqui está a documentação atualizada com as rotas de recuperação de senha se
         "message": "Não foi possível redefinir a senha."
       }
       ```
+- **Observação**: Se o token for inválido ou expirado, retornará erro. Caso contrário, a senha é atualizada e o token removido.
 
 ---
 
@@ -1287,51 +1287,6 @@ GET /search-api?query=naruto
     "type": "like"
   }
   ```
-
----
-
-## 🔑 Rotas de Recuperação de Senha
-
-### 1. Esqueci Minha Senha (Solicitar Redefinição)
-
-- **Endpoint**: `POST /forgotPassword`
-- **Descrição**: Gera um token de redefinição de senha e envia um email para o endereço fornecido, caso o email esteja cadastrado.
-- **Autenticação**: Não necessária.
-- **Headers**:
-  ```json
-  {
-    "Content-Type": "application/json"
-  }
-  ```
-- **Corpo da Requisição**:
-  ```json
-  {
-    "email": "usuario@example.com"
-  }
-  ```
-- **Observação**: Mesmo se o email não existir, a resposta será genérica.
-
----
-
-### 2. Redefinir Senha
-
-- **Endpoint**: `POST /resetPassword`
-- **Descrição**: Redefine a senha do usuário usando um token de redefinição válido e não expirado.
-- **Autenticação**: Não necessária.
-- **Headers**:
-  ```json
-  {
-    "Content-Type": "application/json"
-  }
-  ```
-- **Corpo da Requisição**:
-  ```json
-  {
-    "token": "token-de-redefinicao",
-    "new_password": "NovaSenhaSegura123"
-  }
-  ```
-- **Observação**: Se o token for inválido ou expirado, retornará erro. Caso contrário, a senha é atualizada e o token removido.
 
 ---
 
