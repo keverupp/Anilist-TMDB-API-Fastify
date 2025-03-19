@@ -4,11 +4,14 @@
 
 - [Rotas de Autenticação e Gestão de Tokens](#-rotas-de-autenticação-e-gestão-de-tokens)
 
-  - [Registro](#1-registro)
-  - [Login](#2-login)
-  - [Logout](#3-logout)
-  - [Renovação de Token](#4-renovação-de-token)
-  - [Middleware de Autenticação](#middleware-de-autenticação)
+- [Registro](#1-registro)
+- [Login](#2-login)
+- [Logout](#3-logout)
+- [Renovação de Token](#4-renovação-de-token)
+- [Recuperação de Senha](#5-recuperação-de-senha)
+  - [Solicitação de Redefinição de Senha](#51-solicitação-de-redefinição-de-senha)
+  - [Redefinição de Senha](#52-redefinição-de-senha)
+- [Middleware de Autenticação](#middleware-de-autenticação)
 
 - [Rotas de Busca](#-rotas-de-busca)
 
