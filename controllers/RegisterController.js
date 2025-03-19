@@ -1,6 +1,20 @@
 const argon2 = require("argon2");
 const knex = require("knex")(require("../knexfile").development);
 
+// Função para gerar um ID aleatório de 6 dígitos único
+async function generateUniqueUserId() {
+  let uniqueId;
+  let exists = true;
+
+  while (exists) {
+    uniqueId = Math.floor(100000 + Math.random() * 900000); // Gera um número aleatório de 6 dígitos
+    const user = await knex("users").where({ id: uniqueId }).first();
+    exists = !!user; // Se já existir, continua gerando
+  }
+
+  return uniqueId;
+}
+
 async function register(req, reply) {
   try {
     const { username, email, password } = req.body;
@@ -26,27 +40,29 @@ async function register(req, reply) {
       return reply.status(400).send({ error: "O email já está em uso." });
     }
 
+    // Gerar um ID aleatório único
+    const userId = await generateUniqueUserId();
+
     // Hash da senha
     const hashedPassword = await argon2.hash(password);
 
     // Iniciar uma transação para garantir consistência
     const newUser = await knex.transaction(async (trx) => {
-      // Criar o usuário
-      const [newUserId] = await trx("users")
-        .insert({
-          username,
-          email,
-          password: hashedPassword,
-          created_at: new Date(),
-        })
-        .returning("id");
-
-      const userId = newUserId.id || newUserId;
+      // Criar o usuário com ID aleatório
+      await trx("users").insert({
+        id: userId,
+        username,
+        email,
+        password: hashedPassword,
+        created_at: new Date(),
+      });
 
       // Verificar se o papel padrão 'user' existe
       const role = await trx("roles").where({ name: "user" }).first();
       if (!role) {
-        throw new Error("Papel padrão 'user' não configurado no banco de dados.");
+        throw new Error(
+          "Papel padrão 'user' não configurado no banco de dados."
+        );
       }
 
       // Atribuir o papel padrão ao usuário

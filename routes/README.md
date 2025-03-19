@@ -67,6 +67,10 @@
 
 ---
 
+Aqui está a documentação atualizada com as rotas de recuperação de senha seguindo o mesmo padrão:
+
+---
+
 ## 🔒 Rotas de Autenticação e Gestão de Tokens
 
 ### 1. Registro
@@ -121,6 +125,73 @@
     "token": "eyJhbGciOiJIUzI1NiIsInR..."
   }
   ```
+
+---
+
+### 5. Recuperação de Senha
+
+#### 5.1 Solicitação de Redefinição de Senha
+
+- **Endpoint**: `POST /forgotpassword`
+- **Descrição**: Envia um e-mail com um link para redefinir a senha.
+- **Corpo da Requisição**:
+  ```json
+  {
+    "email": "usuario@example.com"
+  }
+  ```
+- **Resposta** (sempre a mesma, independentemente do e-mail estar cadastrado ou não, por segurança):
+  ```json
+  {
+    "message": "Se este email estiver cadastrado, um email de redefinição será enviado."
+  }
+  ```
+- **E-mail enviado**:
+
+  ```
+  Você solicitou a redefinição de sua senha.
+
+  Clique no link para redefinir:
+  http://localhost:5173/reset-password?token=e15497940b7fcf0d89...
+
+  Se não foi você, ignore este email.
+  ```
+
+---
+
+#### 5.2 Redefinição de Senha
+
+- **Endpoint**: `POST /resetpassword`
+- **Descrição**: Redefine a senha do usuário usando um token de recuperação válido.
+- **Corpo da Requisição**:
+  ```json
+  {
+    "token": "e15497940b7fcf0d89...",
+    "new_password": "NovaSenhaForte123"
+  }
+  ```
+- **Respostas**:
+  - **Sucesso**:
+    ```json
+    {
+      "message": "Senha redefinida com sucesso."
+    }
+    ```
+  - **Erros**:
+    - **Campos ausentes**:
+      ```json
+      {
+        "error": "Bad Request",
+        "message": "Token e nova senha são obrigatórios."
+      }
+      ```
+    - **Erro interno**:
+      ```json
+      {
+        "error": "Erro interno",
+        "message": "Não foi possível redefinir a senha."
+      }
+      ```
 
 ---
 
@@ -373,14 +444,14 @@ GET /search-api?query=naruto
 
 #### **Query Parameters**:
 
-| Parâmetro | Tipo     | Obrigatório | Descrição                                                                                     | Exemplo                     |
-| --------- | -------- | ----------- | --------------------------------------------------------------------------------------------- | --------------------------- |
-| `page`    | `number` | Não         | Número da página para paginação. Valor padrão: `1`.                                           | `?page=2`                   |
-| `limit`   | `number` | Não         | Quantidade de registros por página. Valor padrão: `10`.                                       | `?limit=5`                  |
-| `name`    | `string` | Não         | Nome parcial ou completo do anime ou de títulos alternativos para filtrar resultados.         | `?name=sousou`              |
-| `status`  | `string` | Não         | Status do anime para filtrar resultados (`Finalizado`, `Continuando`, etc.).                  | `?status=Finalizado`        |
-| `fields`  | `string` | Não         | Campos a serem retornados, separados por vírgulas. Caso não seja especificado, retorna todos. | `?fields=id,name`           |
-| `genres`  | `string` | Não         | Lista de gêneros separados por vírgulas para filtrar animes.                                  | `?genres=Drama,Fantasia`    |
+| Parâmetro | Tipo     | Obrigatório | Descrição                                                                                     | Exemplo                  |
+| --------- | -------- | ----------- | --------------------------------------------------------------------------------------------- | ------------------------ |
+| `page`    | `number` | Não         | Número da página para paginação. Valor padrão: `1`.                                           | `?page=2`                |
+| `limit`   | `number` | Não         | Quantidade de registros por página. Valor padrão: `10`.                                       | `?limit=5`               |
+| `name`    | `string` | Não         | Nome parcial ou completo do anime ou de títulos alternativos para filtrar resultados.         | `?name=sousou`           |
+| `status`  | `string` | Não         | Status do anime para filtrar resultados (`Finalizado`, `Continuando`, etc.).                  | `?status=Finalizado`     |
+| `fields`  | `string` | Não         | Campos a serem retornados, separados por vírgulas. Caso não seja especificado, retorna todos. | `?fields=id,name`        |
+| `genres`  | `string` | Não         | Lista de gêneros separados por vírgulas para filtrar animes.                                  | `?genres=Drama,Fantasia` |
 
 #### **Respostas**:
 
@@ -457,8 +528,7 @@ GET /search-api?query=naruto
 - **Paginação**:
   - O resultado padrão é paginado com base nos parâmetros `page` e `limit`. Caso não sejam fornecidos, `page=1` e `limit=10` serão usados como padrão.
 
-
---- 
+---
 
 ### 5. Listar Animes com Status `Returning Series`
 
@@ -472,12 +542,15 @@ GET /search-api?query=naruto
   }
   ```
 - **Query Parameters**:
+
   - `limit` (opcional): Número máximo de resultados por página. Padrão: `10`. Exemplo: `limit=5`.
   - `page` (opcional): Número da página a ser retornada. Padrão: `1`. Exemplo: `page=2`.
   - `fields` (opcional): Lista de campos a serem retornados, separados por vírgula. Exemplo: `fields=id,name,overview`.
 
 - **Resposta**:
+
   - **Código 200**:
+
     ```json
     {
       "data": [
@@ -503,6 +576,7 @@ GET /search-api?query=naruto
       }
     }
     ```
+
     - **`data`**: Lista de animes conforme os filtros e paginação.
     - **`meta`**: Informações sobre a paginação:
       - `limit`: Número máximo de itens por página.
@@ -517,6 +591,7 @@ GET /search-api?query=naruto
     ```
 
 - **Exemplos de uso**:
+
   - **Retornar os campos padrão com no máximo 5 resultados na página 1**:
     ```
     GET /animes/returning-series?limit=5&page=1
@@ -537,7 +612,7 @@ GET /search-api?query=naruto
   - Se `page` não for fornecido, o padrão será 1.
   - A resposta incluirá metadados úteis para navegação paginada.
 
---- 
+---
 
 ### 6. **Listar Temporadas de um Anime**
 
@@ -619,8 +694,6 @@ GET /search-api?query=naruto
 ```
 
 ---
-
-
 
 ## 🎥 Rotas de Episódios
 
