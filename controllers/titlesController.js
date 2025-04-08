@@ -1,4 +1,7 @@
-const { findAnimeIdByAlternativeTitle, findTitles } = require("../models/titleModel");
+const {
+  findAnimeIdByAlternativeTitle,
+  findTitles,
+} = require("../models/titleModel");
 const knex = require("knex")(require("../knexfile").development);
 
 const ALLOWED_FIELDS = ["id", "english_title", "pt_title", "native_title"];
@@ -13,7 +16,7 @@ const searchTitles = async (request, reply) => {
       });
     }
 
-    // Definir campos selecionados
+    // Define campos selecionados
     let selectedFields = ALLOWED_FIELDS;
     if (fields) {
       const requestedFields = fields.split(",").map((field) => field.trim());
@@ -31,31 +34,29 @@ const searchTitles = async (request, reply) => {
       selectedFields = requestedFields;
     }
 
-    const alternativeTitleResult = await findAnimeIdByAlternativeTitle(query);
+    // 1) Busca IDs em alternative_titles
+    const altResults = await findAnimeIdByAlternativeTitle(query);
+    const altIDs = altResults.map((row) => row.anime_id);
 
-    if (alternativeTitleResult.length === 0) {
-      // tenta achar diretamente nos campos de titles
-      const directTitleResults = await findTitles(query);
-      if (directTitleResults.length === 0) {
-        return reply
-          .status(404)
-          .send({ mensagem: "Nenhum título encontrado." });
-      }
-      // se achou, retorna
-      return reply.send(directTitleResults);
-    }
+    // 2) Busca registros diretamente na tabela titles (id + campos)
+    const directResults = await findTitles(query);
+    const directIDs = directResults.map((row) => row.id);
 
-    const animeIds = alternativeTitleResult.map((row) => row.anime_id);
+    // 3) Combina todos os IDs, removendo duplicados
+    const allIDs = [...new Set([...altIDs, ...directIDs])];
 
-    const titles = await knex("titles")
-      .whereIn("id", animeIds)
-      .select(selectedFields);
-
-    if (titles.length === 0) {
+    // 4) Se não houver nenhum ID encontrado, retorna 404
+    if (allIDs.length === 0) {
       return reply.status(404).send({ mensagem: "Nenhum título encontrado." });
     }
 
-    return reply.send(titles);
+    // 5) Busca os registros finais na tabela titles, com os campos solicitados
+    const finalResults = await knex("titles")
+      .whereIn("id", allIDs)
+      .select(selectedFields);
+
+    // 6) Retorna tudo
+    return reply.send(finalResults);
   } catch (error) {
     console.error("Erro ao buscar títulos:", error);
     return reply
@@ -67,3 +68,4 @@ const searchTitles = async (request, reply) => {
 module.exports = {
   searchTitles,
 };
+  
