@@ -7,6 +7,8 @@ const {
   upsertSeason,
   insertAnimeSeasonRelation,
   getEnglishTitleFromTitles,
+  processKeywords,
+  findKeywordsByAnimeId,
 } = require("../models/animeModel");
 const axios = require("axios");
 
@@ -30,10 +32,14 @@ const formatAnimeData = (data, aniListInfo = {}) => ({
   id: data.id,
   name: data.name || "N/A",
   overview: data.overview || "Descrição não disponível.",
-  poster_path: data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null,
-  backdrop_path: data.backdrop_path ? `https://image.tmdb.org/t/p/w1280${data.backdrop_path}` : null,
+  poster_path: data.poster_path
+    ? `https://image.tmdb.org/t/p/w500${data.poster_path}`
+    : null,
+  backdrop_path: data.backdrop_path
+    ? `https://image.tmdb.org/t/p/w1280${data.backdrop_path}`
+    : null,
   first_air_date: data.first_air_date || null,
-  is_current_season: aniListInfo.is_current_season || false, 
+  is_current_season: aniListInfo.is_current_season || false,
   anilist_id: aniListInfo.anilist_id || null,
   banner_path: aniListInfo.banner_path || null,
   episodes_count: data.number_of_episodes || null,
@@ -48,7 +54,9 @@ const formatAnimeData = (data, aniListInfo = {}) => ({
   number_of_episodes: data.number_of_episodes || null,
   popularity: data.popularity || 0,
   status: data.status || null,
-  episode_run_time: data.episode_run_time ? data.episode_run_time[0] || null : null,
+  episode_run_time: data.episode_run_time
+    ? data.episode_run_time[0] || null
+    : null,
   type: data.type || null,
 });
 
@@ -59,17 +67,17 @@ const formatAnimeData = (data, aniListInfo = {}) => ({
  */
 async function fetchAniListInfo(englishTitle) {
   const query = `
-    query ($search: String) {
-      Media(search: $search, type: ANIME) {
-        id
-        bannerImage
-        nextAiringEpisode {
-          airingAt
+      query ($search: String) {
+        Media(search: $search, type: ANIME) {
+          id
+          bannerImage
+          nextAiringEpisode {
+            airingAt
+          }
         }
       }
-    }
-  `;
-  
+    `;
+
   const variables = { search: englishTitle };
 
   const response = await axios.post(
@@ -95,23 +103,29 @@ async function fetchAniListInfo(englishTitle) {
  */
 
 const processGenres = async (genres, animeId, logger) => {
-  await Promise.all(genres.map(async (genre) => {
-    try {
-      // Procurar pelo gênero diretamente pelo ID do TMDB
-      const existingGenre = await findGenreById(genre.id); // Usando o ID do TMDB
-      if (existingGenre) {
-        // Inserir relação entre anime e gênero
-        await insertAnimeGenreRelation(animeId, existingGenre.id);
-      } else {
-        // Logar aviso caso o gênero não exista no banco
-        logger.warn(`Gênero não encontrado no banco: ID ${genre.id}, Nome: ${genre.name}`);
+  await Promise.all(
+    genres.map(async (genre) => {
+      try {
+        // Procurar pelo gênero diretamente pelo ID do TMDB
+        const existingGenre = await findGenreById(genre.id); // Usando o ID do TMDB
+        if (existingGenre) {
+          // Inserir relação entre anime e gênero
+          await insertAnimeGenreRelation(animeId, existingGenre.id);
+        } else {
+          // Logar aviso caso o gênero não exista no banco
+          logger.warn(
+            `Gênero não encontrado no banco: ID ${genre.id}, Nome: ${genre.name}`
+          );
+        }
+      } catch (error) {
+        logger.error(
+          `Erro ao processar gênero: ID ${genre.id}, Nome: ${genre.name}`,
+          error
+        );
       }
-    } catch (error) {
-      logger.error(`Erro ao processar gênero: ID ${genre.id}, Nome: ${genre.name}`, error);
-    }
-  }));
+    })
+  );
 };
-
 
 /**
  * Processa e salva as temporadas associadas ao anime.
@@ -120,19 +134,24 @@ const processGenres = async (genres, animeId, logger) => {
  * @param {object} logger - Objeto de logging (ex: req.log).
  */
 const processSeasons = async (seasons, animeId, logger) => {
-  await Promise.all(seasons.map(async (season) => {
-    try {
-      const seasonId = await upsertSeason({
-        id: season.id,
-        name: season.name,
-        season_number: season.season_number,
-        air_date: season.air_date,
-      });
-      await insertAnimeSeasonRelation(animeId, seasonId);
-    } catch (error) {
-      logger.error(`Erro ao processar temporada: ${season.name}`, error.message);
-    }
-  }));
+  await Promise.all(
+    seasons.map(async (season) => {
+      try {
+        const seasonId = await upsertSeason({
+          id: season.id,
+          name: season.name,
+          season_number: season.season_number,
+          air_date: season.air_date,
+        });
+        await insertAnimeSeasonRelation(animeId, seasonId);
+      } catch (error) {
+        logger.error(
+          `Erro ao processar temporada: ${season.name}`,
+          error.message
+        );
+      }
+    })
+  );
 };
 
 /**
@@ -163,16 +182,21 @@ async function getAnime(req, reply) {
 
     const titleInfo = await getEnglishTitleFromTitles(animeId);
     if (!titleInfo || !titleInfo.english_title) {
-      throw new Error(`Título em inglês não encontrado para o anime com ID ${animeId}.`);
+      throw new Error(
+        `Título em inglês não encontrado para o anime com ID ${animeId}.`
+      );
     }
 
     const englishTitle = titleInfo.english_title;
 
     // Busca informações do TMDB
     const { TMDB_API_KEY } = process.env;
-    const { data: animeData } = await axios.get(`https://api.themoviedb.org/3/tv/${animeId}`, {
-      params: { api_key: TMDB_API_KEY, language: "pt-BR" },
-    });
+    const { data: animeData } = await axios.get(
+      `https://api.themoviedb.org/3/tv/${animeId}`,
+      {
+        params: { api_key: TMDB_API_KEY, language: "pt-BR" },
+      }
+    );
 
     // Busca informações do AniList
     const aniListInfo = await fetchAniListInfo(englishTitle);
@@ -181,16 +205,28 @@ async function getAnime(req, reply) {
     const formattedAnime = formatAnimeData(animeData, aniListInfo);
     await insertAnime(formattedAnime);
 
-    // Processa gêneros e temporadas em paralelo
+    // Busca keywords da TMDB
+    const { data: keywordData } = await axios.get(
+      `https://api.themoviedb.org/3/tv/${animeId}/keywords`,
+      {
+        params: { api_key: TMDB_API_KEY },
+      }
+    );
+
+    // Processa gêneros, temporadas e keywords em paralelo
     await Promise.all([
       processGenres(animeData.genres || [], animeId, req.log),
       processSeasons(animeData.seasons || [], animeId, req.log),
+      processKeywords(animeId, req.log, keywordData.results || []),
     ]);
 
     // Recupera gêneros associados para retorno
-    const genres = await findGenresByAnimeId(animeId);
+    const [genres, keywords] = await Promise.all([
+      findGenresByAnimeId(animeId),
+      findKeywordsByAnimeId(animeId),
+    ]);
 
-    return reply.send({ ...formattedAnime, genres });
+    return reply.send({ ...formattedAnime, genres, keywords });
   } catch (error) {
     req.log.error(error);
 

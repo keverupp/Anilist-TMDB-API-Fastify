@@ -1,7 +1,17 @@
 const knex = require("knex")(require("../knexfile").development);
 
 async function getAllAnimes(request, reply) {
-  const { page = 1, limit = 10, name, status, genres, fields } = request.query;
+  const {
+    page = 1,
+    limit = 10,
+    name,
+    status,
+    genres,
+    keywords,
+    fields,
+    sort_by = "name", // Campo para ordenação (padrão: name)
+    sort_order = "asc", // Direção da ordenação (padrão: ascendente)
+  } = request.query;
 
   try {
     const offset = (page - 1) * limit;
@@ -36,9 +46,11 @@ async function getAllAnimes(request, reply) {
     let selectedFields = defaultFields;
     if (fields) {
       const requestedFields = fields.split(",").map((field) => field.trim());
-      selectedFields = requestedFields.map((field) =>
-        defaultFields.find((defaultField) => defaultField.endsWith(field))
-      ).filter(Boolean);
+      selectedFields = requestedFields
+        .map((field) =>
+          defaultFields.find((defaultField) => defaultField.endsWith(field))
+        )
+        .filter(Boolean);
     }
 
     // Buscar IDs de gêneros, se fornecido
@@ -46,17 +58,55 @@ async function getAllAnimes(request, reply) {
     if (genres) {
       const genreNames = genres.split(",").map((name) => name.trim());
 
-      // Buscar IDs dos gêneros com base nos nomes
       const genreIds = await knex("genres")
         .whereIn("name_pt", genreNames)
         .select("id");
 
       if (genreIds.length === 0) {
-        return reply.status(404).send({ error: "Nenhum gênero correspondente foi encontrado." });
+        return reply
+          .status(404)
+          .send({ error: "Nenhum gênero correspondente foi encontrado." });
       }
 
       genreIdArray = genreIds.map((genre) => genre.id);
     }
+
+    // Buscar IDs de keywords, se fornecido
+    let keywordIdArray = [];
+    if (keywords) {
+      const keywordNames = keywords.split(",").map((k) => k.trim());
+
+      const keywordIds = await knex("keywords")
+        .whereIn("name", keywordNames)
+        .select("id");
+
+      if (keywordIds.length === 0) {
+        return reply
+          .status(404)
+          .send({ error: "Nenhuma keyword correspondente foi encontrada." });
+      }
+
+      keywordIdArray = keywordIds.map((k) => k.id);
+    }
+
+    // Validar campo de ordenação
+    const validSortFields = [
+      "name",
+      "popularity",
+      "vote_average",
+      "first_air_date",
+      "episodes_count",
+      "number_of_seasons",
+    ];
+
+    const sortField = validSortFields.includes(sort_by)
+      ? `animes.${sort_by}`
+      : "animes.name";
+
+    // Validar direção de ordenação
+    const sortDirection = ["asc", "desc"].includes(sort_order.toLowerCase())
+      ? sort_order.toLowerCase()
+      : "asc";
 
     // Base da query
     let query = knex("animes")
@@ -64,10 +114,14 @@ async function getAllAnimes(request, reply) {
       .limit(limit)
       .offset(offset);
 
-    // Filtro por nome (inclui títulos alternativos)
+    // Filtro por nome
     if (name) {
       query = query
-        .leftJoin("alternative_titles", "animes.id", "alternative_titles.anime_id")
+        .leftJoin(
+          "alternative_titles",
+          "animes.id",
+          "alternative_titles.anime_id"
+        )
         .where((builder) => {
           builder
             .where("animes.name", "ilike", `%${name}%`)
@@ -86,37 +140,71 @@ async function getAllAnimes(request, reply) {
         .join("anime_genres", "animes.id", "anime_genres.anime_id")
         .whereIn("anime_genres.genre_id", genreIdArray)
         .groupBy("animes.id")
-        .havingRaw("COUNT(DISTINCT anime_genres.genre_id) = ?", [genreIdArray.length]);
+        .havingRaw("COUNT(DISTINCT anime_genres.genre_id) = ?", [
+          genreIdArray.length,
+        ]);
     }
 
-    // Remover duplicatas devido ao JOIN com `alternative_titles` ou `anime_genres`
+    // Filtro por keywords
+    if (keywords) {
+      query = query
+        .join("anime_keywords", "animes.id", "anime_keywords.anime_id")
+        .whereIn("anime_keywords.keyword_id", keywordIdArray)
+        .groupBy("animes.id")
+        .havingRaw("COUNT(DISTINCT anime_keywords.keyword_id) = ?", [
+          keywordIdArray.length,
+        ]);
+    }
+
+    // Remover duplicatas caso haja JOINs
     query = query.distinct();
 
-    // Obter os animes e contagem total
+    // Aplicar ordenação
+    query = query.orderBy(sortField, sortDirection);
+
+    // Modificador para contagem total
+    const applyFilters = (builder) => {
+      if (genres) {
+        builder
+          .join("anime_genres", "animes.id", "anime_genres.anime_id")
+          .whereIn("anime_genres.genre_id", genreIdArray)
+          .groupBy("animes.id")
+          .havingRaw("COUNT(DISTINCT anime_genres.genre_id) = ?", [
+            genreIdArray.length,
+          ]);
+      }
+      if (keywords) {
+        builder
+          .join("anime_keywords", "animes.id", "anime_keywords.anime_id")
+          .whereIn("anime_keywords.keyword_id", keywordIdArray)
+          .groupBy("animes.id")
+          .havingRaw("COUNT(DISTINCT anime_keywords.keyword_id) = ?", [
+            keywordIdArray.length,
+          ]);
+      }
+      if (name) {
+        builder
+          .leftJoin(
+            "alternative_titles",
+            "animes.id",
+            "alternative_titles.anime_id"
+          )
+          .where((builder) => {
+            builder
+              .where("animes.name", "ilike", `%${name}%`)
+              .orWhere("alternative_titles.title", "ilike", `%${name}%`);
+          });
+      }
+      if (status) {
+        builder.where({ "animes.status": status });
+      }
+    };
+
+    // Obter os animes e a contagem total com os mesmos filtros
     const [animes, totalCount] = await Promise.all([
       query,
       knex("animes")
-        .modify((builder) => {
-          if (genres) {
-            builder
-              .join("anime_genres", "animes.id", "anime_genres.anime_id")
-              .whereIn("anime_genres.genre_id", genreIdArray)
-              .groupBy("animes.id")
-              .havingRaw("COUNT(DISTINCT anime_genres.genre_id) = ?", [genreIdArray.length]);
-          }
-          if (name) {
-            builder
-              .leftJoin("alternative_titles", "animes.id", "alternative_titles.anime_id")
-              .where((builder) => {
-                builder
-                  .where("animes.name", "ilike", `%${name}%`)
-                  .orWhere("alternative_titles.title", "ilike", `%${name}%`);
-              });
-          }
-          if (status) {
-            builder.where({ "animes.status": status });
-          }
-        })
+        .modify(applyFilters)
         .countDistinct("animes.id as total")
         .first(),
     ]);
@@ -124,13 +212,16 @@ async function getAllAnimes(request, reply) {
     const total = parseInt(totalCount.total || 0, 10);
     const totalPages = Math.ceil(total / limit);
 
-    // Retornar resposta
-    reply.status(200).send({
+    return reply.status(200).send({
       pagination: {
         total,
         totalPages,
         currentPage: parseInt(page, 10),
         perPage: parseInt(limit, 10),
+      },
+      sort: {
+        field: sort_by,
+        order: sort_order,
       },
       data: animes,
     });
@@ -140,5 +231,4 @@ async function getAllAnimes(request, reply) {
   }
 }
 
-
-module.exports = { getAllAnimes};
+module.exports = { getAllAnimes };

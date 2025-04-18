@@ -435,26 +435,25 @@ GET /search-api?query=naruto
 
 ---
 
-### Documentação das Rotas
-
----
-
 ### 4. **Listar Todos os Animes**
 
 - **Endpoint**: `GET /animes`
-- **Descrição**: Lista todos os animes no banco de dados com suporte a filtros, paginação, campos personalizados, e gêneros. A busca inclui nomes alternativos.
+- **Descrição**: Lista todos os animes no banco de dados com suporte a filtros, paginação, campos personalizados, gêneros e ordenação. A busca inclui nomes alternativos.
 - **Autenticação**: Não necessária.
 
 #### **Query Parameters**:
 
-| Parâmetro | Tipo     | Obrigatório | Descrição                                                                                     | Exemplo                  |
-| --------- | -------- | ----------- | --------------------------------------------------------------------------------------------- | ------------------------ |
-| `page`    | `number` | Não         | Número da página para paginação. Valor padrão: `1`.                                           | `?page=2`                |
-| `limit`   | `number` | Não         | Quantidade de registros por página. Valor padrão: `10`.                                       | `?limit=5`               |
-| `name`    | `string` | Não         | Nome parcial ou completo do anime ou de títulos alternativos para filtrar resultados.         | `?name=sousou`           |
-| `status`  | `string` | Não         | Status do anime para filtrar resultados (`Finalizado`, `Continuando`, etc.).                  | `?status=Finalizado`     |
-| `fields`  | `string` | Não         | Campos a serem retornados, separados por vírgulas. Caso não seja especificado, retorna todos. | `?fields=id,name`        |
-| `genres`  | `string` | Não         | Lista de gêneros separados por vírgulas para filtrar animes.                                  | `?genres=Drama,Fantasia` |
+| Parâmetro    | Tipo     | Obrigatório | Descrição                                                                                     | Exemplo                      |
+| ------------ | -------- | ----------- | --------------------------------------------------------------------------------------------- | ---------------------------- |
+| `page`       | `number` | Não         | Número da página para paginação. Valor padrão: `1`.                                           | `?page=2`                    |
+| `limit`      | `number` | Não         | Quantidade de registros por página. Valor padrão: `10`.                                       | `?limit=5`                   |
+| `name`       | `string` | Não         | Nome parcial ou completo do anime ou de títulos alternativos para filtrar resultados.         | `?name=sousou`               |
+| `status`     | `string` | Não         | Status do anime para filtrar resultados (`Finalizado`, `Continuando`, etc.).                  | `?status=Finalizado`         |
+| `fields`     | `string` | Não         | Campos a serem retornados, separados por vírgulas. Caso não seja especificado, retorna todos. | `?fields=id,name`            |
+| `genres`     | `string` | Não         | Lista de gêneros separados por vírgulas para filtrar animes.                                  | `?genres=Drama,Fantasia`     |
+| `keywords`   | `string` | Não         | Lista de palavras-chave separadas por vírgulas para filtrar animes.                           | `?keywords=escola,magia`     |
+| `sort_by`    | `string` | Não         | Campo pelo qual ordenar os resultados. Valor padrão: `name`.                                  | `?sort_by=popularity`        |
+| `sort_order` | `string` | Não         | Direção da ordenação: `asc` (ascendente) ou `desc` (descendente). Valor padrão: `asc`.        | `?sort_order=desc`           |
 
 #### **Respostas**:
 
@@ -462,7 +461,17 @@ GET /search-api?query=naruto
 
 ```json
 {
-  "animes": [
+  "pagination": {
+    "total": 100,
+    "totalPages": 10,
+    "currentPage": 1,
+    "perPage": 10
+  },
+  "sort": {
+    "field": "name",
+    "order": "asc"
+  },
+  "data": [
     {
       "id": 1,
       "name": "Naruto",
@@ -487,22 +496,15 @@ GET /search-api?query=naruto
       "episode_run_time": 25,
       "type": "Anime"
     }
-  ],
-  "pagination": {
-    "total": 100,
-    "totalPages": 10,
-    "currentPage": 1,
-    "perPage": 10
-  }
+  ]
 }
 ```
 
-**400 (Erro de Validação)**:
+**404 (Não Encontrado)**:
 
 ```json
 {
-  "error": "Parâmetro inválido",
-  "message": "O parâmetro 'genres' não encontrou resultados correspondentes."
+  "error": "Nenhum gênero correspondente foi encontrado."
 }
 ```
 
@@ -519,17 +521,35 @@ GET /search-api?query=naruto
 - **Busca por Nome**:
   - O parâmetro `name` busca pelo nome do anime (`animes.name`) e também por títulos alternativos (`alternative_titles.title`).
   - Caso não encontre resultados em nenhum dos campos, a resposta será uma lista vazia.
+
 - **Busca por Gêneros**:
   - O parâmetro `genres` filtra os animes que pertencem a todos os gêneros listados (condição AND).
   - Os gêneros são comparados com base no campo `name_pt` da tabela `genres`.
   - Caso nenhum gênero correspondente seja encontrado, a resposta será um erro 404.
+
+- **Busca por Keywords**:
+  - O parâmetro `keywords` filtra os animes que têm todas as palavras-chave listadas (condição AND).
+  - Caso nenhuma keyword correspondente seja encontrada, a resposta será um erro 404.
+
 - **Campos Personalizados**:
   - Quando `fields` é usado, apenas os campos especificados são retornados, desde que sejam válidos e existam na tabela `animes`.
   - Exemplo: `?fields=id,name` retorna somente `id` e `name`.
+
+- **Ordenação**:
+  - Os resultados podem ser ordenados pelo campo especificado em `sort_by` e na direção especificada em `sort_order`.
+  - Campos válidos para ordenação: `name`, `popularity`, `vote_average`, `first_air_date`, `episodes_count`, `number_of_seasons`.
+  - Se um campo inválido for fornecido, o padrão `name` será utilizado.
+  - Direções válidas: `asc` (ascendente, A-Z, menor para maior) e `desc` (descendente, Z-A, maior para menor).
+  - Exemplo: `?sort_by=vote_average&sort_order=desc` ordena os animes da maior para a menor nota.
+
 - **Evitar Ambiguidade**:
   - Todos os campos selecionados são explicitamente associados à tabela correspondente para evitar erros de ambiguidade em consultas SQL.
+
 - **Paginação**:
   - O resultado padrão é paginado com base nos parâmetros `page` e `limit`. Caso não sejam fornecidos, `page=1` e `limit=10` serão usados como padrão.
+
+- **Estrutura da Resposta**:
+  - A resposta inclui informações de paginação, detalhes de ordenação aplicada e os dados dos animes.
 
 ---
 

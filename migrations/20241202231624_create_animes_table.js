@@ -4,7 +4,7 @@
  */
 exports.up = function(knex) {
     return knex.schema.createTable('animes', table => {
-      table.integer('id').primary(); // ID fornecido pela API Anilist como chave primária
+      table.integer('id').primary(); // ID fornecido pela API TMDB como chave primária
       table.string('title').notNullable(); // Título principal
       table.text('description').notNullable(); // Descrição traduzida
       table.string('cover_image_url').notNullable(); // URL da imagem de capa

@@ -63,3 +63,5 @@ profile*
 *.tar
 
 docker-compose.yml
+
+*.old

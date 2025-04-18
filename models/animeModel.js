@@ -12,10 +12,7 @@ const insert = async (table, data) => {
 
 // Função genérica para upsert (inserir ou atualizar) usando onConflict
 const upsert = async (table, conflictColumn, data) => {
-  return knex(table)
-    .insert(data)
-    .onConflict(conflictColumn)
-    .merge();
+  return knex(table).insert(data).onConflict(conflictColumn).merge();
 };
 
 // Função para buscar gêneros associados a um anime pelo ID do TMDB
@@ -25,7 +22,6 @@ const findGenresByAnimeId = async (animeId) => {
     .where("anime_genres.anime_id", animeId)
     .select("genres.id as tmdb_id", "genres.name_en", "genres.name_pt");
 };
-
 
 // Função para buscar gênero pelo nome
 const findGenreById = async (id) => {
@@ -39,7 +35,10 @@ const insertAnimeGenreRelation = async (animeId, genreId) => {
     .first();
 
   if (!exists) {
-    return knex("anime_genres").insert({ anime_id: animeId, genre_id: genreId });
+    return knex("anime_genres").insert({
+      anime_id: animeId,
+      genre_id: genreId,
+    });
   }
 };
 
@@ -69,7 +68,9 @@ const insertAnimeSeasonRelation = async (animeId, seasonId) => {
   seasonId = parseInt(seasonId, 10);
 
   if (isNaN(animeId) || isNaN(seasonId)) {
-    console.error(`IDs inválidos para relacionamento: animeId=${animeId}, seasonId=${seasonId}`);
+    console.error(
+      `IDs inválidos para relacionamento: animeId=${animeId}, seasonId=${seasonId}`
+    );
     return;
   }
 
@@ -78,20 +79,55 @@ const insertAnimeSeasonRelation = async (animeId, seasonId) => {
     .first();
 
   if (!exists) {
-    await knex("anime_seasons").insert({ anime_id: animeId, season_id: seasonId });
-    console.log(`Relacionamento inserido: animeId=${animeId}, seasonId=${seasonId}`);
+    await knex("anime_seasons").insert({
+      anime_id: animeId,
+      season_id: seasonId,
+    });
+    console.log(
+      `Relacionamento inserido: animeId=${animeId}, seasonId=${seasonId}`
+    );
   } else {
-    console.log(`Relacionamento já existe: animeId=${animeId}, seasonId=${seasonId}`);
+    console.log(
+      `Relacionamento já existe: animeId=${animeId}, seasonId=${seasonId}`
+    );
   }
 };
 
 async function getEnglishTitleFromTitles(animeId) {
-  return knex("titles")
-    .select("english_title")
-    .where("id", animeId)
-    .first();
+  return knex("titles").select("english_title").where("id", animeId).first();
 }
 
+const processKeywords = async (animeId, logger, keywords) => {
+  await Promise.all(
+    keywords.map(async (keyword) => {
+      try {
+        // Inserir keyword se não existir
+        await knex("keywords")
+          .insert({ id: keyword.id, name: keyword.name })
+          .onConflict("id")
+          .ignore();
+
+        // Relacionar anime com keyword
+        await knex("anime_keywords")
+          .insert({ anime_id: animeId, keyword_id: keyword.id })
+          .onConflict(["anime_id", "keyword_id"])
+          .ignore();
+      } catch (error) {
+        logger.error(
+          `Erro ao processar keyword '${keyword.name}' (ID ${keyword.id})`,
+          error.message
+        );
+      }
+    })
+  );
+};
+
+const findKeywordsByAnimeId = async (animeId) => {
+  return knex("anime_keywords")
+    .join("keywords", "anime_keywords.keyword_id", "keywords.id")
+    .where("anime_keywords.anime_id", animeId)
+    .select("keywords.id", "keywords.name");
+};
 
 // Exportando funções específicas
 module.exports = {
@@ -103,4 +139,6 @@ module.exports = {
   upsertSeason,
   insertAnimeSeasonRelation,
   getEnglishTitleFromTitles,
+  processKeywords,
+  findKeywordsByAnimeId,
 };
