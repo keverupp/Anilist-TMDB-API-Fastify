@@ -6,28 +6,37 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 async function login(req, reply) {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
-    // Verificar se o usuário existe
     const user = await knex("users").where({ email }).first();
     if (!user) {
-      return reply.status(401).send({ error: "Invalid credentials", message: "Usuário ou senha inválidos." });
+      return reply
+        .status(401)
+        .send({
+          error: "Invalid credentials",
+          message: "Usuário ou senha inválidos.",
+        });
     }
 
-    // Verificar a senha
     const isPasswordValid = await argon2.verify(user.password, password);
     if (!isPasswordValid) {
-      return reply.status(401).send({ error: "Invalid credentials", message: "Usuário ou senha inválidos." });
+      return reply
+        .status(401)
+        .send({
+          error: "Invalid credentials",
+          message: "Usuário ou senha inválidos.",
+        });
     }
 
-    // Gerar o token JWT
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
+    // Define validade do token baseado em rememberMe
+    const daysValid = rememberMe ? 30 : 3;
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+      expiresIn: `${daysValid}d`,
+    });
 
-    // Calcular a data de expiração
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // Token válido por 7 dias
+    expiresAt.setDate(expiresAt.getDate() + daysValid);
 
-    // Salvar o token no banco de dados
     await knex("tokens").insert({
       user_id: user.id,
       token: token,
@@ -35,7 +44,6 @@ async function login(req, reply) {
       created_at: new Date(),
     });
 
-    // Retornar o token e informações do usuário
     return reply.status(200).send({
       message: "Login realizado com sucesso.",
       user: {
@@ -95,19 +103,21 @@ async function refreshToken(req, reply) {
 
     // Gerar um novo token
     const decoded = jwt.verify(token, JWT_SECRET);
-    const newToken = jwt.sign({ id: decoded.id, email: decoded.email }, JWT_SECRET, { expiresIn: "7d" });
+    const newToken = jwt.sign(
+      { id: decoded.id, email: decoded.email },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
     // Atualizar o token no banco
     const newExpiresAt = new Date();
     newExpiresAt.setDate(newExpiresAt.getDate() + 7);
 
-    await knex("tokens")
-      .where({ token })
-      .update({
-        token: newToken,
-        expires_at: newExpiresAt,
-        created_at: new Date(),
-      });
+    await knex("tokens").where({ token }).update({
+      token: newToken,
+      expires_at: newExpiresAt,
+      created_at: new Date(),
+    });
 
     return reply.status(200).send({
       message: "Token renovado com sucesso.",

@@ -77,8 +77,8 @@
 
 ### 1. Registro
 
-- **Endpoint**: `POST /register`
-- **Descrição**: Registra um novo usuário.
+- **Endpoint**: `POST /register`  
+- **Descrição**: Registra um novo usuário.  
 - **Corpo da Requisição**:
   ```json
   {
@@ -92,26 +92,47 @@
 
 ### 2. Login
 
-- **Endpoint**: `POST /login`
-- **Descrição**: Autentica o usuário e retorna um token JWT.
+- **Endpoint**: `POST /login`  
+- **Descrição**: Autentica o usuário e retorna um token JWT com expiração baseada no campo `rememberMe`.  
 - **Corpo da Requisição**:
   ```json
   {
     "email": "usuario@example.com",
-    "password": "senhaSegura123"
+    "password": "senhaSegura123",
+    "rememberMe": true
   }
   ```
+- **Resposta**:
+  ```json
+  {
+    "message": "Login realizado com sucesso.",
+    "user": {
+      "id": 1,
+      "username": "usuario123",
+      "email": "usuario@example.com"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+  ```
+- **Observação**:
+  - O token **é retornado no corpo da resposta**, não via cookie.
+  - O tempo de expiração do token é controlado dinamicamente:
+    - `30 dias` se `rememberMe = true`
+    - `3 dias` se `rememberMe = false` ou omitido
+  - A validade do token também é armazenada no banco de dados (`tokens.expires_at`) e validada a cada requisição via middleware.
 
 ---
 
 ### 3. Logout
 
-- **Endpoint**: `POST /logout`
-- **Descrição**: Invalida o token JWT do usuário.
-- **Corpo da Requisição**:
+- **Endpoint**: `POST /logout`  
+- **Descrição**: Invalida o token armazenado no cookie e remove o cookie do navegador.  
+- **Requisição**:
+  - Nenhum corpo necessário. O token é lido automaticamente do cookie.
+- **Resposta**:
   ```json
   {
-    "token": "eyJhbGciOiJIUzI1NiIsInR..."
+    "message": "Logout efetuado com sucesso."
   }
   ```
 
@@ -119,14 +140,18 @@
 
 ### 4. Renovação de Token
 
-- **Endpoint**: `POST /refreshToken`
-- **Descrição**: Gera um novo token JWT se o token atual for válido.
-- **Corpo da Requisição**:
+- **Endpoint**: `POST /refreshToken`  
+- **Descrição**: Gera um novo token JWT se o token armazenado no cookie ainda for válido.  
+- **Requisição**:
+  - Nenhum corpo necessário. O token é lido automaticamente do cookie.
+- **Resposta**:
   ```json
   {
-    "token": "eyJhbGciOiJIUzI1NiIsInR..."
+    "message": "Token renovado com sucesso."
   }
   ```
+- **Observação**:
+  - Um novo token é emitido e atualizado no cookie com validade de 7 dias.
 
 ---
 
