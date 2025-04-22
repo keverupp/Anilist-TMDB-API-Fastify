@@ -26,9 +26,10 @@ module.exports = fastifyPlugin(async function (fastify, opts) {
         await fastify.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(
           request
         );
+      console.log("✅ access_token recebido:", tokenResponse.access_token);
 
       const userInfoRes = await fetch(
-        "https://www.googleapis.com/oauth2/v2/userinfo",
+        "https://openidconnect.googleapis.com/v1/userinfo",
         {
           headers: {
             Authorization: `Bearer ${tokenResponse.access_token}`,
@@ -37,14 +38,28 @@ module.exports = fastifyPlugin(async function (fastify, opts) {
       );
 
       const profile = await userInfoRes.json();
+      console.log("🔍 Google profile:", profile);
+
+      // 🛡️ Verifica se o email foi retornado
+      if (!profile.email) {
+        console.warn("⚠️ Email ausente no perfil do Google:", profile);
+        return reply.redirect(
+          `${process.env.FRONTEND_URL.replace(
+            /\/$/,
+            ""
+          )}/login?error=missing_email`
+        );
+      }
 
       // 🔍 Verifica se o usuário com o e-mail do Google existe
       const user = await knex("users").where({ email: profile.email }).first();
 
       if (!user) {
-        // ❌ Se o e-mail não estiver registrado, retorna erro ou redireciona com falha
         return reply.redirect(
-          `${process.env.FRONTEND_URL}/login?error=not_registered`
+          `${process.env.FRONTEND_URL.replace(
+            /\/$/,
+            ""
+          )}/login?error=not_registered`
         );
       }
 
@@ -64,14 +79,19 @@ module.exports = fastifyPlugin(async function (fastify, opts) {
         created_at: new Date(),
       });
 
-      // ✅ Redireciona com token no frontend
       reply.redirect(
-        `${process.env.FRONTEND_URL}/login/callback?token=${token}`
+        `${process.env.FRONTEND_URL.replace(
+          /\/$/,
+          ""
+        )}/login/callback?token=${token}`
       );
     } catch (err) {
-      console.error("Erro ao fazer login com Google:", err);
+      console.error("❌ Erro ao fazer login com Google:", err);
       reply.redirect(
-        `${process.env.FRONTEND_URL}/login?error=google_login_failed`
+        `${process.env.FRONTEND_URL.replace(
+          /\/$/,
+          ""
+        )}/login?error=google_login_failed`
       );
     }
   });

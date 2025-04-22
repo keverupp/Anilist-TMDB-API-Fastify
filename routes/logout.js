@@ -1,4 +1,4 @@
-const { logout } = require("../controllers/authController");
+const { logout } = require("../controllers/authControllers");
 
 async function logoutRoutes(fastify, options) {
   // Define a rota /login

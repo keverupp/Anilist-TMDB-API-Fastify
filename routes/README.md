@@ -20,14 +20,23 @@
   - [Buscar e Inserir Animes na Base Local](#2-buscar-e-inserir-animes-na-base-local)
 
 ---
-- [Rotas de Animes](#-rotas-de-animes)
 
-  - [Gerenciar Anime Seguido](#1-gerenciar-anime-seguido)
-  - [Listar Animes Seguidos](#2-listar-animes-seguidos)
-  - [Informações de um Anime](#3-informações-de-um-anime)
-  - [Listar Todos os Animes](#4-listar-todos-os-animes)
-  - [Listar Animes com Status `Returning Series`](#5-listar-animes-com-status-returning-series)
-  - [Listar Temporadas de um Anime](#6-listar-temporadas-de-um-anime)
+### 📚 **Rotas de Animes**
+
+- [Gerenciar Anime Seguido](#1-gerenciar-anime-seguido)  
+- [Listar Animes Seguidos](#2-listar-animes-seguidos)  
+- [Informações de um Anime](#3-informações-de-um-anime)  
+- [Listar Todos os Animes](#4-listar-todos-os-animes)  
+- [Listar Animes com Status `Returning Series`](#5-listar-animes-com-status-returning-series)  
+- [Listar Temporadas de um Anime](#6-listar-temporadas-de-um-anime)
+- [Importar Episódios de um Anime](#7-importar-episódios-de-um-anime)  
+- [Listar Episódios de um Anime](#8-listar-episódios-de-um-anime)  
+- [Atualizar Episódios Pendentes](#9-atualizar-episódios-pendentes)  
+- [Listar Últimos Episódios Atualizados (Apenas Returning Series)](#10-listar-últimos-episódios-atualizados-apenas-returning-series)
+- [Animes com Estreia Hoje (Cacheado)](#11-animes-com-estreia-hoje-cacheado)  
+- [Sincronizar Animes com Estreia Hoje (Inserção no Banco)](#12-sincronizar-animes-com-estreia-hoje-inserção-no-banco)
+
+
 
 ---
 - [Rotas de Episódios](#-rotas-de-episódios)
@@ -348,142 +357,88 @@ GET /search-api?query=naruto
   ]
 }
 ```
-
 ---
 
 ## 🍿 Rotas de Animes
 
 ### 1. Gerenciar Anime Seguido
 
-- **Endpoint**: `POST /anime/follow`
-- **Descrição**: Alterna entre seguir e deixar de seguir um anime. Se o anime já está sendo seguido, a rota cancela o "seguir". Caso contrário, o anime será seguido.
-- **Autenticação**: Obrigatória.
-- **Headers**:
-  ```json
-  {
-    "Authorization": "Bearer <token_do_usuario>",
-    "Content-Type": "application/json"
-  }
-  ```
-- **Corpo da Requisição**:
+- **Endpoint**: `POST /anime/follow`  
+- **Descrição**: Alterna entre seguir ou deixar de seguir um anime.
 
-  ```json
-  {
-    "anime_id": 123
-  }
-  ```
+**Autenticação**: Obrigatória  
+**Headers**:
+```json
+{
+  "Authorization": "Bearer <token_do_usuario>",
+  "Content-Type": "application/json"
+}
+```
 
-  - **anime_id** (obrigatório): ID do anime que o usuário deseja seguir ou deixar de seguir.
+**Corpo da Requisição**:
+```json
+{ "anime_id": 123 }
+```
 
-- **Respostas**:
-  - **201 (Sucesso ao seguir)**:
-    ```json
-    {
-      "message": "Anime seguido com sucesso."
-    }
-    ```
-  - **200 (Sucesso ao deixar de seguir)**:
-    ```json
-    {
-      "message": "Você parou de seguir o anime."
-    }
-    ```
-  - **400 (Erro de Validação)**:
-    ```json
-    {
-      "error": "Bad Request",
-      "message": "ID do anime é obrigatório."
-    }
-    ```
-  - **404 (Anime Não Encontrado)**:
-    ```json
-    {
-      "error": "Not Found",
-      "message": "O anime não foi encontrado."
-    }
-    ```
-  - **500 (Erro Interno)**:
-    ```json
-    {
-      "error": "Erro ao alternar o estado de seguir anime."
-    }
-    ```
+**Respostas**:
+- `201`:
+```json
+{ "message": "Anime seguido com sucesso." }
+```
+- `200`:
+```json
+{ "message": "Você parou de seguir o anime." }
+```
+- `400` / `404` / `500`: Retorna mensagens de erro conforme o caso.
 
 ---
 
 ### 2. Listar Animes Seguidos
 
-- **Endpoint**: `GET /anime/followed`
+- **Endpoint**: `GET /anime/followed`  
 - **Descrição**: Retorna a lista de animes que o usuário está seguindo.
-- **Autenticação**: Obrigatória.
-- **Headers**:
-  ```json
-  {
-    "Authorization": "Bearer <token_do_usuario>"
-  }
-  ```
-- **Respostas**:
-  - **200 (Sucesso)**:
-    ```json
+
+**Autenticação**: Obrigatória  
+**Headers**:
+```json
+{ "Authorization": "Bearer <token_do_usuario>" }
+```
+
+**Resposta**:
+```json
+{
+  "message": "Lista de animes seguidos.",
+  "animes": [
     {
-      "message": "Lista de animes seguidos.",
-      "animes": [
-        {
-          "id": 1,
-          "name": "Naruto",
-          "poster_path": "https://example.com/naruto.jpg"
-        },
-        {
-          "id": 2,
-          "name": "One Piece",
-          "poster_path": "https://example.com/one_piece.jpg"
-        }
-      ]
+      "id": 1,
+      "name": "Naruto",
+      "poster_path": "https://example.com/naruto.jpg"
     }
-    ```
-  - **500 (Erro Interno)**:
-    ```json
-    {
-      "error": "Erro ao listar animes seguidos."
-    }
-    ```
+  ]
+}
+```
 
 ---
 
 ### 3. Informações de um Anime
 
-- **Endpoint**: `GET /anime/:id`
-- **Descrição**: Retorna informações detalhadas sobre um anime.
-- **Autenticação**: Não necessária (ajuste se necessário).
-- **Parâmetros de Rota**:
-  - `id`: ID do anime.
+- **Endpoint**: `GET /anime/:id`  
+- **Descrição**: Retorna informações detalhadas de um anime.
+
+**Parâmetro**:  
+- `id`: ID do anime.
 
 ---
 
-### 4. **Listar Todos os Animes**
+### 4. Listar Todos os Animes
 
-- **Endpoint**: `GET /animes`
-- **Descrição**: Lista todos os animes no banco de dados com suporte a filtros, paginação, campos personalizados, gêneros e ordenação. A busca inclui nomes alternativos.
-- **Autenticação**: Não necessária.
+- **Endpoint**: `GET /animes`  
+- **Descrição**: Lista animes com filtros (`name`, `genres`, `keywords`, `status`), ordenação e paginação.
 
-#### **Query Parameters**:
+**Query Parameters**:
+- `name`, `genres`, `keywords`, `status`, `fields`, `page`, `limit`, `sort_by`, `sort_order`
 
-| Parâmetro    | Tipo     | Obrigatório | Descrição                                                                                     | Exemplo                      |
-| ------------ | -------- | ----------- | --------------------------------------------------------------------------------------------- | ---------------------------- |
-| `page`       | `number` | Não         | Número da página para paginação. Valor padrão: `1`.                                           | `?page=2`                    |
-| `limit`      | `number` | Não         | Quantidade de registros por página. Valor padrão: `10`.                                       | `?limit=5`                   |
-| `name`       | `string` | Não         | Nome parcial ou completo do anime ou de títulos alternativos para filtrar resultados.         | `?name=sousou`               |
-| `status`     | `string` | Não         | Status do anime para filtrar resultados (`Finalizado`, `Continuando`, etc.).                  | `?status=Finalizado`         |
-| `fields`     | `string` | Não         | Campos a serem retornados, separados por vírgulas. Caso não seja especificado, retorna todos. | `?fields=id,name`            |
-| `genres`     | `string` | Não         | Lista de gêneros separados por vírgulas para filtrar animes.                                  | `?genres=Drama,Fantasia`     |
-| `keywords`   | `string` | Não         | Lista de palavras-chave separadas por vírgulas para filtrar animes.                           | `?keywords=escola,magia`     |
-| `sort_by`    | `string` | Não         | Campo pelo qual ordenar os resultados. Valor padrão: `name`.                                  | `?sort_by=popularity`        |
-| `sort_order` | `string` | Não         | Direção da ordenação: `asc` (ascendente) ou `desc` (descendente). Valor padrão: `asc`.        | `?sort_order=desc`           |
-
-#### **Respostas**:
-
-**200 (Sucesso)**:
-
+**Resposta**:
 ```json
 {
   "pagination": {
@@ -501,210 +456,59 @@ GET /search-api?query=naruto
       "id": 1,
       "name": "Naruto",
       "overview": "A história de um ninja...",
-      "poster_path": "/naruto-poster.jpg",
-      "backdrop_path": "/naruto-backdrop.jpg",
-      "banner_path": "/naruto-banner.jpg",
-      "first_air_date": "2002-10-03",
-      "is_current_season": false,
-      "episodes_count": 220,
-      "adult": false,
-      "in_production": false,
-      "homepage": "https://www.naruto.com",
-      "vote_average": 8.5,
-      "vote_count": 1234,
-      "original_name": "ナルト",
-      "original_language": "ja",
-      "number_of_seasons": 5,
-      "number_of_episodes": 220,
-      "popularity": 100.0,
-      "status": "Finalizado",
-      "episode_run_time": 25,
-      "type": "Anime"
+      "poster_path": "/naruto-poster.jpg"
     }
   ]
 }
 ```
 
-**404 (Não Encontrado)**:
-
-```json
-{
-  "error": "Nenhum gênero correspondente foi encontrado."
-}
-```
-
-**500 (Erro Interno)**:
-
-```json
-{
-  "error": "Erro ao buscar animes."
-}
-```
-
-#### **Observações**:
-
-- **Busca por Nome**:
-  - O parâmetro `name` busca pelo nome do anime (`animes.name`) e também por títulos alternativos (`alternative_titles.title`).
-  - Caso não encontre resultados em nenhum dos campos, a resposta será uma lista vazia.
-
-- **Busca por Gêneros**:
-  - O parâmetro `genres` filtra os animes que pertencem a todos os gêneros listados (condição AND).
-  - Os gêneros são comparados com base no campo `name_pt` da tabela `genres`.
-  - Caso nenhum gênero correspondente seja encontrado, a resposta será um erro 404.
-
-- **Busca por Keywords**:
-  - O parâmetro `keywords` filtra os animes que têm todas as palavras-chave listadas (condição AND).
-  - Caso nenhuma keyword correspondente seja encontrada, a resposta será um erro 404.
-
-- **Campos Personalizados**:
-  - Quando `fields` é usado, apenas os campos especificados são retornados, desde que sejam válidos e existam na tabela `animes`.
-  - Exemplo: `?fields=id,name` retorna somente `id` e `name`.
-
-- **Ordenação**:
-  - Os resultados podem ser ordenados pelo campo especificado em `sort_by` e na direção especificada em `sort_order`.
-  - Campos válidos para ordenação: `name`, `popularity`, `vote_average`, `first_air_date`, `episodes_count`, `number_of_seasons`.
-  - Se um campo inválido for fornecido, o padrão `name` será utilizado.
-  - Direções válidas: `asc` (ascendente, A-Z, menor para maior) e `desc` (descendente, Z-A, maior para menor).
-  - Exemplo: `?sort_by=vote_average&sort_order=desc` ordena os animes da maior para a menor nota.
-
-- **Evitar Ambiguidade**:
-  - Todos os campos selecionados são explicitamente associados à tabela correspondente para evitar erros de ambiguidade em consultas SQL.
-
-- **Paginação**:
-  - O resultado padrão é paginado com base nos parâmetros `page` e `limit`. Caso não sejam fornecidos, `page=1` e `limit=10` serão usados como padrão.
-
-- **Estrutura da Resposta**:
-  - A resposta inclui informações de paginação, detalhes de ordenação aplicada e os dados dos animes.
-
 ---
 
 ### 5. Listar Animes com Status `Returning Series`
 
-- **Endpoint**: `GET /animes/returning-series`
-- **Descrição**: Retorna uma lista de animes com status `Returning Series` da tabela `animes`. Suporta opções para limitar o número de resultados, selecionar campos específicos e paginação.
-- **Autenticação**: Não necessária.
-- **Headers**:
-  ```json
-  {
-    "Content-Type": "application/json"
+- **Endpoint**: `GET /animes/returning-series`  
+- **Descrição**: Retorna animes com status `Returning Series`, com suporte a paginação e seleção de campos.
+
+**Query Parameters**:
+- `limit`, `page`, `fields`
+
+**Resposta**:
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Anime Exemplo",
+      "poster_path": "/path.jpg"
+    }
+  ],
+  "meta": {
+    "limit": 5,
+    "page": 1,
+    "count": 1
   }
-  ```
-- **Query Parameters**:
-
-  - `limit` (opcional): Número máximo de resultados por página. Padrão: `10`. Exemplo: `limit=5`.
-  - `page` (opcional): Número da página a ser retornada. Padrão: `1`. Exemplo: `page=2`.
-  - `fields` (opcional): Lista de campos a serem retornados, separados por vírgula. Exemplo: `fields=id,name,overview`.
-
-- **Resposta**:
-
-  - **Código 200**:
-
-    ```json
-    {
-      "data": [
-        {
-          "id": 1,
-          "name": "Anime Exemplo",
-          "overview": "Uma descrição do anime exemplo.",
-          "banner_path": "/path/to/banner.jpg",
-          "poster_path": "/path/to/poster.jpg"
-        },
-        {
-          "id": 2,
-          "name": "Outro Anime",
-          "overview": "Descrição de outro anime.",
-          "banner_path": "/path/to/another-banner.jpg",
-          "poster_path": "/path/to/another-poster.jpg"
-        }
-      ],
-      "meta": {
-        "limit": 5,
-        "page": 1,
-        "count": 2
-      }
-    }
-    ```
-
-    - **`data`**: Lista de animes conforme os filtros e paginação.
-    - **`meta`**: Informações sobre a paginação:
-      - `limit`: Número máximo de itens por página.
-      - `page`: Página atual.
-      - `count`: Número de itens retornados na página.
-
-  - **Código 500** (em caso de erro interno):
-    ```json
-    {
-      "error": "Erro ao listar animes."
-    }
-    ```
-
-- **Exemplos de uso**:
-
-  - **Retornar os campos padrão com no máximo 5 resultados na página 1**:
-    ```
-    GET /animes/returning-series?limit=5&page=1
-    ```
-  - **Retornar apenas os campos `id` e `name` na página 2 com 10 resultados por página**:
-    ```
-    GET /animes/returning-series?fields=id,name&limit=10&page=2
-    ```
-  - **Retornar todos os campos padrão para a página 3 com limite de 8 resultados por página**:
-    ```
-    GET /animes/returning-series?limit=8&page=3
-    ```
-
-- **Observações**:
-  - Se `fields` não for fornecido, os campos padrão serão retornados:
-    - `id`, `name`, `original_name`, `overview`, `poster_path`, `banner_path`, `backdrop_path`.
-  - Se `limit` não for fornecido, o padrão será 10.
-  - Se `page` não for fornecido, o padrão será 1.
-  - A resposta incluirá metadados úteis para navegação paginada.
+}
+```
 
 ---
 
-### 6. **Listar Temporadas de um Anime**
+### 6. Listar Temporadas de um Anime
 
-- **Endpoint**: `GET /animes/:anime_id/seasons`
-- **Descrição**: Lista todas as temporadas de um anime específico com suporte a paginação.
-- **Autenticação**: Não necessária.
+- **Endpoint**: `GET /animes/:anime_id/seasons`  
+- **Descrição**: Lista as temporadas de um anime.
 
-#### **Parâmetros da Rota**:
+**Parâmetros**:
+- `anime_id`: ID do anime  
+- Query: `page`, `limit`
 
-| Parâmetro  | Tipo     | Obrigatório | Descrição                                    | Exemplo     |
-| ---------- | -------- | ----------- | -------------------------------------------- | ----------- |
-| `anime_id` | `number` | Sim         | ID do anime cujas temporadas serão listadas. | `/animes/1` |
-
-#### **Query Parameters**:
-
-| Parâmetro | Tipo     | Obrigatório | Descrição                                               | Exemplo    |
-| --------- | -------- | ----------- | ------------------------------------------------------- | ---------- |
-| `page`    | `number` | Não         | Número da página para paginação. Valor padrão: `1`.     | `?page=2`  |
-| `limit`   | `number` | Não         | Quantidade de registros por página. Valor padrão: `10`. | `?limit=5` |
-
-#### **Respostas**:
-
-**200 (Sucesso)**:
-
+**Resposta**:
 ```json
 {
   "seasons": [
     {
       "id": 1,
-      "name": "Demon Slayer - Entertainment District Arc",
       "season": "Winter",
-      "year": 2023,
-      "air_date": "2023-01-08",
-      "created_at": "2022-12-01T00:00:00.000Z",
-      "updated_at": "2023-01-01T00:00:00.000Z"
-    },
-    {
-      "id": 2,
-      "name": "Demon Slayer - Swordsmith Village Arc",
-      "season": "Spring",
-      "year": 2023,
-      "air_date": "2023-04-09",
-      "created_at": "2023-01-15T00:00:00.000Z",
-      "updated_at": "2023-04-01T00:00:00.000Z"
+      "year": 2023
     }
   ],
   "pagination": {
@@ -716,209 +520,142 @@ GET /search-api?query=naruto
 }
 ```
 
-**400 (Erro de Validação)**:
 
+### 7. Importar Episódios de um Anime
+
+- **Endpoint**: `POST /anime/:animeId/episodes`  
+- **Descrição**: Importa episódios da API TMDB para um anime cadastrado.
+
+**Parâmetro**:
+- `animeId`: ID do anime
+
+**Resposta**:
 ```json
 {
-  "error": "Parâmetro inválido",
-  "message": "O ID do anime deve ser um número válido e positivo."
-}
-```
-
-**404 (Nenhuma Temporada Encontrada)**:
-
-```json
-{
-  "message": "Nenhuma temporada encontrada para este anime."
-}
-```
-
-**500 (Erro Interno)**:
-
-```json
-{
-  "error": "Erro ao buscar temporadas."
+  "message": "Episódios importados com sucesso!"
 }
 ```
 
 ---
 
-## 🎥 Rotas de Episódios
+### 8. Listar Episódios de um Anime
 
-### 1. Importar Episódios de um Anime
+- **Endpoint**: `GET /anime/:animeId/episodes`  
+- **Descrição**: Lista episódios com filtros de temporada e paginação.
 
-- **Endpoint**: `POST /anime/:animeId/episodes`
-- **Descrição**: Importa os episódios de um anime da API do TMDB e os salva na base de dados local, associando-os às temporadas previamente cadastradas.
-- **Autenticação**: Não necessária.
-- **Headers**:
-  ```json
-  {
-    "Content-Type": "application/json"
+**Parâmetros**:
+- `animeId`, `season`, `year`, `page`, `limit`
+
+**Resposta**:
+```json
+{
+  "animeId": 123,
+  "episodes": [
+    {
+      "id": 1,
+      "episode_number": 1,
+      "overview": "Introdução ao anime."
+    }
+  ],
+  "pagination": {
+    "total": 12,
+    "totalPages": 2,
+    "currentPage": 1,
+    "perPage": 10
   }
-  ```
-- **Parâmetros da Rota**:
-
-  - **animeId** (obrigatório): O ID do anime registrado na API do TMDB.
-    - Tipo: `integer`
-    - Exemplo: `/anime/240411/episodes`
-
-- **Resposta**:
-
-  - **Código 201**:
-    ```json
-    {
-      "message": "Episódios importados com sucesso!"
-    }
-    ```
-  - **Código 500** (em caso de erro):
-    ```json
-    {
-      "error": "Erro ao importar episódios."
-    }
-    ```
-
-- **Observação**:
-  - O anime e suas temporadas devem estar previamente registrados na base de dados.
-  - Apenas episódios ainda não cadastrados serão importados.
+}
+```
 
 ---
 
-### 2. Listar Episódios de um Anime com Paginação e Filtro de Temporada
+### 9. Atualizar Episódios Pendentes
 
-- **Endpoint**: `GET /anime/:animeId/episodes`
-- **Descrição**: Retorna os episódios de um anime previamente importados, com suporte a paginação e filtro de temporada.
-- **Autenticação**: Não necessária.
-- **Headers**:
-  ```json
-  {
-    "Content-Type": "application/json"
-  }
-  ```
-- **Parâmetros da Rota**:
+- **Endpoint**: `PUT /episodes/update-pending`  
+- **Descrição**: Atualiza episódios com `is_pending_update = true` se o `air_date` já passou. Se a sinopse continuar indisponível, o episódio permanece como pendente.
 
-  - **animeId** (obrigatório): O ID do anime registrado no banco de dados.
-    - Tipo: `integer`
-    - Exemplo: `/anime/240411/episodes`
+**Comportamento**:
+- Busca na API TMDB usando `show_id`, `season`, `episode_number`
+- Atualiza `overview`, `runtime`, `vote_average`, etc.
 
-- **Parâmetros da Query**:
-
-  - **season** (opcional): Número da temporada do anime.
-    - Tipo: `integer`
-    - Exemplo: `season=2`
-  - **year** (opcional): Ano de lançamento da temporada.
-    - Tipo: `integer`
-    - Exemplo: `year=2022`
-  - **page** (opcional): O número da página que deseja visualizar.
-    - Tipo: `integer`
-    - Valor padrão: `1`
-    - Exemplo: `page=2`
-  - **limit** (opcional): O número de episódios a serem retornados por página.
-    - Tipo: `integer`
-    - Valor padrão: `10`
-    - Exemplo: `limit=5`
-
-- **Resposta**:
-
-  - **Código 200**:
-    ```json
-    {
-      "animeId": 240411,
-      "season": 2,
-      "year": 2022,
-      "episodes": [
-        {
-          "id": 1,
-          "name": "Episódio 1",
-          "episode_number": 1,
-          "overview": "Introdução ao anime.",
-          "air_date": "2022-01-01",
-          "vote_average": 8.5,
-          "vote_count": 100,
-          "still_path": "/image.jpg",
-          "runtime": 24,
-          "tmdb_id": 98765
-        }
-      ],
-      "pagination": {
-        "total": 100,
-        "totalPages": 20,
-        "currentPage": 1,
-        "perPage": 10
-      }
-    }
-    ```
-  - **Código 404** (quando a temporada não é encontrada):
-    ```json
-    {
-      "error": "Temporada não encontrada."
-    }
-    ```
-  - **Código 500** (em caso de erro interno):
-    ```json
-    {
-      "error": "Erro ao listar episódios."
-    }
-    ```
-
-- **Observações**:
-
-  - É possível filtrar os episódios por temporada usando os parâmetros `season` (número da temporada) e `year` (ano de lançamento).
-  - Caso nenhum filtro de temporada seja fornecido, retorna os episódios da primeira temporada encontrada no banco de dados.
-  - Os episódios são retornados em ordem crescente de número do episódio (`episode_number`).
-  - A resposta inclui informações de paginação, como total de episódios (`total`), total de páginas (`totalPages`), página atual (`currentPage`), e número de itens por página (`perPage`).
+**Resposta**:
+```json
+{
+  "message": "Episódios pendentes atualizados com sucesso!"
+}
+```
 
 ---
 
-### 3. Atualizar Episódios com Runtime Nulo
+### 10. Listar Últimos Episódios Atualizados (Apenas Returning Series)
 
-- **Endpoint**: `PUT /episodes/update-pending`
-- **Descrição**: Busca todos os episódios com a coluna `runtime` como `null` na base de dados, consulta a API do TMDB para obter informações completas sobre esses episódios e atualiza as informações no banco de dados.
-- **Autenticação**: Não necessária.
-- **Headers**:
+- **Endpoint**: `GET /episodes/recent-updates`  
+- **Descrição**: Retorna o episódio mais recentemente atualizado de cada anime com status `Returning Series`. Apenas episódios lançados e com sinopse válida são retornados.
 
-  ```json
-  {
-    "Content-Type": "application/json"
+**Query Parameters**:
+- `limit`, `page`
+
+**Resposta**:
+```json
+{
+  "data": [
+    {
+      "anime_id": 123,
+      "anime_name": "Exemplo",
+      "episode_number": 4,
+      "overview": "O episódio mais recente com sinopse disponível."
+    }
+  ],
+  "meta": {
+    "limit": 10,
+    "page": 1,
+    "count": 1
   }
-  ```
+}
+```
 
-- **Comportamento da Rota**:
+---
 
-  1. Verifica os episódios na base de dados com `runtime` como `null`.
-  2. Para cada episódio encontrado:
-     - Busca as informações na API do TMDB usando o endpoint:
-       ```
-       https://api.themoviedb.org/3/tv/{show_id}/season/{season_number}/episode/{episode_number}
-       ```
-     - Atualiza as seguintes colunas no banco de dados:
-       - `name`: Nome do episódio.
-       - `overview`: Descrição.
-       - `still_path`: Caminho para a imagem.
-       - `air_date`: Data de exibição.
-       - `vote_average`: Nota média de votação.
-       - `vote_count`: Número de votos.
-       - `runtime`: Duração do episódio (em minutos).
-       - `production_code`: Código de produção.
-       - `episode_type`: Tipo de episódio.
-       - `updated_at`: Hora da última atualização.
+### 11. Animes com Estreia Hoje (Cacheado)
 
-- **Resposta**:
+- **Endpoint**: `GET /animes/airing-today`  
+- **Descrição**: Retorna os animes que estreiam na data atual utilizando cache armazenado no banco. Na primeira requisição do dia, consulta a API da TMDB e armazena a resposta processada. Nas próximas, retorna direto do banco.
 
-  - **Código 200 (Sucesso)**:
-    ```json
+**Resposta**:
+```json
+{
+  "page": 1,
+  "results": [
     {
-      "message": "Episódios atualizados com sucesso!"
+      "id": 261091,
+      "name": "The Shiunji Family Children",
+      "poster_path": "https://image.tmdb.org/t/p/w500/iSSYooLNjjNvbGSqAxnL8LgtSMP.jpg",
+      "backdrop_path": "https://image.tmdb.org/t/p/w1280/tjQrXMEWxAkA5Uo7261NDZfoyn1.jpg",
+      "overview": "O amor entre irmão e irmã...",
+      "first_air_date": "2025-04-08",
+      "vote_average": 9.0,
+      "vote_count": 1
     }
-    ```
-  - **Código 500 (Erro)**:
-    ```json
-    {
-      "error": "Erro ao atualizar episódios."
-    }
-    ```
+  ],
+  "total_pages": 1,
+  "total_results": 7
+}
+```
 
-- **Observação**:
-  - Episódios já atualizados ou com informações completas serão ignorados.
+---
+
+### 12. Sincronizar Animes com Estreia Hoje (Inserção no Banco)
+
+- **Endpoint**: `GET /animes/airing-today/sync`  
+- **Descrição**: Consulta a API da TMDB por animes com estreia na data atual (`first_air_date = today`), insere ou atualiza os títulos principais e títulos alternativos no banco de dados.
+
+**Resposta**:
+```json
+{
+  "message": "Sincronização concluída com sucesso.",
+  "total_titles": 7,
+  "total_alternative_titles": 15
+}
+```
 
 ---
 

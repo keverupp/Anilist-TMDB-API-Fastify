@@ -1,6 +1,9 @@
-const { getAnimeSeasons, getAnimeSeasonId } = require('../models/animeSeasonsModel');
-const { findEpisode, createEpisode } = require('../models/episodesModel');
-const axios = require('axios');
+const {
+  getAnimeSeasons,
+  getAnimeSeasonId,
+} = require("../models/animeSeasonsModel");
+const { findEpisode, createEpisode } = require("../models/episodesModel");
+const axios = require("axios");
 const knex = require("knex")(require("../knexfile").development);
 const apiKey = process.env.TMDB_API_KEY;
 
@@ -11,50 +14,55 @@ async function fetchEpisodes(request, reply) {
     const animeSeasons = await getAnimeSeasons(animeId);
 
     if (!animeSeasons || animeSeasons.length === 0) {
-      return reply.status(404).send({ error: 'Nenhuma temporada encontrada para o anime.' });
+      return reply
+        .status(404)
+        .send({ error: "Nenhuma temporada encontrada para o anime." });
     }
 
-    await Promise.all(animeSeasons.map(async (season) => {
-      const { data } = await axios.get(
-        `https://api.themoviedb.org/3/tv/${animeId}/season/${season.season}`,
-        { params: { api_key: apiKey, language: "pt-BR" } }
-      );
+    await Promise.all(
+      animeSeasons.map(async (season) => {
+        const { data } = await axios.get(
+          `https://api.themoviedb.org/3/tv/${animeId}/season/${season.season}`,
+          { params: { api_key: apiKey, language: "pt-BR" } }
+        );
 
-      const episodes = data.episodes || [];
-      for (const episode of episodes) {
-        const existingEpisode = await findEpisode({
-          anime_season_id: season.anime_season_id,
-          episode_number: episode.episode_number,
-        });
-
-        if (!existingEpisode) {
-          await createEpisode({
+        const episodes = data.episodes || [];
+        for (const episode of episodes) {
+          const existingEpisode = await findEpisode({
             anime_season_id: season.anime_season_id,
             episode_number: episode.episode_number,
-            name: episode.name,
-            overview: episode.overview || 'Descrição não disponível.',
-            still_path: episode.still_path 
-              ? `https://image.tmdb.org/t/p/w500${episode.still_path}` 
-              : 'Imagem não disponível',
-            air_date: episode.air_date || null,
-            vote_average: episode.vote_average || 0,
-            vote_count: episode.vote_count || 0,
-            runtime: episode.runtime || null,
-            tmdb_id: episode.id,
-            show_id: animeId,
-            is_pending_update: episode.air_date > new Date().toISOString(), // Marca como pendente se o episódio ainda não foi lançado
           });
-        }
-      }
-    }));
 
-    return reply.status(201).send({ message: 'Episódios importados com sucesso!' });
+          if (!existingEpisode) {
+            await createEpisode({
+              anime_season_id: season.anime_season_id,
+              episode_number: episode.episode_number,
+              name: episode.name,
+              overview: episode.overview || "Descrição não disponível.",
+              still_path: episode.still_path
+                ? `https://image.tmdb.org/t/p/w500${episode.still_path}`
+                : "Imagem não disponível",
+              air_date: episode.air_date || null,
+              vote_average: episode.vote_average || 0,
+              vote_count: episode.vote_count || 0,
+              runtime: episode.runtime || null,
+              tmdb_id: episode.id,
+              show_id: animeId,
+              is_pending_update: episode.air_date > new Date().toISOString(), // Marca como pendente se o episódio ainda não foi lançado
+            });
+          }
+        }
+      })
+    );
+
+    return reply
+      .status(201)
+      .send({ message: "Episódios importados com sucesso!" });
   } catch (error) {
     console.error(error);
-    return reply.status(500).send({ error: 'Erro ao importar episódios.' });
+    return reply.status(500).send({ error: "Erro ao importar episódios." });
   }
 }
-
 
 async function listEpisodes(request, reply) {
   const { animeId } = request.params;
@@ -63,10 +71,12 @@ async function listEpisodes(request, reply) {
   try {
     const animeSeason = await getAnimeSeasonId(animeId, season, year);
     if (!animeSeason) {
-      return reply.status(404).send({ error: 'Temporada não encontrada.' });
+      return reply.status(404).send({ error: "Temporada não encontrada." });
     }
 
-    const anime = await knex("animes").where({ id: animeId }).first("anilist_id");
+    const anime = await knex("animes")
+      .where({ id: animeId })
+      .first("anilist_id");
     if (!anime) {
       return reply.status(404).send({ error: "Anime não encontrado." });
     }
@@ -90,11 +100,13 @@ async function listEpisodes(request, reply) {
       "is_pending_update", // Incluímos a coluna `is_pending_update`
     ];
 
-    const selectedFields = fields 
-      ? fields.split(",").map((f) => f.trim()) 
+    const selectedFields = fields
+      ? fields.split(",").map((f) => f.trim())
       : allowedFields;
 
-    const invalidFields = selectedFields.filter((field) => !allowedFields.includes(field));
+    const invalidFields = selectedFields.filter(
+      (field) => !allowedFields.includes(field)
+    );
     if (invalidFields.length > 0) {
       return reply.status(400).send({
         error: "Campos inválidos selecionados.",
@@ -114,7 +126,7 @@ async function listEpisodes(request, reply) {
       knex("episodes")
         .where({ anime_season_id: animeSeason.anime_season_id })
         .count("id as count")
-        .first()
+        .first(),
     ]);
 
     const total = parseInt(totalCount.count, 10);
@@ -146,72 +158,133 @@ async function listEpisodes(request, reply) {
 async function updatePendingEpisodes(request, reply) {
   try {
     // Buscar episódios com pendência
-    const pendingEpisodes = await knex('episodes')
-      .where('is_pending_update', true)
-      .andWhere('air_date', '<=', knex.fn.now());
+    const pendingEpisodes = await knex("episodes")
+      .where("is_pending_update", true)
+      .andWhere("air_date", "<=", knex.fn.now());
 
     if (pendingEpisodes.length === 0) {
-      return reply.status(200).send({ message: 'Nenhum episódio pendente foi lançado.' });
+      return reply
+        .status(200)
+        .send({ message: "Nenhum episódio pendente foi lançado." });
     }
 
     // Atualizar cada episódio pendente
-    await Promise.all(pendingEpisodes.map(async (episode) => {
-      try {
-        const { show_id, episode_number, anime_season_id } = episode;
+    await Promise.all(
+      pendingEpisodes.map(async (episode) => {
+        try {
+          const { show_id, episode_number, anime_season_id } = episode;
 
-        // Buscar o número da temporada (season)
-        const seasonInfo = await knex('anime_seasons')
-          .join('seasons', 'anime_seasons.season_id', 'seasons.id')
-          .where('anime_seasons.id', anime_season_id)
-          .select('seasons.season')
-          .first();
+          // Buscar o número da temporada (season)
+          const seasonInfo = await knex("anime_seasons")
+            .join("seasons", "anime_seasons.season_id", "seasons.id")
+            .where("anime_seasons.id", anime_season_id)
+            .select("seasons.season")
+            .first();
 
-        if (!seasonInfo || !seasonInfo.season) {
-          return;
+          if (!seasonInfo || !seasonInfo.season) {
+            return;
+          }
+
+          const season = seasonInfo.season;
+
+          // Montar a URL correta para a API
+          const apiUrl = `https://api.themoviedb.org/3/tv/${show_id}/season/${season}/episode/${episode_number}`;
+
+          // Buscar informações atualizadas na API
+          const { data } = await axios.get(apiUrl, {
+            params: { api_key: apiKey, language: "pt-BR" },
+          });
+
+          // Tratar overview e verificar pendência
+          const overviewText =
+            data.overview && data.overview.trim() !== ""
+              ? data.overview
+              : "Descrição não disponível.";
+
+          const isPendingUpdate = overviewText === "Descrição não disponível.";
+
+          // Preparar os dados atualizados
+          const updatedData = {
+            name: data.name || episode.name || null,
+            overview: overviewText,
+            still_path: data.still_path
+              ? `https://image.tmdb.org/t/p/w500${data.still_path}`
+              : "Imagem não disponível",
+            air_date: data.air_date || episode.air_date || null,
+            vote_average: data.vote_average || 0,
+            vote_count: data.vote_count || 0,
+            runtime: data.runtime || episode.runtime || null,
+            production_code: data.production_code || null,
+            episode_type: data.episode_type || null,
+            is_pending_update: isPendingUpdate,
+            updated_at: new Date().toISOString(),
+          };
+
+          // Atualizar episódio no banco
+          await knex("episodes").where("id", episode.id).update(updatedData);
+        } catch (error) {
+          // Episódio não encontrado na API → remover pendência para não repetir a busca
+          if (error.response && error.response.status === 404) {
+            await knex("episodes")
+              .where("id", episode.id)
+              .update({ is_pending_update: false });
+          } else {
+            console.error(
+              `Erro ao atualizar episódio ID ${episode.id}:`,
+              error.message
+            );
+          }
         }
+      })
+    );
 
-        const season = seasonInfo.season;
-
-        // Montar a URL correta para a API
-        const apiUrl = `https://api.themoviedb.org/3/tv/${show_id}/season/${season}/episode/${episode_number}`;
-
-        // Buscar informações atualizadas na API
-        const { data } = await axios.get(apiUrl, {
-          params: { api_key: apiKey, language: "pt-BR" }
-        });
-
-        // Preparar os dados atualizados
-        const updatedData = {
-          name: data.name || episode.name || null,
-          overview: data.overview && data.overview.trim() !== ""
-            ? data.overview
-            : 'Descrição não disponível.',
-          still_path: data.still_path
-            ? `https://image.tmdb.org/t/p/w500${data.still_path}`
-            : 'Imagem não disponível',
-          air_date: data.air_date || episode.air_date || null,
-          vote_average: data.vote_average || 0,
-          vote_count: data.vote_count || 0,
-          runtime: data.runtime || episode.runtime || null,
-          production_code: data.production_code || null,
-          episode_type: data.episode_type || null,
-          is_pending_update: false,
-          updated_at: new Date().toISOString(),
-        };
-
-        // Atualizar episódio no banco
-        await knex('episodes').where('id', episode.id).update(updatedData);
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          await knex('episodes').where('id', episode.id).update({ is_pending_update: false });
-        }
-      }
-    }));
-
-    return reply.status(200).send({ message: 'Episódios pendentes atualizados com sucesso!' });
+    return reply
+      .status(200)
+      .send({ message: "Episódios pendentes atualizados com sucesso!" });
   } catch (error) {
-    return reply.status(500).send({ error: 'Erro ao atualizar episódios pendentes.' });
+    console.error("Erro geral na atualização:", error);
+    return reply
+      .status(500)
+      .send({ error: "Erro ao atualizar episódios pendentes." });
   }
 }
 
-module.exports = { fetchEpisodes, listEpisodes, updatePendingEpisodes };
+async function getRecentEpisodes(request, reply) {
+  const { page = 1, perPage = 10 } = request.query;
+
+  try {
+    const episodes = await knex("episodes")
+      .where("is_pending_update", false)
+      .andWhere("air_date", "<=", knex.fn.now())
+      .orderBy("updated_at", "desc")
+      .limit(perPage)
+      .offset((page - 1) * perPage);
+
+    const [{ count }] = await knex("episodes")
+      .where("is_pending_update", false)
+      .andWhere("air_date", "<=", knex.fn.now())
+      .count("id as count");
+
+    return reply.send({
+      episodes,
+      pagination: {
+        total: parseInt(count),
+        totalPages: Math.ceil(count / perPage),
+        currentPage: Number(page),
+        perPage: Number(perPage),
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return reply
+      .status(500)
+      .send({ error: "Erro ao buscar episódios recentes." });
+  }
+}
+
+module.exports = {
+  fetchEpisodes,
+  listEpisodes,
+  updatePendingEpisodes,
+  getRecentEpisodes,
+};

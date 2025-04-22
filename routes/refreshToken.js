@@ -1,4 +1,4 @@
-const { refreshToken } = require("../controllers/authController");
+const { refreshToken } = require("../controllers/authControllers");
 
 async function refreshTokenRoutes(fastify, options) {
   // Define a rota /refreshToken

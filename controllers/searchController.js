@@ -25,13 +25,14 @@ async function searchAnimes(req, reply) {
 
     await Promise.all(
       results.map(async (anime) => {
-        // Filtra apenas se tiver gênero 16 (Anime)
-        if (!anime.genre_ids || !anime.genre_ids.includes(16)) return;
+        // ✅ Filtro por gênero Anime (16) e idioma original japonês
+        if (!anime.genre_ids?.includes(16) || anime.original_language !== "ja")
+          return;
 
         const animeId = anime.id;
         let ptTitle = "N/A";
 
-        // Buscar título em português do Brasil e títulos alternativos em paralelo
+        // Buscar título pt-BR
         const ptTitlePromise = (async () => {
           try {
             const { data: ptData } = await axios.get(
@@ -48,6 +49,7 @@ async function searchAnimes(req, reply) {
           }
         })();
 
+        // Buscar títulos alternativos
         const altTitlesPromise = (async () => {
           try {
             const { data: altData } = await axios.get(
@@ -55,8 +57,7 @@ async function searchAnimes(req, reply) {
               { params: { api_key: apiKey } }
             );
 
-            const altResults = altData.results || [];
-            altResults.forEach((altTitle) => {
+            (altData.results || []).forEach((altTitle) => {
               alternativeTitlesToInsert.push({
                 anime_id: animeId,
                 iso_3166_1: altTitle.iso_3166_1,
@@ -73,10 +74,8 @@ async function searchAnimes(req, reply) {
           }
         })();
 
-        // Espera as requisições paralelas terminarem
         await Promise.all([ptTitlePromise, altTitlesPromise]);
 
-        // Adicionar título principal
         titlesToInsert.push({
           id: animeId,
           english_title: anime.name || "N/A",

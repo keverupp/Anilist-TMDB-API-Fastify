@@ -1,4 +1,4 @@
-const { login } = require("../controllers/AuthController");
+const { login } = require("../controllers/authControllers");
 
 async function loginRoutes(fastify, options) {
   // Define a rota /login

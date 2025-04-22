@@ -7,7 +7,7 @@ const app = require("./app"); // Substitua pelo caminho correto para o módulo d
     await app(fastify, {});
 
     // Inicie o servidor em todas as interfaces, na porta 3000
-    const port = process.env.PORT || 3001;
+    const port = process.env.PORT || 3000;
     await fastify.listen({ port, host: "0.0.0.0" });
 
     console.log(`Server is running on: http://${fastify.server.address().address}:${port}`);
