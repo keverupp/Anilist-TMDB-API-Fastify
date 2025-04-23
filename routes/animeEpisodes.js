@@ -9,6 +9,8 @@ const {
   getRecentEpisodesFromReturningSeries,
 } = require("../controllers/getRecentEpisodesFromReturningSeries");
 
+const { getUpcomingEpisodes } = require("../controllers/getUpcomingEpisodes");
+
 async function episodeRoutes(fastify, options) {
   // Rota para importar episódios
   fastify.post("/anime/:animeId/episodes", fetchEpisodes);
@@ -22,6 +24,8 @@ async function episodeRoutes(fastify, options) {
   fastify.get("/episodes/all-recent-episodes", getRecentEpisodes);
 
   fastify.get("/episodes/recent-updates", getRecentEpisodesFromReturningSeries);
+
+  fastify.get("/episodes/get-upcoming", getUpcomingEpisodes);
 }
 
 module.exports = episodeRoutes;
