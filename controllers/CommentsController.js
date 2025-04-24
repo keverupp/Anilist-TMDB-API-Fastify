@@ -4,6 +4,8 @@ const {
   notifyNewComment,
 } = require("../services/NotificationService");
 
+const { findUserById } = require("../models/userModel");
+
 // Criar um comentário ou resposta
 async function createComment(req, reply) {
   const { anime_id, episode_id, content } = req.body;
@@ -83,31 +85,48 @@ async function getComments(req, reply) {
       .orderBy("created_at", "asc");
 
     const commentMap = {};
+    const userIds = new Set();
+
     allComments.forEach((comment) => {
+      userIds.add(comment.user_id);
       commentMap[comment.id] = { ...comment, replies: [] };
     });
 
+    // Buscar todos os usuários de uma vez, apenas com os campos existentes
+    const users = await knex("users")
+      .select("id", "username", "avatar")
+      .whereIn("id", Array.from(userIds));
+
+    const userMap = {};
+    users.forEach((user) => {
+      userMap[user.id] = user;
+    });
+
+    // Adicionar os dados do usuário ao comentário
+    allComments.forEach((comment) => {
+      commentMap[comment.id].user = userMap[comment.user_id] || null;
+    });
+
+    // Agrupar respostas
     allComments.forEach((comment) => {
       if (comment.parent_id) {
         commentMap[comment.parent_id]?.replies.push(commentMap[comment.id]);
       }
     });
 
-    const rootCommentIds = rootCommentsRows.map((r) => r.id);
-    const paginatedRootComments = rootCommentIds.map((id) => commentMap[id]);
+    const commentsWithUsers = rootCommentsRows.map(
+      (comment) => commentMap[comment.id]
+    );
 
-    return reply.status(200).send({
+    return reply.send({
+      total: Number(count),
       page: Number(page),
       limit: Number(limit),
-      total: Number(count),
-      total_pages: Math.ceil(count / limit),
-      comments: paginatedRootComments,
+      comments: commentsWithUsers,
     });
   } catch (error) {
-    console.error("Erro ao listar comentários:", error);
-    return reply
-      .status(500)
-      .send({ error: "Erro interno ao listar comentários." });
+    console.error(error);
+    return reply.status(500).send({ error: "Erro ao buscar comentários" });
   }
 }
 
@@ -222,6 +241,5 @@ async function editComment(req, reply) {
     });
   }
 }
-
 
 module.exports = { createComment, getComments, deleteComment, editComment };
