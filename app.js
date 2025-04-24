@@ -14,6 +14,7 @@ module.exports = async function (fastify, opts) {
         "https://otakudiscuss-frontend.vercel.app",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://www.otakudiscuss.online",
       ];
       // Permitir requisições sem origin (como curl ou ferramentas internas)
       if (!origin || allowedOrigins.includes(origin)) {
