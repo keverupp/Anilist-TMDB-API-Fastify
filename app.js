@@ -8,11 +8,22 @@ const swaggerUi = require("@fastify/swagger-ui");
 require("dotenv").config();
 
 module.exports = async function (fastify, opts) {
-  // Configurar CORS
   fastify.register(require("@fastify/cors"), {
-    origin: "https://otakudiscuss-frontend.vercel.app", // Permite todas as origens
-    methods: ["GET", "POST", "PUT", "DELETE"], // Permite esses métodos
-    allowedHeaders: ["Content-Type", "Authorization"], // Cabeçalhos permitidos
+    origin: (origin, cb) => {
+      const allowedOrigins = [
+        "https://otakudiscuss-frontend.vercel.app",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+      ];
+      // Permitir requisições sem origin (como curl ou ferramentas internas)
+      if (!origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Not allowed by CORS"), false);
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   });
 
   // Registra o plugin @fastify/multipart para suporte a uploads de arquivos
