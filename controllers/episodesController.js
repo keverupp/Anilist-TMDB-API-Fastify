@@ -282,9 +282,62 @@ async function getRecentEpisodes(request, reply) {
   }
 }
 
+async function getEpisodeById(request, reply) {
+  const { episodeId } = request.params;
+  const { fields } = request.query;
+
+  try {
+    const allowedFields = [
+      "id",
+      "episode_number",
+      "name",
+      "overview",
+      "still_path",
+      "created_at",
+      "air_date",
+      "vote_average",
+      "vote_count",
+      "runtime",
+      "anime_season_id",
+      "tmdb_id",
+      "show_id",
+      "updated_at",
+      "is_pending_update",
+    ];
+
+    const selectedFields = fields
+      ? fields.split(",").map((f) => f.trim())
+      : allowedFields;
+
+    const invalidFields = selectedFields.filter(
+      (field) => !allowedFields.includes(field)
+    );
+    if (invalidFields.length > 0) {
+      return reply.status(400).send({
+        error: "Campos inválidos selecionados.",
+        invalidFields,
+      });
+    }
+
+    const episode = await knex("episodes")
+      .where({ id: episodeId })
+      .first(selectedFields);
+
+    if (!episode) {
+      return reply.status(404).send({ error: "Episódio não encontrado." });
+    }
+
+    return reply.send(episode);
+  } catch (error) {
+    console.error(error);
+    return reply.status(500).send({ error: "Erro ao buscar episódio." });
+  }
+}
+
 module.exports = {
   fetchEpisodes,
   listEpisodes,
   updatePendingEpisodes,
   getRecentEpisodes,
+  getEpisodeById,
 };

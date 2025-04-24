@@ -3,6 +3,7 @@ const {
   listEpisodes,
   updatePendingEpisodes,
   getRecentEpisodes,
+  getEpisodeById,
 } = require("../controllers/episodesController");
 
 const {
@@ -26,6 +27,8 @@ async function episodeRoutes(fastify, options) {
   fastify.get("/episodes/recent-updates", getRecentEpisodesFromReturningSeries);
 
   fastify.get("/episodes/get-upcoming", getUpcomingEpisodes);
+
+  fastify.get("/episodes/:episodeId", getEpisodeById);
 }
 
 module.exports = episodeRoutes;
