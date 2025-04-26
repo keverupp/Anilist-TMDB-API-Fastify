@@ -16,7 +16,7 @@ async function getAnimeLogos(req, reply) {
       return reply.send(existing.data);
     }
 
-    const url = `https://api.themoviedb.org/3/tv/${id}/images?include_image_language=en,pt&api_key=${TMDB_API_KEY}`;
+    const url = `https://api.themoviedb.org/3/tv/${id}/images?include_image_language=en,pt,ja&api_key=${TMDB_API_KEY}`;
     const { data } = await axios.get(url);
 
     const processFilePath = (items, size) => {
