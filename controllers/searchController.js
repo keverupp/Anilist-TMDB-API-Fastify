@@ -25,8 +25,10 @@ async function searchAnimes(req, reply) {
 
     await Promise.all(
       results.map(async (anime) => {
-        // ✅ Filtro por gênero Anime (16) e idioma original japonês
-        if (!anime.genre_ids?.includes(16) || anime.original_language !== "ja")
+        if (
+          !anime.genre_ids?.includes(16) ||
+          !["ja", "zh"].includes(anime.original_language)
+        )
           return;
 
         const animeId = anime.id;

@@ -2,6 +2,7 @@ const { getAnime } = require("../controllers/AnimeController");
 const { getAllAnimes } = require("../controllers/listAnimesController");
 const { syncTodayTitles } = require("../controllers/syncTitlesController");
 const { getAiringTodayCached } = require("../controllers/getAiringTodayCached");
+const { getAnimeLogos } = require("../controllers/LogosController");
 
 async function animeRoutes(fastify, options) {
   fastify.get("/anime/:id", getAnime);
@@ -13,6 +14,8 @@ async function animeRoutes(fastify, options) {
 
   // 🧠 Retorna dados da TMDB com cache em banco
   fastify.get("/animes/airing-today", getAiringTodayCached);
+
+  fastify.get("/anime/:id/logos", getAnimeLogos);
 }
 
 module.exports = animeRoutes;
