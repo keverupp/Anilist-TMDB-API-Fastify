@@ -66,7 +66,14 @@ async function fetchEpisodes(request, reply) {
 
 async function listEpisodes(request, reply) {
   const { animeId } = request.params;
-  const { page = 1, limit = 10, fields, season, year } = request.query;
+  const {
+    page = 1,
+    limit = 10,
+    fields,
+    season,
+    year,
+    order = "asc", // novo parâmetro
+  } = request.query;
 
   try {
     const animeSeason = await getAnimeSeasonId(animeId, season, year);
@@ -97,7 +104,7 @@ async function listEpisodes(request, reply) {
       "tmdb_id",
       "show_id",
       "updated_at",
-      "is_pending_update", // Incluímos a coluna `is_pending_update`
+      "is_pending_update",
     ];
 
     const selectedFields = fields
@@ -115,12 +122,13 @@ async function listEpisodes(request, reply) {
     }
 
     const offset = (page - 1) * limit;
+    const sortOrder = order.toLowerCase() === "desc" ? "desc" : "asc";
 
     const [episodes, totalCount] = await Promise.all([
       knex("episodes")
         .where({ anime_season_id: animeSeason.anime_season_id })
         .select(selectedFields)
-        .orderBy("episode_number", "asc")
+        .orderBy("episode_number", sortOrder)
         .limit(limit)
         .offset(offset),
       knex("episodes")
