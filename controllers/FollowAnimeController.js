@@ -17,7 +17,7 @@ async function toggleFollowAnime(req, reply) {
     if (!animeExists) {
       return reply.status(404).send({
         error: "Not Found",
-        message: "O anime não foi encontrado.",
+        message: "Ops. O anime não foi encontrado.",
       });
     }
 
@@ -31,7 +31,7 @@ async function toggleFollowAnime(req, reply) {
       await knex("anime_follows").where({ anime_id, user_id }).del();
 
       return reply.status(200).send({
-        message: "Você parou de seguir o anime.",
+        message: "Você desfavoritou o anime.",
       });
     }
 
@@ -42,12 +42,12 @@ async function toggleFollowAnime(req, reply) {
     });
 
     return reply.status(201).send({
-      message: "Anime seguido com sucesso.",
+      message: "Anime favoritado.",
     });
   } catch (error) {
-    console.error("Erro ao alternar seguir anime:", error);
+    console.error("Erro ao favoritar/desfavoritar anime:", error);
     return reply.status(500).send({
-      error: "Erro ao alternar o estado de seguir anime.",
+      error: "Erro ao alternar o estado de favoritar anime.",
     });
   }
 }
@@ -60,20 +60,16 @@ async function listFollowedAnimes(req, reply) {
     const followedAnimes = await knex("anime_follows")
       .join("animes", "anime_follows.anime_id", "animes.id")
       .where("anime_follows.user_id", user_id)
-      .select(
-        "animes.id",
-        "animes.name",
-        "animes.poster_path"
-      );
+      .select("animes.id", "animes.name", "animes.poster_path");
 
     return reply.status(200).send({
-      message: "Lista de animes seguidos.",
+      message: "Lista de animes favoritados.",
       animes: followedAnimes,
     });
   } catch (error) {
-    console.error("Erro ao listar animes seguidos:", error);
+    console.error("Erro ao listar animes favoritados:", error);
     return reply.status(500).send({
-      error: "Erro ao listar animes seguidos.",
+      error: "Erro ao listar animes favoritados.",
     });
   }
 }
