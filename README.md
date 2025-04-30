@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="./assets/logo_full.png" alt="Banner do Projeto">
-</p>
-
 Este projeto é uma API construída com **Fastify** (quase totalmente por IA) que utiliza a API do TMDB e AniList para buscar informações sobre animes, episódios e temporadas. Ele também utiliza **Knex.js** para gerenciar o banco de dados.
 
 ## **Índice**
@@ -16,57 +12,6 @@ Este projeto é uma API construída com **Fastify** (quase totalmente por IA) qu
 9.  [Contribuindo](#contribuindo)
 10. [Licença](#licença)
 
-# To-Do List
-
-- [x] **Rotas Inserção Títulos via API**
-  - Implementar endpoints para inserir títulos utilizando a API.
-
-- [x] **Rotas Inserção Animes (descrição, temporadas, etc.) via ID na API**
-  - Implementar rotas para busca e inserção de detalhes de animes utilizando o ID fornecido pela API.
-
-- [x] **Permissões de Usuários e Middleware**
-  - Criar middleware para controle de permissões.
-  - Configurar diferentes níveis de acesso baseados em funções.
-
-- [x] **Seeds para Permissões**
-  - Adicionar seeds para popular o banco de dados com permissões padrão.
-
-- [x] **Rotas de Configuração de Preferências**
-  - Criar endpoints para permitir que usuários personalizem suas preferências.
-
-- [x] **Rotas Editar Comentários**
-  - Implementar funcionalidades para que usuários possam editar seus comentários.
-
-- [x] **Rota Listar Animes Seguidos**
-  - Criar rota para listar todos os animes seguidos pelo usuário.
-
-- [x] **Rota Para listar Notificações**
-  - Criar rota para listar as notificações do usuário.
-
-- [x] **Rota Marcar Notificação como Lida**
-  - Criar rota para ler notificações do usuário.
-
-- [ ] **Rota Marcar Solicitação como Lida**
-  - Permitir que administradores ou usuários responsáveis possam marcar solicitações como lidas.
-
-- [ ] **Rota de Reportar (qualquer conteúdo)**
-  - Implementar sistema de reporte para conteúdos inadequados ou suspeitos.
-
-- [x] **Rota para Listar Temporadas(URGENTE)**
-  - Rota que consulta nome, quantidade e outras informações das temporadas do anime.
-
-- [ ] **Ajuste README Routes**
-  - Ajuste nas Rotas como Videos, returning series e etc.
-
-- [ ] **Template para E-mail**
-  - Criação de um template personalizado para envio de emails de recuperação de senha e etc.
-
-### Progresso Atual
-- Itens concluídos: 9/14
-- Itens pendentes: 4/14
-
-
----
 
 ## **Visão Geral**
 
