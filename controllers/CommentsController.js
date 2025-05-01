@@ -188,6 +188,119 @@ async function editComment(req, reply) {
   /* ...má lógica existente... */
 }
 
+// Excluir um comentário ou resposta
+async function deleteComment(req, reply) {
+  const { id } = req.params;
+  const user_id = req.user.id;
+  const user_roles = req.user.roles; // Obter papéis do usuário autenticado
+
+  if (!id) {
+    return reply.status(400).send({
+      error: "Bad Request",
+      message: "ID do comentário é obrigatório.",
+    });
+  }
+
+  try {
+    const comment = await knex("comments").where({ id }).first();
+
+    if (!comment) {
+      return reply
+        .status(404)
+        .send({ error: "Not Found", message: "Comentário não encontrado." });
+    }
+
+    // Verifica se o usuário tem permissão para excluir o comentário
+    const isAdmin = user_roles.includes("admin");
+    if (comment.user_id !== user_id && !isAdmin) {
+      return reply.status(403).send({
+        error: "Forbidden",
+        message: "Você não tem permissão para excluir este comentário.",
+      });
+    }
+
+    // Remover notificações associadas a este comentário
+    await knex("notifications")
+      .where((builder) =>
+        builder
+          .where({ related_id: id, type: "reply" })
+          .orWhere({ related_id: id, type: "new_comment" })
+      )
+      .del();
+
+    // Excluir respostas associadas (cascata)
+    await knex("comments").where({ parent_id: id }).del();
+    await knex("comments").where({ id }).del();
+
+    return reply
+      .status(200)
+      .send({ message: "Comentário excluído com sucesso." });
+  } catch (error) {
+    console.error("Erro ao excluir comentário:", error);
+    return reply
+      .status(500)
+      .send({ error: "Erro interno ao excluir comentário." });
+  }
+}
+
+// Editar um comentário
+async function editComment(req, reply) {
+  const { id } = req.params; // ID do comentário a ser editado
+  const { content } = req.body; // Novo conteúdo do comentário
+  const user_id = req.user.id; // ID do usuário autenticado
+  const user_roles = req.user.roles; // Papéis do usuário autenticado
+
+  // Validações de entrada
+  if (!id) {
+    return reply.status(400).send({
+      error: "Bad Request",
+      message: "ID do comentário é obrigatório.",
+    });
+  }
+  if (!content || content.trim().length === 0) {
+    return reply.status(400).send({
+      error: "Bad Request",
+      message: "O conteúdo do comentário não pode estar vazio.",
+    });
+  }
+
+  try {
+    // Buscar o comentário no banco de dados
+    const comment = await knex("comments").where({ id }).first();
+
+    if (!comment) {
+      return reply.status(404).send({
+        error: "Not Found",
+        message: "Comentário não encontrado.",
+      });
+    }
+
+    // Verificar se o usuário tem permissão para editar o comentário
+    const isAdmin = user_roles.includes("admin");
+    if (comment.user_id !== user_id && !isAdmin) {
+      return reply.status(403).send({
+        error: "Forbidden",
+        message: "Você não tem permissão para editar este comentário.",
+      });
+    }
+
+    // Atualizar o comentário no banco de dados
+    await knex("comments")
+      .where({ id })
+      .update({ content, updated_at: knex.fn.now() });
+
+    return reply.status(200).send({
+      message: "Comentário atualizado com sucesso.",
+    });
+  } catch (error) {
+    console.error("Erro ao editar comentário:", error);
+    return reply.status(500).send({
+      error: "Erro interno ao editar comentário.",
+    });
+  }
+}
+
+
 module.exports = {
   createComment,
   getComments,
