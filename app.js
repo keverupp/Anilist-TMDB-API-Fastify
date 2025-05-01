@@ -18,6 +18,7 @@ module.exports = async function (fastify, opts) {
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://www.otakudiscuss.online",
+        "https://otakudiscuss.online",
       ];
       if (!origin || allowedOrigins.includes(origin)) {
         cb(null, true);
