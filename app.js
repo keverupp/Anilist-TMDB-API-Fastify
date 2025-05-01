@@ -12,22 +12,10 @@ require("dotenv").config();
 module.exports = async function (fastify, opts) {
   // CORS
   fastify.register(require("@fastify/cors"), {
-    origin: (origin, cb) => {
-      const allowedOrigins = [
-        "https://otakudiscuss-frontend.vercel.app",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://www.otakudiscuss.online",
-        "https://otakudiscuss.online",
-      ];
-      if (!origin || allowedOrigins.includes(origin)) {
-        cb(null, true);
-      } else {
-        cb(new Error("Not allowed by CORS"), false);
-      }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: "*", // aceita qualquer origem
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   });
 
   // Multipart
