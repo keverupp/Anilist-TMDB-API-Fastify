@@ -1,16 +1,25 @@
-const fastify = require("fastify")({ logger: true });
-const app = require("./app"); // Substitua pelo caminho correto para o módulo do seu servidor
+// dev.js
+"use strict";
+
+const Fastify = require("fastify");
+const appPlugin = require("./app"); // seu app.js como plugin
+
+// Cria instância com logger
+const fastify = Fastify({ logger: true });
+
+// 1️⃣ Registra TODO o app (CORS, Swagger, WS e Autoload de routes/plugins)
+fastify.register(appPlugin);
 
 (async () => {
   try {
-    // Registre os plugins e rotas
-    await app(fastify, {});
+    // 2️⃣ Aguarda tudo carregar e imprime as rotas ativas
+    await fastify.ready();
+    fastify.printRoutes();
 
-    // Inicie o servidor em todas as interfaces, na porta 3000
+    // 3️⃣ Inicia o servidor
     const port = process.env.PORT || 3000;
     await fastify.listen({ port, host: "0.0.0.0" });
-
-    console.log(`Server is running on: http://${fastify.server.address().address}:${port}`);
+    console.log(`🚀 Server running at http://localhost:${port}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

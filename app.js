@@ -4,10 +4,13 @@ const path = require("node:path");
 const AutoLoad = require("@fastify/autoload");
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
+const websocket = require("@fastify/websocket");
+const fastify = require("fastify")();
 
 require("dotenv").config();
 
 module.exports = async function (fastify, opts) {
+  // CORS
   fastify.register(require("@fastify/cors"), {
     origin: (origin, cb) => {
       const allowedOrigins = [
@@ -16,7 +19,6 @@ module.exports = async function (fastify, opts) {
         "http://127.0.0.1:3000",
         "https://www.otakudiscuss.online",
       ];
-      // Permitir requisições sem origin (como curl ou ferramentas internas)
       if (!origin || allowedOrigins.includes(origin)) {
         cb(null, true);
       } else {
@@ -27,14 +29,12 @@ module.exports = async function (fastify, opts) {
     allowedHeaders: ["Content-Type", "Authorization"],
   });
 
-  // Registra o plugin @fastify/multipart para suporte a uploads de arquivos
+  // Multipart
   fastify.register(require("@fastify/multipart"), {
-    limits: {
-      fileSize: 5 * 1024 * 1024, // Limite de tamanho do arquivo (5 MB)
-    },
+    limits: { fileSize: 5 * 1024 * 1024 },
   });
 
-  // Configurar Swagger
+  // Swagger
   fastify.register(swagger, {
     swagger: {
       info: {
@@ -42,7 +42,7 @@ module.exports = async function (fastify, opts) {
         description: "Documentação da API plataforma OtakuDiscuss",
         version: "1.0.0",
       },
-      host: process.env.HOST || "localhost:3000", // Ajusta para produção
+      host: process.env.HOST || "localhost:3000",
       schemes: ["http", "https"],
       consumes: ["application/json"],
       produces: ["application/json"],
@@ -58,25 +58,23 @@ module.exports = async function (fastify, opts) {
     },
   });
 
-  // Registrar Swagger UI
+  // Swagger UI
   fastify.register(swaggerUi, {
-    routePrefix: "/docs", // URL para acessar a documentação
-    uiConfig: {
-      docExpansion: "list", // Expande os métodos por padrão
-      deepLinking: true,
-    },
+    routePrefix: "/docs",
+    uiConfig: { docExpansion: "list", deepLinking: true },
     staticCSP: true,
-    transformSpecification: (swaggerObject, request, reply) => {
-      return swaggerObject;
-    },
+    transformSpecification: (swaggerObject) => swaggerObject,
   });
 
-  // Carrega todos os plugins definidos na pasta `plugins`
+  // WebSocket plugin
+  fastify.register(require("@fastify/websocket"));
+
+  // Plugins folder
   fastify.register(AutoLoad, {
     dir: path.join(__dirname, "plugins"),
   });
 
-  // Carrega todas as rotas definidas na pasta `routes`
+  // Routes folder (inclui WS em routes/websockets)
   fastify.register(AutoLoad, {
     dir: path.join(__dirname, "routes"),
   });
