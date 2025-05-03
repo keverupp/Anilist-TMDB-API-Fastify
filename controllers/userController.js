@@ -1,4 +1,4 @@
-const { UserModel, getUserById } = require("../models/userModel");
+const UserModel = require("../models/userModel");
 const knex = require("knex")(require("../knexfile").development);
 const argon2 = require("argon2"); // caso use argon2 para hash da senha
 
@@ -71,6 +71,10 @@ const updateUser = async (userId, updates) => {
     // Propaga outros tipos de erro
     throw error;
   }
+};
+
+const getUserById = async (userId) => {
+  return knex("users").where({ id: userId }).first();
 };
 
 const changePassword = async (userId, currentPassword, newPassword) => {
