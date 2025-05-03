@@ -161,8 +161,6 @@ const processSeasons = async (seasons, animeId, logger) => {
  */
 async function getAnime(req, reply) {
   const { id } = req.params;
-
-  // Validação do parâmetro `id`
   if (!isValidId(id)) {
     return reply.status(400).send({
       error: 'Parâmetro "id" inválido.',
@@ -172,8 +170,6 @@ async function getAnime(req, reply) {
 
   try {
     const animeId = Number(id);
-
-    // Verifica se o anime já existe no banco
     let anime = await findAnimeById(animeId);
     if (anime) {
       const genres = await findGenresByAnimeId(animeId);
@@ -181,46 +177,45 @@ async function getAnime(req, reply) {
     }
 
     const titleInfo = await getEnglishTitleFromTitles(animeId);
-    if (!titleInfo || !titleInfo.english_title) {
+    if (!titleInfo?.english_title) {
       throw new Error(
         `Título em inglês não encontrado para o anime com ID ${animeId}.`
       );
     }
 
-    const englishTitle = titleInfo.english_title;
-
-    // Busca informações do TMDB
+    // 1. Busca TMDB
     const { TMDB_API_KEY } = process.env;
     const { data: animeData } = await axios.get(
       `https://api.themoviedb.org/3/tv/${animeId}`,
-      {
-        params: { api_key: TMDB_API_KEY, language: "pt-BR" },
-      }
+      { params: { api_key: TMDB_API_KEY, language: "pt-BR" } }
     );
 
-    // Busca informações do AniList
-    const aniListInfo = await fetchAniListInfo(englishTitle);
+    // 2. Tenta AniList, mas ignora erros / 404
+    let aniListInfo = {};
+    try {
+      aniListInfo = await fetchAniListInfo(titleInfo.english_title);
+    } catch (err) {
+      req.log.warn(
+        `AniList não encontrou "${titleInfo.english_title}", seguindo apenas com TMDB.`
+      );
+    }
 
-    // Formata e insere o anime no banco
+    // 3. Formata e salva
     const formattedAnime = formatAnimeData(animeData, aniListInfo);
     await insertAnime(formattedAnime);
 
-    // Busca keywords da TMDB
+    // 4. Busca e processa keywords, gêneros e temporadas
     const { data: keywordData } = await axios.get(
       `https://api.themoviedb.org/3/tv/${animeId}/keywords`,
-      {
-        params: { api_key: TMDB_API_KEY },
-      }
+      { params: { api_key: TMDB_API_KEY } }
     );
 
-    // Processa gêneros, temporadas e keywords em paralelo
     await Promise.all([
       processGenres(animeData.genres || [], animeId, req.log),
       processSeasons(animeData.seasons || [], animeId, req.log),
       processKeywords(animeId, req.log, keywordData.results || []),
     ]);
 
-    // Recupera gêneros associados para retorno
     const [genres, keywords] = await Promise.all([
       findGenresByAnimeId(animeId),
       findKeywordsByAnimeId(animeId),
@@ -229,14 +224,12 @@ async function getAnime(req, reply) {
     return reply.send({ ...formattedAnime, genres, keywords });
   } catch (error) {
     req.log.error(error);
-
-    if (error.response && error.response.data) {
+    if (error.response?.data) {
       return reply.status(500).send({
         error: "Erro ao buscar dados da API externa.",
         details: error.response.data,
       });
     }
-
     return reply.status(500).send({
       error: "Erro desconhecido.",
       details: error.message,
