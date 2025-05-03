@@ -87,7 +87,11 @@ async function createComment(req, reply) {
     };
 
     // Emite evento de novo comentário
-    commentEmitter.emit("comment", emittedComment);
+    // Emite evento de novo comentário
+    commentEmitter.emit("comment", {
+      action: "new_comment", // Adicionado para consistência
+      ...emittedComment,
+    });
 
     return reply.status(201).send({
       message: parent_id
@@ -181,13 +185,6 @@ function subscribeToComments(animeId, episodeId, callback) {
   return () => commentEmitter.off("comment", listener);
 }
 
-async function deleteComment(req, reply) {
-  /* ...má lógica existente... */
-}
-async function editComment(req, reply) {
-  /* ...má lógica existente... */
-}
-
 // Excluir um comentário ou resposta
 async function deleteComment(req, reply) {
   const { id } = req.params;
@@ -231,6 +228,15 @@ async function deleteComment(req, reply) {
     // Excluir respostas associadas (cascata)
     await knex("comments").where({ parent_id: id }).del();
     await knex("comments").where({ id }).del();
+
+    // NOVO: Emitir evento de exclusão de comentário
+    commentEmitter.emit("comment", {
+      action: "delete_comment",
+      id: parseInt(id),
+      parent_id: comment.parent_id,
+      anime_id: comment.anime_id,
+      episode_id: comment.episode_id,
+    });
 
     return reply
       .status(200)
@@ -289,6 +295,20 @@ async function editComment(req, reply) {
       .where({ id })
       .update({ content, updated_at: knex.fn.now() });
 
+    // Buscar o comentário atualizado para obter o updated_at
+    const updatedComment = await knex("comments").where({ id }).first();
+
+    // NOVO: Emitir evento de edição de comentário
+    commentEmitter.emit("comment", {
+      action: "edit_comment",
+      id: parseInt(id),
+      parent_id: comment.parent_id,
+      anime_id: comment.anime_id,
+      episode_id: comment.episode_id,
+      content: content,
+      updated_at: updatedComment.updated_at,
+    });
+
     return reply.status(200).send({
       message: "Comentário atualizado com sucesso.",
     });
@@ -299,7 +319,6 @@ async function editComment(req, reply) {
     });
   }
 }
-
 
 module.exports = {
   createComment,
