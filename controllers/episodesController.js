@@ -72,7 +72,8 @@ async function listEpisodes(request, reply) {
     fields,
     season,
     year,
-    order = "asc", // novo parâmetro
+    order = "asc",
+    includeFuture = false, // Novo parâmetro para incluir ou não episódios futuros
   } = request.query;
 
   try {
@@ -124,17 +125,25 @@ async function listEpisodes(request, reply) {
     const offset = (page - 1) * limit;
     const sortOrder = order.toLowerCase() === "desc" ? "desc" : "asc";
 
+    // Construir a consulta base
+    let episodesQuery = knex("episodes").where({
+      anime_season_id: animeSeason.anime_season_id,
+    });
+
+    // Adicionar filtro para episódios futuros se includeFuture for false
+    if (includeFuture !== "true" && includeFuture !== true) {
+      episodesQuery = episodesQuery.where({ is_pending_update: false });
+    }
+
+    // Executar as consultas para obter os episódios e o total
     const [episodes, totalCount] = await Promise.all([
-      knex("episodes")
-        .where({ anime_season_id: animeSeason.anime_season_id })
+      episodesQuery
+        .clone()
         .select(selectedFields)
         .orderBy("episode_number", sortOrder)
         .limit(limit)
         .offset(offset),
-      knex("episodes")
-        .where({ anime_season_id: animeSeason.anime_season_id })
-        .count("id as count")
-        .first(),
+      episodesQuery.clone().count("id as count").first(),
     ]);
 
     const total = parseInt(totalCount.count, 10);
