@@ -1,4 +1,4 @@
-const UserModel = require("../models/userModel");
+const { UserModel, getUserById } = require("../models/userModel");
 const knex = require("knex")(require("../knexfile").development);
 const argon2 = require("argon2"); // caso use argon2 para hash da senha
 
@@ -39,24 +39,46 @@ const updateUser = async (userId, updates) => {
     throw new Error("Nenhuma informação válida fornecida para atualização.");
   }
 
-  // Atualiza no banco de dados
-  const updatedUser = await UserModel.updateUser(userId, updates);
+  // Verifica se já existe outro usuário com o mesmo username
+  if (updates.username) {
+    const existingUser = await knex("users")
+      .where({ username: updates.username })
+      .whereNot({ id: userId })
+      .first();
 
-  if (!updatedUser) {
-    throw new Error("Usuário não encontrado ou atualização falhou.");
+    if (existingUser) {
+      throw new Error("Nome de usuário já está em uso por outra conta.");
+    }
   }
 
-  return updatedUser;
-};
+  try {
+    // Atualiza no banco de dados
+    const updatedUser = await UserModel.updateUser(userId, updates);
 
-const getUserById = async (userId) => {
-  return knex("users").where({ id: userId }).first();
+    if (!updatedUser) {
+      throw new Error("Usuário não encontrado ou atualização falhou.");
+    }
+
+    return updatedUser;
+  } catch (error) {
+    // Captura erros de chave duplicada que possam ainda ocorrer
+    if (
+      error.message.includes("violates unique constraint") &&
+      error.message.includes("users_username_unique")
+    ) {
+      throw new Error("Nome de usuário já está em uso por outra conta.");
+    }
+    // Propaga outros tipos de erro
+    throw error;
+  }
 };
 
 const changePassword = async (userId, currentPassword, newPassword) => {
   // Validação de entrada
   if (!currentPassword || !newPassword) {
-    throw new Error("Ambos os campos 'currentPassword' e 'newPassword' são obrigatórios.");
+    throw new Error(
+      "Ambos os campos 'currentPassword' e 'newPassword' são obrigatórios."
+    );
   }
   if (newPassword.length < 6) {
     throw new Error("A nova senha deve ter pelo menos 6 caracteres.");
@@ -91,7 +113,9 @@ async function getUserPreferences(req, reply) {
 
   try {
     // Busca as preferências do usuário
-    const preferences = await knex("user_preferences").where({ user_id }).first();
+    const preferences = await knex("user_preferences")
+      .where({ user_id })
+      .first();
 
     if (!preferences) {
       return reply.status(404).send({
@@ -110,21 +134,38 @@ async function getUserPreferences(req, reply) {
       error: "Erro ao listar preferências do usuário.",
     });
   }
-};
+}
 
 async function updateUserPreferences(req, reply) {
   const user_id = req.user.id;
-  const { notify_replies, notify_reactions, notify_new_comments, notify_new_episodes } = req.body;
+  const {
+    notify_replies,
+    notify_reactions,
+    notify_new_comments,
+    notify_new_episodes,
+  } = req.body;
 
   try {
     // Atualiza as preferências do usuário
     const updated = await knex("user_preferences")
       .where({ user_id })
       .update({
-        notify_replies: notify_replies !== undefined ? notify_replies : knex.raw("notify_replies"),
-        notify_reactions: notify_reactions !== undefined ? notify_reactions : knex.raw("notify_reactions"),
-        notify_new_comments: notify_new_comments !== undefined ? notify_new_comments : knex.raw("notify_new_comments"),
-        notify_new_episodes: notify_new_episodes !== undefined ? notify_new_episodes : knex.raw("notify_new_episodes"),
+        notify_replies:
+          notify_replies !== undefined
+            ? notify_replies
+            : knex.raw("notify_replies"),
+        notify_reactions:
+          notify_reactions !== undefined
+            ? notify_reactions
+            : knex.raw("notify_reactions"),
+        notify_new_comments:
+          notify_new_comments !== undefined
+            ? notify_new_comments
+            : knex.raw("notify_new_comments"),
+        notify_new_episodes:
+          notify_new_episodes !== undefined
+            ? notify_new_episodes
+            : knex.raw("notify_new_episodes"),
       });
 
     if (!updated) {
@@ -143,8 +184,7 @@ async function updateUserPreferences(req, reply) {
       error: "Erro ao atualizar preferências do usuário.",
     });
   }
-};
-
+}
 
 module.exports = {
   getUser,
