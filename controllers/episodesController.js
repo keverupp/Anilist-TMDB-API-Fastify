@@ -476,6 +476,7 @@ async function getEpisodeById(request, reply) {
       });
     }
 
+    // Get the episode data
     const episode = await knex("episodes")
       .where({ id: episodeId })
       .first(selectedFields);
@@ -484,7 +485,64 @@ async function getEpisodeById(request, reply) {
       return reply.status(404).send({ error: "Episódio não encontrado." });
     }
 
-    return reply.send(episode);
+    // Get the anime information using the show_id from the episode
+    const anime = await knex("animes")
+      .where({ id: episode.show_id })
+      .first([
+        "id",
+        "name",
+        "poster_path",
+        "banner_path",
+        "backdrop_path",
+        "anilist_id",
+      ]);
+
+    if (!anime) {
+      return reply.status(404).send({ error: "Anime não encontrado." });
+    }
+
+    // Get the season information
+    const season = await knex("anime_seasons")
+      .join("seasons", "anime_seasons.season_id", "=", "seasons.id")
+      .where({ "anime_seasons.id": episode.anime_season_id })
+      .first(["seasons.season", "seasons.year"]);
+
+    // Get the next and previous episodes
+    const [previousEpisode, nextEpisode] = await Promise.all([
+      knex("episodes")
+        .where({
+          anime_season_id: episode.anime_season_id,
+          episode_number: episode.episode_number - 1,
+        })
+        .first(["id", "episode_number", "name"]),
+      knex("episodes")
+        .where({
+          anime_season_id: episode.anime_season_id,
+          episode_number: episode.episode_number + 1,
+        })
+        .first(["id", "episode_number", "name"]),
+    ]);
+
+    // Construct episode URL
+    const episodeUrl = anime.anilist_id
+      ? `https://www.miruro.online/watch?id=${anime.anilist_id}&ep=${episode.episode_number}`
+      : null;
+
+    // Combine the data
+    const response = {
+      episode: {
+        ...episode,
+        episode_url: episodeUrl,
+      },
+      anime,
+      season,
+      navigation: {
+        previous: previousEpisode || null,
+        next: nextEpisode || null,
+      },
+    };
+
+    return reply.send(response);
   } catch (error) {
     console.error(error);
     return reply.status(500).send({ error: "Erro ao buscar episódio." });
