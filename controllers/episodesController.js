@@ -174,20 +174,37 @@ async function listEpisodes(request, reply) {
 
 async function updatePendingEpisodes(request, reply) {
   try {
-    // Buscar episódios com pendência ou com descrição não disponível e data de lançamento já passada
+    // Primeiro, atualizar automaticamente o is_pending_update para false
+    // para episódios com data de exibição mais antiga que 7 dias
+    const autoUpdateResult = await knex("episodes")
+      .where("overview", "Descrição não disponível.")
+      .andWhere("is_pending_update", true)
+      .andWhere("air_date", "<", knex.raw("CURRENT_DATE - INTERVAL '1 days'"))
+      .update({
+        is_pending_update: false,
+        updated_at: new Date().toISOString(),
+      })
+      .returning(["id", "name", "air_date"]);
+
+    // Agora buscar apenas episódios que realmente precisam de atualização
+    // Modificação no primeiro where para verificar apenas episódios pendentes
+    // ou com descrição não disponível mas com air_date até 7 dias atrás
     const episodesNeedingUpdate = await knex("episodes")
       .where(function () {
-        this.where("is_pending_update", true).orWhere(
-          "overview",
-          "Descrição não disponível."
+        this.where(function () {
+          this.where("is_pending_update", true).orWhere(
+            "overview",
+            "Descrição não disponível."
+          );
+        }).andWhere(
+          "air_date",
+          ">=",
+          knex.raw("CURRENT_DATE - INTERVAL '7 days'")
         );
       })
-      .andWhereBetween("air_date", [
-        knex.raw("CURRENT_DATE - INTERVAL '7 days'"),
-        knex.raw("CURRENT_DATE + INTERVAL '7 days'"),
-      ]);
+      .andWhere("air_date", "<=", knex.raw("CURRENT_DATE + INTERVAL '7 days'"));
 
-    if (episodesNeedingUpdate.length === 0) {
+    if (episodesNeedingUpdate.length === 0 && autoUpdateResult.length === 0) {
       return reply
         .status(200)
         .send({ message: "Nenhum episódio para atualizar foi encontrado." });
@@ -199,6 +216,7 @@ async function updatePendingEpisodes(request, reply) {
       failed: [],
       notFound: [],
       seasonMissing: [],
+      autoMarkedNotPending: autoUpdateResult || [], // Adicionar os resultados da atualização automática
     };
 
     // Vamos buscar todos os season_ids de uma vez para melhorar o desempenho
@@ -289,8 +307,16 @@ async function updatePendingEpisodes(request, reply) {
                 ? data.overview
                 : "Descrição não disponível.";
 
+            // Verificar se o episódio ainda deve ser considerado pendente:
+            // - Se tem descrição disponível, não é pendente
+            // - Se a data de exibição já passou há mais de 7 dias, não é mais pendente
+            const airDate = new Date(data.air_date || episode.air_date);
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
             const isPendingUpdate =
-              overviewText === "Descrição não disponível.";
+              overviewText === "Descrição não disponível." &&
+              (!airDate || airDate > sevenDaysAgo);
 
             // Preparar os dados atualizados
             const updatedData = {
@@ -317,6 +343,7 @@ async function updatePendingEpisodes(request, reply) {
               id,
               name: data.name || name,
               status: "success",
+              isPendingUpdate: isPendingUpdate,
             };
           } catch (error) {
             if (error.response && error.response.status === 404) {
@@ -348,7 +375,7 @@ async function updatePendingEpisodes(request, reply) {
         })
       );
 
-      // Processamento dos resultados (mantido igual)
+      // Processamento dos resultados
       results.forEach((result) => {
         if (result.status === "fulfilled") {
           const episode = result.value;
@@ -398,11 +425,14 @@ async function updatePendingEpisodes(request, reply) {
     return reply.status(200).send({
       message: "Processo de atualização concluído",
       summary: {
-        total: episodesNeedingUpdate.length,
+        total:
+          episodesNeedingUpdate.length +
+          updateResults.autoMarkedNotPending.length,
         successful: updateResults.success.length,
         failed: updateResults.failed.length,
         notFound: updateResults.notFound.length,
         seasonMissing: updateResults.seasonMissing.length,
+        autoMarkedNotPending: updateResults.autoMarkedNotPending.length,
       },
       details: updateResults,
     });
