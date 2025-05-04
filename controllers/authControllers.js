@@ -35,7 +35,16 @@ async function login(req, reply) {
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
       expiresIn: `${daysValid}d`,
     });
-    // ...
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + daysValid);
+
+    await knex("tokens").insert({
+      user_id: user.id,
+      token: token,
+      expires_at: expiresAt,
+      created_at: new Date(),
+    });
+    
     return reply.status(200).send({
       message: "Login realizado com sucesso.",
       user: {
