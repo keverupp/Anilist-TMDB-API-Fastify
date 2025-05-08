@@ -101,4 +101,4 @@ async function register(req, reply) {
   }
 }
 
-module.exports = { register };
+module.exports = { register, generateUniqueUserId };
