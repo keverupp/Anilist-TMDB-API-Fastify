@@ -11,6 +11,7 @@ async function getAnimeCalendar(request, reply) {
   }
 
   try {
+    // Busca cache e ordena por data
     const query = knex("tmdb_cached_responses")
       .select("cache_date", "data")
       .orderBy("cache_date", "asc");
@@ -34,18 +35,26 @@ async function getAnimeCalendar(request, reply) {
       ]);
     }
 
-    const results = await query;
+    const [results, genres] = await Promise.all([
+      query,
+      knex("genres").select("id", "name_pt"),
+    ]);
 
-    const genres = await knex("genres").select("id", "name_pt");
     const genreMap = Object.fromEntries(genres.map((g) => [g.id, g.name_pt]));
 
     const parsed = results.map((row) => {
-      const animes = (row.data.results || []).map((anime) => ({
-        ...anime,
-        genres: (anime.genre_ids || [])
-          .map((id) => genreMap[id])
-          .filter(Boolean),
-      }));
+      // filtra animes que tenham overview não vazio
+      const animes = (row.data.results || [])
+        .filter(
+          (anime) =>
+            typeof anime.overview === "string" && anime.overview.trim() !== ""
+        )
+        .map((anime) => ({
+          ...anime,
+          genres: (anime.genre_ids || [])
+            .map((id) => genreMap[id])
+            .filter(Boolean),
+        }));
 
       return {
         date: row.cache_date,
