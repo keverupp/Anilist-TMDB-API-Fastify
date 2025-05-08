@@ -1,7 +1,7 @@
-require('dotenv').config();
-const nodemailer = require('nodemailer');
+require("dotenv").config();
+const nodemailer = require("nodemailer");
 
-async function sendEmail(to, subject, text) {
+async function sendEmail(to, subject, text, html = null) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
@@ -12,12 +12,21 @@ async function sendEmail(to, subject, text) {
     },
   });
 
-  await transporter.sendMail({
+  // Configuração básica do email
+  const mailOptions = {
     from: `"${process.env.FROM_NAME}" <${process.env.FROM_EMAIL}>`,
     to,
     subject,
     text,
-  });
+  };
+
+  // Adiciona o conteúdo HTML se fornecido
+  if (html) {
+    mailOptions.html = html;
+  }
+
+  // Envia o email
+  await transporter.sendMail(mailOptions);
 }
 
 module.exports = {
