@@ -49,7 +49,7 @@ async function processRequest(email) {
         <td style="padding: 20px 0; text-align: center; background-color: white;">
           <img src="${
             process.env.COMPANY_LOGO ||
-            "https://via.placeholder.com/180x60?text=Logo"
+            "https://www.otakudiscuss.online/logo.png"
           }" alt="${
     process.env.FROM_NAME
   }" width="180" style="max-width: 180px; height: auto;">
