@@ -54,7 +54,7 @@ async function listNotifications(req, reply) {
     // Buscar informações dos animes
     const animes = await knex("animes")
       .whereIn("id", animeIds)
-      .select("id", "name", "poster_path", "backdrop_path");
+      .select("id", "name", "poster_path", "backdrop_path", "banner_path");
 
     // Mapear informações dos animes para fácil acesso
     const animeMap = animes.reduce((acc, anime) => {
@@ -85,6 +85,7 @@ async function listNotifications(req, reply) {
           name: anime.name,
           poster_path: anime.poster_path,
           backdrop_path: anime.backdrop_path,
+          banner_path: anime.banner_path,
         };
       }
 
