@@ -1,4 +1,8 @@
 const knex = require("knex")(require("../knexfile").development);
+const {
+  countUnreadNotifications,
+  markAllNotificationsAsRead,
+} = require("../services/NotificationService");
 
 async function listNotifications(req, reply) {
   const user_id = req.user.id;
@@ -103,9 +107,13 @@ async function listNotifications(req, reply) {
       return result;
     });
 
+    // Obter contagem de notificações não lidas
+    const unreadCount = await countUnreadNotifications(user_id);
+
     return reply.status(200).send({
       message: "Notificações recuperadas com sucesso.",
       notifications: finalNotifications,
+      unreadCount: unreadCount,
     });
   } catch (error) {
     console.error("Erro ao listar notificações:", error);
@@ -132,8 +140,12 @@ async function markNotificationAsRead(req, reply) {
       });
     }
 
+    // Obter contagem atualizada de notificações não lidas
+    const unreadCount = await countUnreadNotifications(user_id);
+
     return reply.status(200).send({
       message: "Notificação marcada como lida com sucesso.",
+      unreadCount: unreadCount,
     });
   } catch (error) {
     console.error("Erro ao marcar notificação como lida:", error);
@@ -143,4 +155,50 @@ async function markNotificationAsRead(req, reply) {
   }
 }
 
-module.exports = { markNotificationAsRead, listNotifications };
+/**
+ * Marca todas as notificações do usuário como lidas
+ */
+async function markAllAsRead(req, reply) {
+  const user_id = req.user.id;
+
+  try {
+    await markAllNotificationsAsRead(user_id);
+
+    return reply.status(200).send({
+      message: "Todas as notificações foram marcadas como lidas.",
+      unreadCount: 0,
+    });
+  } catch (error) {
+    console.error("Erro ao marcar todas notificações como lidas:", error);
+    return reply.status(500).send({
+      error: "Erro ao marcar todas notificações como lidas.",
+    });
+  }
+}
+
+/**
+ * Retorna apenas a contagem de notificações não lidas
+ */
+async function getUnreadCount(req, reply) {
+  const user_id = req.user.id;
+
+  try {
+    const count = await countUnreadNotifications(user_id);
+
+    return reply.status(200).send({
+      unreadCount: count,
+    });
+  } catch (error) {
+    console.error("Erro ao obter contagem de notificações não lidas:", error);
+    return reply.status(500).send({
+      error: "Erro ao obter contagem de notificações não lidas.",
+    });
+  }
+}
+
+module.exports = {
+  markNotificationAsRead,
+  listNotifications,
+  markAllAsRead,
+  getUnreadCount,
+};
