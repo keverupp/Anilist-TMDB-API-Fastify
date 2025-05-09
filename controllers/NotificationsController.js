@@ -24,7 +24,7 @@ async function listNotifications(req, reply) {
       return acc;
     }, {});
 
-    // Adicionar detalhes relacionados a cada notificação
+    // Adicionar anime_id e episode_id às notificações
     const enrichedNotifications = notifications.map((notification) => {
       const related = commentMap[notification.related_id] || {};
       return {
@@ -34,9 +34,77 @@ async function listNotifications(req, reply) {
       };
     });
 
+    // Coletar todos os IDs de animes e episódios únicos
+    const animeIds = [
+      ...new Set(
+        enrichedNotifications
+          .filter((n) => n.anime_id !== null)
+          .map((n) => n.anime_id)
+      ),
+    ];
+
+    const episodeIds = [
+      ...new Set(
+        enrichedNotifications
+          .filter((n) => n.episode_id !== null)
+          .map((n) => n.episode_id)
+      ),
+    ];
+
+    // Buscar informações dos animes
+    const animes = await knex("animes")
+      .whereIn("id", animeIds)
+      .select("id", "name", "poster_path", "backdrop_path");
+
+    // Mapear informações dos animes para fácil acesso
+    const animeMap = animes.reduce((acc, anime) => {
+      acc[anime.id] = anime;
+      return acc;
+    }, {});
+
+    // Buscar informações dos episódios
+    const episodes = await knex("episodes")
+      .whereIn("id", episodeIds)
+      .select("id", "name", "still_path", "episode_number");
+
+    // Mapear informações dos episódios para fácil acesso
+    const episodeMap = episodes.reduce((acc, episode) => {
+      acc[episode.id] = episode;
+      return acc;
+    }, {});
+
+    // Adicionar as informações de anime e episódio a cada notificação
+    const finalNotifications = enrichedNotifications.map((notification) => {
+      const result = { ...notification };
+
+      // Adicionar informações do anime se existir
+      if (notification.anime_id && animeMap[notification.anime_id]) {
+        const anime = animeMap[notification.anime_id];
+        result.anime = {
+          id: anime.id,
+          name: anime.name,
+          poster_path: anime.poster_path,
+          backdrop_path: anime.backdrop_path,
+        };
+      }
+
+      // Adicionar informações do episódio se existir
+      if (notification.episode_id && episodeMap[notification.episode_id]) {
+        const episode = episodeMap[notification.episode_id];
+        result.episode = {
+          id: episode.id,
+          name: episode.name,
+          still_path: episode.still_path,
+          episode_number: episode.episode_number,
+        };
+      }
+
+      return result;
+    });
+
     return reply.status(200).send({
       message: "Notificações recuperadas com sucesso.",
-      notifications: enrichedNotifications,
+      notifications: finalNotifications,
     });
   } catch (error) {
     console.error("Erro ao listar notificações:", error);
