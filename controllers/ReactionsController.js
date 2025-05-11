@@ -61,4 +61,43 @@ async function reactToComment(req, reply) {
   }
 }
 
+async function countReactions(req, reply) {
+  const { comment_id } = req.query;
+  const user_id = req.user?.id || null;
+
+  try {
+    const [up] = await knex("reactions")
+      .where({ comment_id, type: "upvote" })
+      .count("id as count");
+    const [down] = await knex("reactions")
+      .where({ comment_id, type: "downvote" })
+      .count("id as count");
+
+    // Descobre se o usuário já votou e qual foi o tipo
+    let userReaction = null;
+    if (user_id) {
+      const existing = await knex("reactions")
+        .where({ comment_id, user_id })
+        .first();
+      userReaction = existing ? existing.type : null;
+    }
+
+    const upvotes = parseInt(up.count, 10);
+    const downvotes = parseInt(down.count, 10);
+    const score = upvotes - downvotes;
+
+    return reply.status(200).send({
+      upvotes,
+      downvotes,
+      score,
+      userReaction,
+    });
+  } catch (error) {
+    console.error("Erro ao contar reações:", error);
+    return reply
+      .status(500)
+      .send({ error: "Erro interno ao contar as reações." });
+  }
+}
+
 module.exports = { reactToComment, countReactions };
