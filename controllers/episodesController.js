@@ -445,7 +445,7 @@ async function updatePendingEpisodes(request, reply) {
   }
 }
 
-async function getRecentEpisodes(request, reply) {
+async function getAllRecentEpisodes(request, reply) {
   const { page = 1, perPage = 10 } = request.query;
 
   try {
@@ -592,6 +592,6 @@ module.exports = {
   fetchEpisodes,
   listEpisodes,
   updatePendingEpisodes,
-  getRecentEpisodes,
+  getAllRecentEpisodes,
   getEpisodeById,
 };

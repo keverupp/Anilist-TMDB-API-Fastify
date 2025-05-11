@@ -1,21 +1,19 @@
 const knex = require("knex")(require("../knexfile").development);
 
-async function getRecentEpisodesFromReturningSeries(request, reply) {
+async function getRecentEpisodes(request, reply) {
   try {
     const { limit = 10, page = 1 } = request.query;
     const parsedLimit = Math.max(Number(limit), 1);
     const parsedPage = Math.max(Number(page), 1);
     const offset = (parsedPage - 1) * parsedLimit;
 
-    const maxDate = knex.raw("CURRENT_DATE");
-    const minDate = knex.raw("CURRENT_DATE - INTERVAL '3 days'");
-
     const episodes = await knex("episodes")
       .join("anime_seasons", "episodes.anime_season_id", "anime_seasons.id")
       .join("animes", "anime_seasons.anime_id", "animes.id")
-      .where("episodes.is_pending_update", false)
-      .andWhereBetween("episodes.air_date", [minDate, maxDate])
-      .orderBy("episodes.air_date", "desc")
+      .andWhereRaw(
+        "episodes.air_date >= CURRENT_DATE - INTERVAL '3 days' AND episodes.air_date <= CURRENT_DATE"
+      )
+      .orderBy("episodes.air_date", "desc") // Ordenando do mais recente para o mais antigo
       .limit(parsedLimit)
       .offset(offset)
       .select(
@@ -41,4 +39,4 @@ async function getRecentEpisodesFromReturningSeries(request, reply) {
   }
 }
 
-module.exports = { getRecentEpisodesFromReturningSeries };
+module.exports = { getRecentEpisodes };

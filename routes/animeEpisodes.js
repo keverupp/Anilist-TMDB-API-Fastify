@@ -2,13 +2,13 @@ const {
   fetchEpisodes,
   listEpisodes,
   updatePendingEpisodes,
-  getRecentEpisodes,
+  getAllRecentEpisodes,
   getEpisodeById,
 } = require("../controllers/episodesController");
 
 const {
-  getRecentEpisodesFromReturningSeries,
-} = require("../controllers/getRecentEpisodesFromReturningSeries");
+  getRecentEpisodes,
+} = require("../controllers/recentEpisodesController");
 
 const { getUpcomingEpisodes } = require("../controllers/getUpcomingEpisodes");
 
@@ -22,9 +22,9 @@ async function episodeRoutes(fastify, options) {
   // Rota para atualizar episódios com runtime nulo
   fastify.post("/episodes/update-pending", updatePendingEpisodes);
 
-  fastify.get("/episodes/all-recent-episodes", getRecentEpisodes);
+  fastify.get("/episodes/all-recent-episodes", getAllRecentEpisodes);
 
-  fastify.get("/episodes/recent-updates", getRecentEpisodesFromReturningSeries);
+  fastify.get("/episodes/recent", getRecentEpisodes);
 
   fastify.get("/episodes/get-upcoming", getUpcomingEpisodes);
 

@@ -111,6 +111,7 @@ async function createComment(req, reply) {
 async function getComments(req, reply) {
   const { anime_id, episode_id, page = 1, limit = 20 } = req.query;
   const offset = (page - 1) * limit;
+  const currentUserId = req.user?.id; // agora opcional
 
   try {
     const [{ count }] = await knex("comments")
@@ -129,34 +130,51 @@ async function getComments(req, reply) {
 
     const commentMap = {};
     const userIds = new Set();
-
-    allComments.forEach((comment) => {
-      userIds.add(comment.user_id);
-      commentMap[comment.id] = { ...comment, replies: [] };
+    allComments.forEach((c) => {
+      userIds.add(c.user_id);
+      commentMap[c.id] = {
+        ...c,
+        replies: [],
+        likes_count: 0,
+        dislikes_count: 0,
+        user_reaction: null,
+      };
     });
 
     const users = await knex("users")
       .select("id", "username", "avatar")
       .whereIn("id", Array.from(userIds));
+    const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
 
-    const userMap = {};
-    users.forEach((user) => {
-      userMap[user.id] = user;
+    const reactionRows = await knex("reactions")
+      .select("comment_id", "type")
+      .count("* as count")
+      .whereIn("comment_id", Object.keys(commentMap))
+      .groupBy("comment_id", "type");
+
+    reactionRows.forEach(({ comment_id, type, count }) => {
+      if (type === "like") commentMap[comment_id].likes_count = +count;
+      if (type === "dislike") commentMap[comment_id].dislikes_count = +count;
     });
 
-    allComments.forEach((comment) => {
-      commentMap[comment.id].user = userMap[comment.user_id] || null;
+    // só busca reação do usuário se ele estiver logado
+    if (currentUserId) {
+      const userReactions = await knex("reactions")
+        .select("comment_id", "type")
+        .whereIn("comment_id", Object.keys(commentMap))
+        .andWhere("user_id", currentUserId);
+
+      userReactions.forEach(({ comment_id, type }) => {
+        commentMap[comment_id].user_reaction = type;
+      });
+    }
+
+    allComments.forEach((c) => {
+      commentMap[c.id].user = userMap[c.user_id] || null;
+      if (c.parent_id) commentMap[c.parent_id]?.replies.push(commentMap[c.id]);
     });
 
-    allComments.forEach((comment) => {
-      if (comment.parent_id) {
-        commentMap[comment.parent_id]?.replies.push(commentMap[comment.id]);
-      }
-    });
-
-    const commentsWithUsers = rootCommentsRows.map(
-      (comment) => commentMap[comment.id]
-    );
+    const commentsWithUsers = rootCommentsRows.map((c) => commentMap[c.id]);
 
     return reply.send({
       total: Number(count),
@@ -165,7 +183,7 @@ async function getComments(req, reply) {
       comments: commentsWithUsers,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Erro ao buscar comentários:", error);
     return reply.status(500).send({ error: "Erro ao buscar comentários" });
   }
 }
