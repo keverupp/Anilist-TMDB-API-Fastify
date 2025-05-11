@@ -14,7 +14,8 @@
 - [Middleware de Autenticação](#middleware-de-autenticação)
 
 ---
-- [Rotas de Busca](#-rotas-de-busca) 
+
+- [Rotas de Busca](#-rotas-de-busca)
 
   - [Buscar Títulos de Animes](#1-buscar-títulos-de-animes)
   - [Buscar e Inserir Animes na Base Local](#2-buscar-e-inserir-animes-na-base-local)
@@ -36,9 +37,8 @@
 - [Animes com Estreia Hoje (Cacheado)](#11-animes-com-estreia-hoje-cacheado)  
 - [Sincronizar Animes com Estreia Hoje (Inserção no Banco)](#12-sincronizar-animes-com-estreia-hoje-inserção-no-banco)
 
-
-
 ---
+
 - [Rotas de Episódios](#-rotas-de-episódios)
 
   - [Importar Episódios de um Anime](#1-importar-episódios-de-um-anime)
@@ -46,12 +46,14 @@
   - [Atualizar Episódios com Runtime Nulo](#3-atualizar-episódios-com-runtime-nulo)
 
 ---
+
 - [Rotas de Vídeos](#-rotas-de-vídeos)
 
   - [Adicionar Vídeos de um Anime](#1-adicionar-vídeos-de-um-anime)
   - [Consultar Vídeos](#2-consultar-vídeos)
 
 ---
+
 - [Rotas de Comentários](#-rotas-de-comentários)
 
   - [Criar Comentário](#1-criar-comentário)
@@ -61,11 +63,13 @@
   - [Excluir Comentário](#5-excluir-comentário)
 
 ---
+
 - [Rotas de Reações](#-rotas-de-reações)
 
   - [Adicionar/Atualizar/Remover Reação](#1-adicionar-atualizar-remover-reação)
 
 ---
+
 - [Rotas de Usuário](#-rotas-de-usuário)
 
   - [Atualizar Avatar do Usuário](#1-atualizar-avatar-do-usuário)
@@ -76,6 +80,7 @@
   - [Atualizar Preferências do Usuário](#6-atualizar-preferências-do-usuário)
 
 ---
+
 - [Rotas de Notificações](#-rotas-de-notificações)
   - [Listar Notificações](#1-listar-notificações)
   - [Marcar Notificação como Lida](#2-marcar-notificação-como-lida)
@@ -89,6 +94,7 @@
 - **Endpoint**: `POST /register`  
 - **Descrição**: Registra um novo usuário.  
 - **Corpo da Requisição**:
+
   ```json
   {
     "username": "usuario123",
@@ -104,6 +110,7 @@
 - **Endpoint**: `POST /login`  
 - **Descrição**: Autentica o usuário e retorna um token JWT com expiração baseada no campo `rememberMe`.  
 - **Corpo da Requisição**:
+
   ```json
   {
     "email": "usuario@example.com",
@@ -111,7 +118,9 @@
     "rememberMe": true
   }
   ```
+
 - **Resposta**:
+
   ```json
   {
     "message": "Login realizado com sucesso.",
@@ -123,6 +132,7 @@
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
   ```
+
 - **Observação**:
   - O token **é retornado no corpo da resposta**, não via cookie.
   - O tempo de expiração do token é controlado dinamicamente:
@@ -139,6 +149,7 @@
 - **Requisição**:
   - Nenhum corpo necessário. O token é lido automaticamente do cookie.
 - **Resposta**:
+
   ```json
   {
     "message": "Logout efetuado com sucesso."
@@ -154,11 +165,13 @@
 - **Requisição**:
   - Nenhum corpo necessário. O token é lido automaticamente do cookie.
 - **Resposta**:
+
   ```json
   {
     "message": "Token renovado com sucesso."
   }
   ```
+
 - **Observação**:
   - Um novo token é emitido e atualizado no cookie com validade de 7 dias.
 
@@ -171,17 +184,21 @@
 - **Endpoint**: `POST /forgotpassword`
 - **Descrição**: Envia um e-mail com um link para redefinir a senha.
 - **Corpo da Requisição**:
+
   ```json
   {
     "email": "usuario@example.com"
   }
   ```
+
 - **Resposta** (sempre a mesma, independentemente do e-mail estar cadastrado ou não, por segurança):
+
   ```json
   {
     "message": "Se este email estiver cadastrado, um email de redefinição será enviado."
   }
   ```
+
 - **E-mail enviado**:
 
   ```
@@ -200,34 +217,42 @@
 - **Endpoint**: `POST /resetpassword`
 - **Descrição**: Redefine a senha do usuário usando um token de recuperação válido.
 - **Corpo da Requisição**:
+
   ```json
   {
     "token": "e15497940b7fcf0d89...",
     "new_password": "NovaSenhaForte123"
   }
   ```
+
 - **Respostas**:
   - **Sucesso**:
+
     ```json
     {
       "message": "Senha redefinida com sucesso."
     }
     ```
+
   - **Erros**:
     - **Campos ausentes**:
+
       ```json
       {
         "error": "Bad Request",
         "message": "Token e nova senha são obrigatórios."
       }
       ```
+
     - **Erro interno**:
+
       ```json
       {
         "error": "Erro interno",
         "message": "Não foi possível redefinir a senha."
       }
       ```
+
 - **Observação**: Se o token for inválido ou expirado, retornará erro. Caso contrário, a senha é atualizada e o token removido.
 
 ---
@@ -253,11 +278,13 @@
 - **Descrição**: Busca títulos de animes na base de dados local. A busca verifica os títulos principais e os alternativos para retornar informações sobre os animes encontrados. Permite a personalização da resposta especificando os campos desejados.
 - **Autenticação**: Não necessária.
 - **Headers**:
+
   ```json
   {
     "Content-Type": "application/json"
   }
   ```
+
 - **Parâmetros da Query**:
 
   - **query** (obrigatório): A palavra-chave usada para buscar os títulos.
@@ -284,11 +311,13 @@
 - **Descrição**: Busca animes na API do The Movie Database (TMDB) com base em um termo de consulta, insere os títulos principais e alternativos encontrados no banco de dados local e retorna os dados processados.
 - **Autenticação**: Não necessária.
 - **Headers**:
+
   ```json
   {
     "Content-Type": "application/json"
   }
   ```
+
 - **Parâmetros da Query**:
 
   - **query** (obrigatório): A palavra-chave usada para buscar os animes na API.
@@ -357,6 +386,7 @@ GET /search-api?query=naruto
   ]
 }
 ```
+
 ---
 
 ## 🍿 Rotas de Animes
@@ -368,6 +398,7 @@ GET /search-api?query=naruto
 
 **Autenticação**: Obrigatória  
 **Headers**:
+
 ```json
 {
   "Authorization": "Bearer <token_do_usuario>",
@@ -376,19 +407,25 @@ GET /search-api?query=naruto
 ```
 
 **Corpo da Requisição**:
+
 ```json
 { "anime_id": 123 }
 ```
 
 **Respostas**:
+
 - `201`:
+
 ```json
 { "message": "Anime seguido com sucesso." }
 ```
+
 - `200`:
+
 ```json
 { "message": "Você parou de seguir o anime." }
 ```
+
 - `400` / `404` / `500`: Retorna mensagens de erro conforme o caso.
 
 ---
@@ -400,11 +437,13 @@ GET /search-api?query=naruto
 
 **Autenticação**: Obrigatória  
 **Headers**:
+
 ```json
 { "Authorization": "Bearer <token_do_usuario>" }
 ```
 
 **Resposta**:
+
 ```json
 {
   "message": "Lista de animes seguidos.",
@@ -426,6 +465,7 @@ GET /search-api?query=naruto
 - **Descrição**: Retorna informações detalhadas de um anime.
 
 **Parâmetro**:  
+
 - `id`: ID do anime.
 
 ---
@@ -436,9 +476,11 @@ GET /search-api?query=naruto
 - **Descrição**: Lista animes com filtros (`name`, `genres`, `keywords`, `status`), ordenação e paginação.
 
 **Query Parameters**:
+
 - `name`, `genres`, `keywords`, `status`, `fields`, `page`, `limit`, `sort_by`, `sort_order`
 
 **Resposta**:
+
 ```json
 {
   "pagination": {
@@ -470,9 +512,11 @@ GET /search-api?query=naruto
 - **Descrição**: Retorna animes com status `Returning Series`, com suporte a paginação e seleção de campos.
 
 **Query Parameters**:
+
 - `limit`, `page`, `fields`
 
 **Resposta**:
+
 ```json
 {
   "data": [
@@ -498,10 +542,12 @@ GET /search-api?query=naruto
 - **Descrição**: Lista as temporadas de um anime.
 
 **Parâmetros**:
+
 - `anime_id`: ID do anime  
 - Query: `page`, `limit`
 
 **Resposta**:
+
 ```json
 {
   "seasons": [
@@ -520,16 +566,17 @@ GET /search-api?query=naruto
 }
 ```
 
-
 ### 7. Importar Episódios de um Anime
 
 - **Endpoint**: `POST /anime/:animeId/episodes`  
 - **Descrição**: Importa episódios da API TMDB para um anime cadastrado.
 
 **Parâmetro**:
+
 - `animeId`: ID do anime
 
 **Resposta**:
+
 ```json
 {
   "message": "Episódios importados com sucesso!"
@@ -544,9 +591,11 @@ GET /search-api?query=naruto
 - **Descrição**: Lista episódios com filtros de temporada e paginação.
 
 **Parâmetros**:
+
 - `animeId`, `season`, `year`, `page`, `limit`
 
 **Resposta**:
+
 ```json
 {
   "animeId": 123,
@@ -574,10 +623,12 @@ GET /search-api?query=naruto
 - **Descrição**: Atualiza episódios com `is_pending_update = true` se o `air_date` já passou. Se a sinopse continuar indisponível, o episódio permanece como pendente.
 
 **Comportamento**:
+
 - Busca na API TMDB usando `show_id`, `season`, `episode_number`
 - Atualiza `overview`, `runtime`, `vote_average`, etc.
 
 **Resposta**:
+
 ```json
 {
   "message": "Episódios pendentes atualizados com sucesso!"
@@ -592,9 +643,11 @@ GET /search-api?query=naruto
 - **Descrição**: Retorna o episódio mais recentemente atualizado de cada anime com status `Returning Series`. Apenas episódios lançados e com sinopse válida são retornados.
 
 **Query Parameters**:
+
 - `limit`, `page`
 
 **Resposta**:
+
 ```json
 {
   "data": [
@@ -621,6 +674,7 @@ GET /search-api?query=naruto
 - **Descrição**: Retorna os animes que estreiam na data atual utilizando cache armazenado no banco. Na primeira requisição do dia, consulta a API da TMDB e armazena a resposta processada. Nas próximas, retorna direto do banco.
 
 **Resposta**:
+
 ```json
 {
   "page": 1,
@@ -649,6 +703,7 @@ GET /search-api?query=naruto
 - **Descrição**: Consulta a API da TMDB por animes com estreia na data atual (`first_air_date = today`), insere ou atualiza os títulos principais e títulos alternativos no banco de dados.
 
 **Resposta**:
+
 ```json
 {
   "message": "Sincronização concluída com sucesso.",
@@ -667,11 +722,13 @@ GET /search-api?query=naruto
 - **Descrição**: Busca vídeos de um anime na API do TMDB e os salva no banco de dados. Utiliza a chave `key` para evitar duplicação.
 - **Autenticação**: Não necessária.
 - **Headers**:
+
   ```json
   {
     "Content-Type": "application/json"
   }
   ```
+
 - **Parâmetros da Rota**:
 
   - **anime_id** (obrigatório): ID do anime na API do TMDB.
@@ -681,6 +738,7 @@ GET /search-api?query=naruto
 - **Respostas**:
 
   - **201 (Criado)**:
+
     ```json
     {
       "message": "Vídeos inseridos com sucesso!",
@@ -698,19 +756,25 @@ GET /search-api?query=naruto
       ]
     }
     ```
+
   - **404 (Não Encontrado)**:
+
     ```json
     {
       "message": "Nenhum vídeo encontrado para esta série."
     }
     ```
+
   - **400 (Nenhum Vídeo Válido)**:
+
     ```json
     {
       "message": "Nenhum vídeo válido encontrado para inserir."
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro ao buscar e inserir vídeos."
@@ -729,11 +793,13 @@ GET /search-api?query=naruto
 - **Descrição**: Recupera vídeos armazenados no banco de dados, com suporte a filtros e paginação.
 - **Autenticação**: Não necessária.
 - **Headers**:
+
   ```json
   {
     "Content-Type": "application/json"
   }
   ```
+
 - **Parâmetros de Query**:
 
   - **show_id** (opcional): Filtra vídeos de um anime específico.
@@ -751,6 +817,7 @@ GET /search-api?query=naruto
 - **Respostas**:
 
   - **200 (Sucesso)**:
+
     ```json
     {
       "videos": [
@@ -774,7 +841,9 @@ GET /search-api?query=naruto
       }
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro ao buscar vídeos."
@@ -795,12 +864,14 @@ GET /search-api?query=naruto
 - **Descrição**: Cria um novo comentário em um anime ou episódio.
 - **Autenticação**: Obrigatória.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <token_do_usuario>",
     "Content-Type": "application/json"
   }
   ```
+
 - **Corpo da Requisição**:
 
   ```json
@@ -817,20 +888,25 @@ GET /search-api?query=naruto
 
 - **Respostas**:
   - **201 (Criado)**:
+
     ```json
     {
       "message": "Comentário criado com sucesso.",
       "commentId": 1
     }
     ```
+
   - **400 (Erro de Validação)**:
+
     ```json
     {
       "error": "Bad Request",
       "message": "Anime ID e conteúdo são obrigatórios."
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro interno ao criar comentário."
@@ -845,12 +921,14 @@ GET /search-api?query=naruto
 - **Descrição**: Cria uma resposta a um comentário existente.
 - **Autenticação**: Obrigatória.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <token_do_usuario>",
     "Content-Type": "application/json"
   }
   ```
+
 - **Parâmetros da Rota**:
 
   - **id** (obrigatório): ID do comentário pai.
@@ -865,20 +943,25 @@ GET /search-api?query=naruto
 
 - **Respostas**:
   - **201 (Criado)**:
+
     ```json
     {
       "message": "Resposta criada com sucesso.",
       "commentId": 2
     }
     ```
+
   - **404 (Comentário Pai Não Encontrado)**:
+
     ```json
     {
       "error": "Not Found",
       "message": "Comentário pai não encontrado."
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro interno ao criar comentário."
@@ -893,11 +976,13 @@ GET /search-api?query=naruto
 - **Descrição**: Retorna os comentários de um anime ou episódio, com respostas aninhadas e suporte à paginação.
 - **Autenticação**: Não necessária.
 - **Headers**:
+
   ```json
   {
     "Content-Type": "application/json"
   }
   ```
+
 - **Parâmetros da Query**:
 
   - **anime_id** (obrigatório): ID do anime.
@@ -913,6 +998,7 @@ GET /search-api?query=naruto
 
 - **Respostas**:
   - **200 (Sucesso)**:
+
     ```json
     {
       "page": 1,
@@ -933,7 +1019,9 @@ GET /search-api?query=naruto
       ]
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro interno ao listar comentários."
@@ -948,37 +1036,46 @@ GET /search-api?query=naruto
 - **Descrição**: Exclui um comentário ou resposta. Apenas o criador do comentário ou um administrador pode excluir.
 - **Autenticação**: Obrigatória.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <token_do_usuario>"
   }
   ```
+
 - **Parâmetros da Rota**:
 
   - **id** (obrigatório): ID do comentário a ser excluído.
 
 - **Respostas**:
   - **200 (Sucesso)**:
+
     ```json
     {
       "message": "Comentário excluído com sucesso."
     }
     ```
+
   - **403 (Sem Permissão)**:
+
     ```json
     {
       "error": "Forbidden",
       "message": "Você não tem permissão para excluir este comentário."
     }
     ```
+
   - **404 (Comentário Não Encontrado)**:
+
     ```json
     {
       "error": "Not Found",
       "message": "Comentário não encontrado."
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro interno ao excluir comentário."
@@ -993,12 +1090,14 @@ GET /search-api?query=naruto
 - **Descrição**: Edita um comentário. Apenas o criador do comentário ou um administrador pode editar.
 - **Autenticação**: Obrigatória.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <token_do_usuario>",
     "Content-Type": "application/json"
   }
   ```
+
 - **Parâmetros da Rota**:
 
   - **id** (obrigatório): ID do comentário a ser editado.
@@ -1013,33 +1112,42 @@ GET /search-api?query=naruto
 
 - **Respostas**:
   - **200 (Sucesso)**:
+
     ```json
     {
       "message": "Comentário atualizado com sucesso."
     }
     ```
+
   - **403 (Sem Permissão)**:
+
     ```json
     {
       "error": "Forbidden",
       "message": "Você não tem permissão para editar este comentário."
     }
     ```
+
   - **404 (Comentário Não Encontrado)**:
+
     ```json
     {
       "error": "Not Found",
       "message": "Comentário não encontrado."
     }
     ```
+
   - **400 (Erro de Validação)**:
+
     ```json
     {
       "error": "Bad Request",
       "message": "O conteúdo do comentário não pode estar vazio."
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro interno ao editar comentário."
@@ -1050,25 +1158,68 @@ GET /search-api?query=naruto
 
 ## 👍 Rotas de Reações
 
-### 1. Adicionar/Atualizar/Remover Reação
+### 1. POST /reactions
 
-- **Endpoint**: `POST /reactions`
-- **Descrição**: Adiciona, atualiza ou remove uma reação (`like` ou `dislike`) a um comentário.
-- **Autenticação**: Necessária.
+Adiciona ou altera uma reação (“upvote” ou “downvote”) a um comentário.
+
+- **Endpoint**:
+  `POST /reactions`
+- **Descrição**:
+
+  - Se o usuário ainda **não** reagiu ao comentário, cria um novo voto.
+  - Se já houver reação **diferente**, atualiza para o novo tipo.
+  - Se já houver reação **igual**, retorna erro 400 informando que o voto já existe.
+    Após a operação bem-sucedida, sempre retorna o estado atualizado das contagens.
+- **Autenticação**:
+  Bearer Token (usuário logado)
 - **Headers**:
-  ```json
-  {
-    "Authorization": "Bearer <seu_token>",
-    "Content-Type": "application/json"
-  }
+
+  ```http
+  Authorization: Bearer <seu_token>
+  Content-Type: application/json
   ```
+
 - **Corpo da Requisição**:
+
   ```json
   {
-    "comment_id": 1,
-    "type": "like"
+    "comment_id": 123,
+    "type": "upvote"    // ou "downvote"
   }
   ```
+
+- **Respostas**:
+
+  - **200 OK**
+
+    ```json
+    {
+      "upvotes": 10,           // total de upvotes no comentário
+      "downvotes": 2,          // total de downvotes no comentário
+      "score": 8,              // upvotes – downvotes
+      "userReaction": "upvote" // reação atual do usuário
+    }
+    ```
+
+  - **400 Bad Request**
+
+    - Dados inválidos (faltando `comment_id` ou `type` incorreto):
+
+      ```json
+      { "error": "Dados inválidos." }
+      ```
+
+    - Reação já existente no mesmo tipo:
+
+      ```json
+      { "error": "Você já reagiu dessa forma a este comentário." }
+      ```
+
+  - **500 Internal Server Error**
+
+    ```json
+    { "error": "Erro interno ao processar a reação." }
+    ```
 
 ---
 
@@ -1080,12 +1231,14 @@ GET /search-api?query=naruto
 - **Descrição**: Permite ao usuário atualizar sua imagem de avatar. A imagem enviada será carregada no Cloudinary, e o URL será salvo no banco de dados.
 - **Autenticação**: Necessária.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <seu-token>",
     "Content-Type": "multipart/form-data"
   }
   ```
+
 - **Corpo da Requisição**:
 
   - Tipo: `form-data`
@@ -1105,11 +1258,13 @@ GET /search-api?query=naruto
 - **Descrição**: Retorna informações públicas do usuário, como nome, avatar e descrição, com base no ID fornecido.
 - **Autenticação**: Não necessária.
 - **Headers**:
+
   ```json
   {
     "Content-Type": "application/json"
   }
   ```
+
 - **Corpo da Requisição**: Não aplicável.
 
 - **Resposta de Exemplo**:
@@ -1135,18 +1290,22 @@ GET /search-api?query=naruto
 - **Descrição**: Permite ao usuário atualizar informações de perfil, como nome, descrição ou outros campos permitidos.
 - **Autenticação**: Necessária.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <seu-token>",
     "Content-Type": "application/json"
   }
   ```
+
 - **Corpo da Requisição**:
+
   ```json
   {
     "username": "novo_nome"
   }
   ```
+
   ***
 
 ### 4. Atualizar Senha do Usuário
@@ -1155,13 +1314,16 @@ GET /search-api?query=naruto
 - **Descrição**: Permite ao usuário atualizar senha.
 - **Autenticação**: Necessária.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <seu-token>",
     "Content-Type": "application/json"
   }
   ```
+
 - **Corpo da Requisição**:
+
   ```json
   {
     "currentPassword": "987654321",
@@ -1175,13 +1337,16 @@ GET /search-api?query=naruto
 - **Descrição**: Retorna as preferências de notificação configuradas pelo usuário autenticado.
 - **Autenticação**: Obrigatória.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <token_do_usuario>"
   }
   ```
+
 - **Respostas**:
   - **200 (Sucesso)**:
+
     ```json
     {
       "message": "Preferências do usuário recuperadas com sucesso.",
@@ -1193,14 +1358,18 @@ GET /search-api?query=naruto
       }
     }
     ```
+
   - **404 (Não Encontrado)**:
+
     ```json
     {
       "error": "Not Found",
       "message": "Preferências do usuário não encontradas."
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro ao listar preferências do usuário."
@@ -1215,12 +1384,14 @@ GET /search-api?query=naruto
 - **Descrição**: Atualiza as preferências de notificação do usuário autenticado.
 - **Autenticação**: Obrigatória.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <token_do_usuario>",
     "Content-Type": "application/json"
   }
   ```
+
 - **Corpo da Requisição**:
 
   - Envie apenas os campos que deseja atualizar.
@@ -1249,19 +1420,24 @@ GET /search-api?query=naruto
 
 - **Respostas**:
   - **200 (Sucesso)**:
+
     ```json
     {
       "message": "Preferências do usuário atualizadas com sucesso."
     }
     ```
+
   - **404 (Não Encontrado)**:
+
     ```json
     {
       "error": "Not Found",
       "message": "Preferências do usuário não encontradas."
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro ao atualizar preferências do usuário."
@@ -1278,13 +1454,16 @@ GET /search-api?query=naruto
 - **Descrição**: Retorna as notificações do usuário autenticado, incluindo informações relacionadas ao comentário (como `anime_id` ou `episode_id`).
 - **Autenticação**: Obrigatória.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <token_do_usuario>"
   }
   ```
+
 - **Respostas**:
   - **200 (Sucesso)**:
+
     ```json
     {
       "message": "Notificações recuperadas com sucesso.",
@@ -1302,7 +1481,9 @@ GET /search-api?query=naruto
       ]
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro ao listar notificações."
@@ -1317,30 +1498,37 @@ GET /search-api?query=naruto
 - **Descrição**: Marca uma notificação específica como lida.
 - **Autenticação**: Obrigatória.
 - **Headers**:
+
   ```json
   {
     "Authorization": "Bearer <token_do_usuario>"
   }
   ```
+
 - **Parâmetros da Rota**:
 
   - **id** (obrigatório): ID da notificação que será marcada como lida.
 
 - **Respostas**:
   - **200 (Sucesso)**:
+
     ```json
     {
       "message": "Notificação marcada como lida com sucesso."
     }
     ```
+
   - **404 (Não Encontrado)**:
+
     ```json
     {
       "error": "Not Found",
       "message": "Notificação não encontrada ou você não tem permissão."
     }
     ```
+
   - **500 (Erro Interno)**:
+
     ```json
     {
       "error": "Erro ao marcar notificação como lida."
@@ -1354,12 +1542,14 @@ GET /search-api?query=naruto
 1. **Redirecionar para o Anime**:
 
    - Caso `anime_id` esteja presente:
+
      ```javascript
      const redirectUrl = `/anime/${notification.anime_id}#comment-${notification.related_id}`;
      ```
 
 2. **Redirecionar para o Episódio**:
    - Caso `episode_id` também esteja presente:
+
      ```javascript
      const redirectUrl = `/anime/${notification.anime_id}/episode/${notification.episode_id}#comment-${notification.related_id}`;
      ```
