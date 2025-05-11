@@ -4,7 +4,10 @@ const {
   deleteComment,
   editComment,
 } = require("../controllers/CommentsController");
-const { authenticate } = require("../middlewares/AuthMiddleware");
+const {
+  authenticate,
+  authenticateOptional,
+} = require("../middlewares/AuthMiddleware");
 
 async function commentRoutes(fastify, options) {
   // Rota para criar um comentário (protegida pelo AuthMiddleware)
@@ -14,7 +17,7 @@ async function commentRoutes(fastify, options) {
   fastify.post("/comments/:id", { preHandler: authenticate }, createComment);
 
   // Rota para listar comentários
-  fastify.get("/comments", getComments);
+  fastify.get("/comments", { preHandler: authenticateOptional }, getComments);
 
   // Rota para excluir comentários (protegida pelo AuthMiddleware)
   fastify.delete("/comments/:id", { preHandler: authenticate }, deleteComment);

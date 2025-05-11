@@ -1,19 +1,60 @@
 const { verifyToken, findUserById } = require("../services/AuthService");
 const knex = require("knex")(require("../knexfile").development);
 
+async function authenticateOptional(req, reply) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    // não há token: segue em frente sem setar req.user
+    return;
+  }
+
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    // header mal formado: ignora
+    return;
+  }
+
+  try {
+    // verifica no banco (mesma lógica do authenticate)
+    const tokenEntry = await knex("tokens")
+      .where({ token })
+      .andWhere("expires_at", ">", new Date())
+      .first();
+    if (!tokenEntry) return;
+
+    const decoded = await verifyToken(token);
+    const user = await findUserById(decoded.id);
+    if (!user) return;
+
+    // popula req.user exatamente como no authenticate
+    req.user = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      // ...etc
+    };
+  } catch {
+    // token inválido ou expirado: ignora o erro
+  }
+}
+
 async function authenticate(req, reply) {
   try {
     const authHeader = req.headers.authorization;
 
     // Verifica se o cabeçalho Authorization existe
     if (!authHeader) {
-      return reply.status(401).send({ error: "Unauthorized", message: "Token ausente" });
+      return reply
+        .status(401)
+        .send({ error: "Unauthorized", message: "Token ausente" });
     }
 
     // Extrai o token do cabeçalho
     const token = authHeader.split(" ")[1];
     if (!token) {
-      return reply.status(401).send({ error: "Unauthorized", message: "Token inválido" });
+      return reply
+        .status(401)
+        .send({ error: "Unauthorized", message: "Token inválido" });
     }
 
     // Verifica o token no banco de dados
@@ -23,7 +64,9 @@ async function authenticate(req, reply) {
       .first();
 
     if (!tokenEntry) {
-      return reply.status(401).send({ error: "Unauthorized", message: "Token inválido ou expirado" });
+      return reply
+        .status(401)
+        .send({ error: "Unauthorized", message: "Token inválido ou expirado" });
     }
 
     // Decodifica o token JWT
@@ -33,7 +76,9 @@ async function authenticate(req, reply) {
     const user = await findUserById(decoded.id);
 
     if (!user) {
-      return reply.status(401).send({ error: "Unauthorized", message: "Usuário não encontrado" });
+      return reply
+        .status(401)
+        .send({ error: "Unauthorized", message: "Usuário não encontrado" });
     }
 
     // Busca os papéis do usuário
@@ -62,7 +107,9 @@ async function authenticate(req, reply) {
     // Fluxo segue para o handler da rota
   } catch (error) {
     console.error("Erro na autenticação:", error);
-    return reply.status(401).send({ error: "Unauthorized", message: "Token inválido ou expirado" });
+    return reply
+      .status(401)
+      .send({ error: "Unauthorized", message: "Token inválido ou expirado" });
   }
 }
 
@@ -73,10 +120,12 @@ async function authenticate(req, reply) {
 function checkPermission(permission) {
   return async (req, reply, next) => {
     if (!req.user || !req.user.permissions.includes(permission)) {
-      return reply.status(403).send({ error: "Forbidden", message: "Permissão insuficiente" });
+      return reply
+        .status(403)
+        .send({ error: "Forbidden", message: "Permissão insuficiente" });
     }
     next();
   };
 }
 
-module.exports = { authenticate, checkPermission };
+module.exports = { authenticate, checkPermission, authenticateOptional };
