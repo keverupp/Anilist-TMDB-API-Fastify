@@ -111,7 +111,7 @@ async function createComment(req, reply) {
 async function getComments(req, reply) {
   const { anime_id, episode_id, page = 1, limit = 20 } = req.query;
   const offset = (page - 1) * limit;
-  const currentUserId = req.user?.id || null; // agora explicito null quando não logado
+  const currentUserId = req.user?.id || null;
 
   try {
     // 1) Total de comentários de nível raiz
@@ -141,8 +141,8 @@ async function getComments(req, reply) {
         replies: [],
         likes_count: 0,
         dislikes_count: 0,
-        score: 0, // campo score inicializado
-        user_reaction: null, // reação do usuário logado
+        score: 0,
+        user_reaction: null,
       };
     });
 
@@ -152,7 +152,7 @@ async function getComments(req, reply) {
       .whereIn("id", Array.from(userIds));
     const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
 
-    // 6) Conta likes/dislikes agrupado por comentário
+    // 6) Conta upvotes/downvotes agrupado por comentário
     const reactionRows = await knex("reactions")
       .select("comment_id", "type")
       .count("* as count")
@@ -160,8 +160,12 @@ async function getComments(req, reply) {
       .groupBy("comment_id", "type");
 
     reactionRows.forEach(({ comment_id, type, count }) => {
-      if (type === "like") commentMap[comment_id].likes_count = +count;
-      if (type === "dislike") commentMap[comment_id].dislikes_count = +count;
+      if (type === "upvote") {
+        commentMap[comment_id].likes_count = +count;
+      }
+      if (type === "downvote") {
+        commentMap[comment_id].dislikes_count = +count;
+      }
     });
 
     // 7) Calcula o score = likes_count - dislikes_count
