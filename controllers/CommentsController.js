@@ -111,23 +111,27 @@ async function createComment(req, reply) {
 async function getComments(req, reply) {
   const { anime_id, episode_id, page = 1, limit = 20 } = req.query;
   const offset = (page - 1) * limit;
-  const currentUserId = req.user?.id; // agora opcional
+  const currentUserId = req.user?.id || null; // agora explicito null quando não logado
 
   try {
+    // 1) Total de comentários de nível raiz
     const [{ count }] = await knex("comments")
       .where({ anime_id, episode_id: episode_id || null, parent_id: null })
       .count({ count: "*" });
 
+    // 2) Busca comentários raiz paginados
     const rootCommentsRows = await knex("comments")
       .where({ anime_id, episode_id: episode_id || null, parent_id: null })
       .orderBy("created_at", "asc")
       .limit(limit)
       .offset(offset);
 
+    // 3) Busca todos (raiz + filhos) para montar árvore e calcular reações
     const allComments = await knex("comments")
       .where({ anime_id, episode_id: episode_id || null })
       .orderBy("created_at", "asc");
 
+    // 4) Inicializa mapa de comentário
     const commentMap = {};
     const userIds = new Set();
     allComments.forEach((c) => {
@@ -137,15 +141,18 @@ async function getComments(req, reply) {
         replies: [],
         likes_count: 0,
         dislikes_count: 0,
-        user_reaction: null,
+        score: 0, // campo score inicializado
+        user_reaction: null, // reação do usuário logado
       };
     });
 
+    // 5) Carrega dados dos usuários
     const users = await knex("users")
       .select("id", "username", "avatar")
       .whereIn("id", Array.from(userIds));
     const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
 
+    // 6) Conta likes/dislikes agrupado por comentário
     const reactionRows = await knex("reactions")
       .select("comment_id", "type")
       .count("* as count")
@@ -157,7 +164,12 @@ async function getComments(req, reply) {
       if (type === "dislike") commentMap[comment_id].dislikes_count = +count;
     });
 
-    // só busca reação do usuário se ele estiver logado
+    // 7) Calcula o score = likes_count - dislikes_count
+    Object.values(commentMap).forEach((c) => {
+      c.score = c.likes_count - c.dislikes_count;
+    });
+
+    // 8) Se logado, busca reação individual do usuário
     if (currentUserId) {
       const userReactions = await knex("reactions")
         .select("comment_id", "type")
@@ -169,13 +181,18 @@ async function getComments(req, reply) {
       });
     }
 
+    // 9) Anexa usuário e monta replies
     allComments.forEach((c) => {
       commentMap[c.id].user = userMap[c.user_id] || null;
-      if (c.parent_id) commentMap[c.parent_id]?.replies.push(commentMap[c.id]);
+      if (c.parent_id) {
+        commentMap[c.parent_id]?.replies.push(commentMap[c.id]);
+      }
     });
 
+    // 10) Prepara array final apenas com comentários raiz
     const commentsWithUsers = rootCommentsRows.map((c) => commentMap[c.id]);
 
+    // 11) Retorna payload
     return reply.send({
       total: Number(count),
       page: Number(page),
