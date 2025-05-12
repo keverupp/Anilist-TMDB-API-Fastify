@@ -13,24 +13,23 @@ async function logActivity(req, reply) {
     const ip_address =
       req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
-    // Criar o registro de atividade - modificado para lidar com diferentes retornos do knex
-    const result = await knex("activity_logs").insert({
+    // Criar o registro de atividade
+    await knex("activity_logs").insert({
       user_id,
       action,
       ip_address,
       created_at: new Date(),
     });
 
-    // Obter ID de forma segura (funciona com diferentes configurações do knex)
-    const logId = Array.isArray(result) ? result[0] : result;
-
+    // Retornar apenas uma mensagem de sucesso sem o ID
     return reply.status(200).send({
+      success: true,
       message: "Atividade registrada com sucesso.",
-      log_id: logId,
     });
   } catch (error) {
     console.error("Erro ao registrar atividade:", error);
     return reply.status(500).send({
+      success: false,
       error: "Erro ao registrar atividade.",
     });
   }
