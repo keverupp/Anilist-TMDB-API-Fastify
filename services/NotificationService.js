@@ -36,8 +36,33 @@ function emitNotification(notification) {
 
 async function createNotification(user_id, type, related_id) {
   try {
-    // Inserir notificação no banco de dados
-    const [insertedId] = await knex("notifications")
+    // 1) Verifica se já existe
+    let notification = await knex("notifications")
+      .where({ user_id, type, related_id })
+      .first();
+
+    if (notification) {
+      // 2) Se existir, só marca como não lida e atualiza timestamp
+      await knex("notifications").where({ id: notification.id }).update({
+        read: false,
+        created_at: new Date(), // opcional
+      });
+
+      // Recarrega o registro atualizado
+      notification = await knex("notifications")
+        .where({ id: notification.id })
+        .first();
+
+      emitNotification({
+        action: "update_notification",
+        ...notification,
+      });
+
+      return notification;
+    }
+
+    // 3) Se não existir, insere normalmente
+    const [inserted] = await knex("notifications")
       .insert({
         user_id,
         type,
@@ -45,26 +70,14 @@ async function createNotification(user_id, type, related_id) {
         read: false,
         created_at: new Date(),
       })
-      .returning("id");
+      .returning("*");
 
-    // Determinar o ID dependendo de como seu banco retorna
-    const notificationId = insertedId?.id || insertedId;
-
-    // Buscar a notificação completa para enriquecer
-    const notification = await knex("notifications")
-      .where("id", notificationId)
-      .first();
-
-    // Adicionar informações específicas ao tipo de notificação
-    let enrichedNotification = { ...notification };
-
-    // Emitir via websocket
     emitNotification({
       action: "new_notification",
-      ...enrichedNotification,
+      ...inserted,
     });
 
-    return notification;
+    return inserted;
   } catch (error) {
     console.error("Erro ao criar notificação:", error);
   }
