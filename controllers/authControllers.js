@@ -66,6 +66,7 @@ async function login(req, reply) {
         username: user.username,
         email: user.email,
         avatar: user.avatar,
+        role: "user",
       },
       token,
     });
