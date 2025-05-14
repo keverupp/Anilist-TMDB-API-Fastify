@@ -1,61 +1,39 @@
-- [🔒 Rotas de Autenticação e Gestão de Tokens](#-rotas-de-autenticação-e-gestão-de-tokens)
-  - [1. Registro](#1-registro)
-  - [2. Login](#2-login)
-  - [3. Logout](#3-logout)
-  - [4. Renovação de Token](#4-renovação-de-token)
-  - [5. Recuperação de Senha](#5-recuperação-de-senha)
-    - [5.1 Solicitação de Redefinição de Senha](#51-solicitação-de-redefinição-de-senha)
-    - [5.2 Redefinição de Senha](#52-redefinição-de-senha)
-  - [Middleware de Autenticação](#middleware-de-autenticação)
-- [🔎 Rotas de Busca](#-rotas-de-busca)
-  - [1. Buscar Títulos de Animes](#1-buscar-títulos-de-animes)
-  - [2. Buscar e Inserir Animes na Base Local](#2-buscar-e-inserir-animes-na-base-local)
-  - [Exemplo de Respostas](#exemplo-de-respostas)
-    - [**1. Buscar Títulos de Animes**](#1-buscar-títulos-de-animes-1)
-    - [**2. Buscar e Inserir Animes na Base Local**](#2-buscar-e-inserir-animes-na-base-local-1)
-- [🍿 Rotas de Animes](#-rotas-de-animes)
-  - [1. Gerenciar Anime Seguido](#1-gerenciar-anime-seguido)
-  - [2. Listar Animes Seguidos](#2-listar-animes-seguidos)
-  - [3. Informações de um Anime](#3-informações-de-um-anime)
-  - [4. Listar Todos os Animes](#4-listar-todos-os-animes)
-  - [5. Listar Animes com Status `Returning Series`](#5-listar-animes-com-status-returning-series)
-  - [6. Listar Temporadas de um Anime](#6-listar-temporadas-de-um-anime)
-  - [7. Importar Episódios de um Anime](#7-importar-episódios-de-um-anime)
-  - [8. Listar Episódios de um Anime](#8-listar-episódios-de-um-anime)
-  - [9. Atualizar Episódios Pendentes](#9-atualizar-episódios-pendentes)
-  - [10. Listar Últimos Episódios Atualizados (Apenas Returning Series)](#10-listar-últimos-episódios-atualizados-apenas-returning-series)
-  - [11. Animes com Estreia Hoje (Cacheado)](#11-animes-com-estreia-hoje-cacheado)
-  - [12. Sincronizar Animes com Estreia Hoje (Inserção no Banco)](#12-sincronizar-animes-com-estreia-hoje-inserção-no-banco)
-- [📺 Rotas de Vídeos](#-rotas-de-vídeos)
-  - [1. Adicionar Vídeos de um Anime](#1-adicionar-vídeos-de-um-anime)
-  - [2. Consultar Vídeos](#2-consultar-vídeos)
-- [💬 Rotas de Comentários](#-rotas-de-comentários)
-  - [1. Criar Comentário](#1-criar-comentário)
-  - [2. Responder Comentário](#2-responder-comentário)
-  - [3. Listar Comentários](#3-listar-comentários)
-  - [4. Excluir Comentário](#4-excluir-comentário)
-  - [5. Editar Comentário](#5-editar-comentário)
-- [👍 Rotas de Reações](#-rotas-de-reações)
-  - [1. POST /reactions](#1-post-reactions)
-- [👤 Rotas de Usuário](#-rotas-de-usuário)
-  - [1. Atualizar Avatar do Usuário](#1-atualizar-avatar-do-usuário)
-  - [2. Buscar Detalhes do Usuário](#2-buscar-detalhes-do-usuário)
-  - [3. Atualizar Informações do Usuário](#3-atualizar-informações-do-usuário)
-  - [4. Atualizar Senha do Usuário](#4-atualizar-senha-do-usuário)
-  - [5. Listar Preferências do Usuário](#5-listar-preferências-do-usuário)
-  - [6. Atualizar Preferências do Usuário](#6-atualizar-preferências-do-usuário)
-- [🔔 Rotas de Notificações](#-rotas-de-notificações)
-  - [1. Listar Notificações](#1-listar-notificações)
-  - [2. Marcar Notificação como Lida](#2-marcar-notificação-como-lida)
-  - [Exemplos de Uso no Frontend](#exemplos-de-uso-no-frontend)
-- [📊 Rotas de Ranking](#-rotas-de-ranking)
-  - [1. Obter Ranking de Animes](#1-obter-ranking-de-animes)
-- [⭐ Rotas de Votação](#-rotas-de-votação)
-  - [1. Avaliar um Anime com Estrelas](#1-avaliar-um-anime-com-estrelas)
-  - [2. Escolher o Melhor Anime da Temporada](#2-escolher-o-melhor-anime-da-temporada)
-  - [3. Visualizar Minhas Avaliações](#3-visualizar-minhas-avaliações)
-- [🔄 Códigos de Erro Comuns](#-códigos-de-erro-comuns)
-- [📆 Temporadas](#-temporadas)
+- [🌟 Animes da Temporada Atual](#-animes-da-temporada-atual)
+  - [Obter Animes da Temporada Atual](#obter-animes-da-temporada-atual)
+    - [9. Atualizar Episódios Pendentes](#9-atualizar-episódios-pendentes)
+    - [10. Listar Últimos Episódios Atualizados (Apenas Returning Series)](#10-listar-últimos-episódios-atualizados-apenas-returning-series)
+    - [11. Animes com Estreia Hoje (Cacheado)](#11-animes-com-estreia-hoje-cacheado)
+    - [12. Sincronizar Animes com Estreia Hoje (Inserção no Banco)](#12-sincronizar-animes-com-estreia-hoje-inserção-no-banco)
+  - [📺 Rotas de Vídeos](#-rotas-de-vídeos)
+    - [1. Adicionar Vídeos de um Anime](#1-adicionar-vídeos-de-um-anime)
+    - [2. Consultar Vídeos](#2-consultar-vídeos)
+  - [💬 Rotas de Comentários](#-rotas-de-comentários)
+    - [1. Criar Comentário](#1-criar-comentário)
+    - [2. Responder Comentário](#2-responder-comentário)
+    - [3. Listar Comentários](#3-listar-comentários)
+    - [4. Excluir Comentário](#4-excluir-comentário)
+    - [5. Editar Comentário](#5-editar-comentário)
+  - [👍 Rotas de Reações](#-rotas-de-reações)
+    - [1. POST /reactions](#1-post-reactions)
+  - [👤 Rotas de Usuário](#-rotas-de-usuário)
+    - [1. Atualizar Avatar do Usuário](#1-atualizar-avatar-do-usuário)
+    - [2. Buscar Detalhes do Usuário](#2-buscar-detalhes-do-usuário)
+    - [3. Atualizar Informações do Usuário](#3-atualizar-informações-do-usuário)
+    - [4. Atualizar Senha do Usuário](#4-atualizar-senha-do-usuário)
+    - [5. Listar Preferências do Usuário](#5-listar-preferências-do-usuário)
+    - [6. Atualizar Preferências do Usuário](#6-atualizar-preferências-do-usuário)
+  - [🔔 Rotas de Notificações](#-rotas-de-notificações)
+    - [1. Listar Notificações](#1-listar-notificações)
+    - [2. Marcar Notificação como Lida](#2-marcar-notificação-como-lida)
+    - [Exemplos de Uso no Frontend](#exemplos-de-uso-no-frontend)
+  - [📊 Rotas de Ranking](#-rotas-de-ranking)
+    - [1. Obter Ranking de Animes](#1-obter-ranking-de-animes)
+  - [⭐ Rotas de Votação](#-rotas-de-votação)
+    - [1. Avaliar um Anime com Estrelas](#1-avaliar-um-anime-com-estrelas)
+    - [2. Escolher o Melhor Anime da Temporada](#2-escolher-o-melhor-anime-da-temporada)
+    - [3. Visualizar Minhas Avaliações](#3-visualizar-minhas-avaliações)
+  - [🔄 Códigos de Erro Comuns](#-códigos-de-erro-comuns)
+  - [📆 Temporadas](#-temporadas)
 
 ## 🔒 Rotas de Autenticação e Gestão de Tokens
 
@@ -585,6 +563,99 @@ GET /search-api?query=naruto
 }
 ```
 
+---
+
+# 🌟 Animes da Temporada Atual
+
+## Obter Animes da Temporada Atual
+
+- **Endpoint**: `GET /anime/current-season`
+- **Descrição**: Retorna todos os animes marcados como em exibição na temporada atual (`is_current_season = true`).
+- **Autenticação**: Não necessária.
+- **Headers**:
+
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+
+- **Parâmetros da Query**:
+  - `page` (opcional): Número da página para paginação (padrão: 1)
+  - `limit` (opcional): Quantidade de itens por página (padrão: 20)
+  - `genres` (opcional): Filtro por gêneros, separados por vírgula (ex: "ação,aventura,comédia")
+  - `keywords` (opcional): Filtro por palavras-chave, separadas por vírgula
+  - `sort_by` (opcional): Campo para ordenação - "name", "popularity", "vote_average", "first_air_date", "episodes_count" (padrão: "popularity")
+  - `sort_order` (opcional): Direção da ordenação - "asc" ou "desc" (padrão: "desc")
+
+- **Resposta de Exemplo**:
+
+  ```json
+  {
+    "pagination": {
+      "total": 42,
+      "totalPages": 3,
+      "currentPage": 1,
+      "perPage": 20
+    },
+    "sort": {
+      "field": "popularity",
+      "order": "desc"
+    },
+    "current_season": {
+      "name": "inverno",
+      "year": 2025
+    },
+    "data": [
+      {
+        "id": 123,
+        "name": "Attack on Titan: The Final Season",
+        "original_name": "進撃の巨人 The Final Season",
+        "overview": "Descrição do anime...",
+        "poster_path": "/path/to/poster.jpg",
+        "backdrop_path": "/path/to/backdrop.jpg",
+        "first_air_date": "2024-12-01",
+        "episodes_count": 12,
+        "vote_average": 4.8,
+        "vote_count": 1250,
+        "popularity": 98.5,
+        "status": "Airing",
+        "type": "TV",
+        "genres": [
+          {
+            "id": 1,
+            "name_pt": "Ação"
+          },
+          {
+            "id": 5,
+            "name_pt": "Drama"
+          }
+        ]
+      },
+      // Mais animes...
+    ]
+  }
+  ```
+
+- **Observação**:
+  - Os animes retornados são apenas aqueles marcados como `is_current_season = true`
+  - Cada anime inclui seus gêneros associados em português (`name_pt`)
+  - A resposta inclui informações sobre a temporada atual (nome e ano)
+  - Por padrão, os animes são ordenados por popularidade em ordem decrescente
+  - Use esta rota para exibir carrosséis ou listas de "Animes da Temporada" em sua interface
+  - Os gêneros podem ser utilizados para filtrar ou categorizar os animes na interface do usuário
+
+- **Possíveis Códigos de Erro**:
+  - `404 Not Found`: Gêneros ou keywords especificados não foram encontrados
+  - `500 Internal Server Error`: Erro no servidor durante o processamento da requisição
+
+- **Exemplos de Uso**:
+  - Listagem básica: `GET /anime/current-season`
+  - Filtrar por gêneros: `GET /anime/current-season?genres=ação,drama`
+  - Ordenar por avaliação: `GET /anime/current-season?sort_by=vote_average&sort_order=desc`
+  - Paginação: `GET /anime/current-season?page=2&limit=15`
+  - Combinação de filtros: `GET /anime/current-season?genres=ação&sort_by=popularity&page=1&limit=10`
+  
 ---
 
 ### 9. Atualizar Episódios Pendentes
