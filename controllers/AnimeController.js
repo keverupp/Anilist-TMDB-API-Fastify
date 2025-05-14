@@ -14,8 +14,6 @@ const axios = require("axios");
 
 /**
  * Valida se o ID fornecido é um número válido e positivo.
- * @param {any} id - O ID a ser validado.
- * @returns {boolean} - Retorna true se válido, caso contrário false.
  */
 const isValidId = (id) => {
   const num = Number(id);
@@ -24,9 +22,6 @@ const isValidId = (id) => {
 
 /**
  * Formata os dados do anime provenientes da API TMDB e AniList.
- * @param {object} data - Dados brutos do anime da API TMDB.
- * @param {object} aniListInfo - Dados adicionais da AniList.
- * @returns {object} - Dados formatados do anime para inserção no banco.
  */
 const formatAnimeData = (data, aniListInfo = {}) => ({
   id: data.id,
@@ -54,40 +49,30 @@ const formatAnimeData = (data, aniListInfo = {}) => ({
   number_of_episodes: data.number_of_episodes || null,
   popularity: data.popularity || 0,
   status: data.status || null,
-  episode_run_time: data.episode_run_time
-    ? data.episode_run_time[0] || null
-    : null,
+  episode_run_time: data.episode_run_time?.[0] || null,
   type: data.type || null,
 });
 
 /**
- * Busca informações do AniList com base no título em inglês.
- * @param {string} englishTitle - O título em inglês do anime.
- * @returns {object} - Dados do AniList formatados.
+ * Busca informações do AniList.
  */
 async function fetchAniListInfo(englishTitle) {
   const query = `
-      query ($search: String) {
-        Media(search: $search, type: ANIME) {
-          id
-          bannerImage
-          nextAiringEpisode {
-            airingAt
-          }
-        }
+    query ($search: String) {
+      Media(search: $search, type: ANIME) {
+        id
+        bannerImage
+        nextAiringEpisode { airingAt }
       }
-    `;
-
+    }
+  `;
   const variables = { search: englishTitle };
-
   const response = await axios.post(
     "https://graphql.anilist.co",
     { query, variables },
     { headers: { "Content-Type": "application/json" } }
   );
-
   const data = response.data.data.Media;
-
   return {
     anilist_id: data.id,
     banner_path: data.bannerImage,
@@ -97,22 +82,15 @@ async function fetchAniListInfo(englishTitle) {
 
 /**
  * Processa e salva os gêneros associados ao anime.
- * @param {array} genres - Array de gêneros do anime.
- * @param {number} animeId - ID do anime.
- * @param {object} logger - Objeto de logging (ex: req.log).
  */
-
 const processGenres = async (genres, animeId, logger) => {
   await Promise.all(
     genres.map(async (genre) => {
       try {
-        // Procurar pelo gênero diretamente pelo ID do TMDB
-        const existingGenre = await findGenreById(genre.id); // Usando o ID do TMDB
+        const existingGenre = await findGenreById(genre.id);
         if (existingGenre) {
-          // Inserir relação entre anime e gênero
           await insertAnimeGenreRelation(animeId, existingGenre.id);
         } else {
-          // Logar aviso caso o gênero não exista no banco
           logger.warn(
             `Gênero não encontrado no banco: ID ${genre.id}, Nome: ${genre.name}`
           );
@@ -129,13 +107,12 @@ const processGenres = async (genres, animeId, logger) => {
 
 /**
  * Processa e salva as temporadas associadas ao anime.
- * @param {array} seasons - Array de temporadas do anime.
- * @param {number} animeId - ID do anime.
- * @param {object} logger - Objeto de logging (ex: req.log).
+ * Ignora temporadas especiais (season_number = 0).
  */
 const processSeasons = async (seasons, animeId, logger) => {
+  const numberedSeasons = (seasons || []).filter((s) => s.season_number > 0);
   await Promise.all(
-    seasons.map(async (season) => {
+    numberedSeasons.map(async (season) => {
       try {
         const seasonId = await upsertSeason({
           id: season.id,
@@ -156,8 +133,6 @@ const processSeasons = async (seasons, animeId, logger) => {
 
 /**
  * Controlador para obter informações de um anime, incluindo integração com TMDB e AniList.
- * @param {object} req - Objeto de requisição.
- * @param {object} reply - Objeto de resposta.
  */
 async function getAnime(req, reply) {
   const { id } = req.params;
@@ -204,7 +179,7 @@ async function getAnime(req, reply) {
     const formattedAnime = formatAnimeData(animeData, aniListInfo);
     await insertAnime(formattedAnime);
 
-    // 4. Busca e processa keywords, gêneros e temporadas
+    // 4. Busca keywords e processa relacionamentos
     const { data: keywordData } = await axios.get(
       `https://api.themoviedb.org/3/tv/${animeId}/keywords`,
       { params: { api_key: TMDB_API_KEY } }
@@ -212,7 +187,7 @@ async function getAnime(req, reply) {
 
     await Promise.all([
       processGenres(animeData.genres || [], animeId, req.log),
-      processSeasons(animeData.seasons || [], animeId, req.log),
+      processSeasons(animeData.seasons, animeId, req.log),
       processKeywords(animeId, req.log, keywordData.results || []),
     ]);
 

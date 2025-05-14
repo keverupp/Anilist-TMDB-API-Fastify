@@ -11,24 +11,22 @@ const insert = async (table, data) => {
 };
 
 // Função genérica para upsert (inserir ou atualizar) usando onConflict
-const upsert = async (table, conflictColumn, data) => {
-  return knex(table).insert(data).onConflict(conflictColumn).merge();
+const upsert = async (table, conflictColumns, data) => {
+  return knex(table).insert(data).onConflict(conflictColumns).merge();
 };
 
-// Função para buscar gêneros associados a um anime pelo ID do TMDB
+// === Gêneros ===
 const findGenresByAnimeId = async (animeId) => {
   return knex("anime_genres")
-    .join("genres", "anime_genres.genre_id", "genres.id") // Associar pelo ID
+    .join("genres", "anime_genres.genre_id", "genres.id")
     .where("anime_genres.anime_id", animeId)
     .select("genres.id as tmdb_id", "genres.name_en", "genres.name_pt");
 };
 
-// Função para buscar gênero pelo nome
 const findGenreById = async (id) => {
-  return knex("genres").where("id", id).first(); // Busca pelo ID do TMDB
+  return knex("genres").where("id", id).first();
 };
 
-// Função para inserir relação entre anime e gênero
 const insertAnimeGenreRelation = async (animeId, genreId) => {
   const exists = await knex("anime_genres")
     .where({ anime_id: animeId, genre_id: genreId })
@@ -42,7 +40,7 @@ const insertAnimeGenreRelation = async (animeId, genreId) => {
   }
 };
 
-// Função para upsert temporada
+// === Temporadas ===
 const upsertSeason = async (season) => {
   const seasonData = {
     id: season.id,
@@ -52,27 +50,13 @@ const upsertSeason = async (season) => {
     air_date: season.air_date || null,
   };
 
-  try {
-    await upsert("seasons", "id", seasonData);
-    console.log(`Temporada upserted: ${seasonData.name}, ID: ${seasonData.id}`);
-    return parseInt(seasonData.id, 10);
-  } catch (error) {
-    console.error("Erro em upsertSeason:", error.message, season);
-    throw new Error("Falha ao inserir ou recuperar a temporada.");
-  }
+  await upsert("seasons", "id", seasonData);
+  return parseInt(seasonData.id, 10);
 };
 
-// Função para relacionar anime e temporada
 const insertAnimeSeasonRelation = async (animeId, seasonId) => {
   animeId = parseInt(animeId, 10);
   seasonId = parseInt(seasonId, 10);
-
-  if (isNaN(animeId) || isNaN(seasonId)) {
-    console.error(
-      `IDs inválidos para relacionamento: animeId=${animeId}, seasonId=${seasonId}`
-    );
-    return;
-  }
 
   const exists = await knex("anime_seasons")
     .where({ anime_id: animeId, season_id: seasonId })
@@ -83,16 +67,74 @@ const insertAnimeSeasonRelation = async (animeId, seasonId) => {
       anime_id: animeId,
       season_id: seasonId,
     });
-    console.log(
-      `Relacionamento inserido: animeId=${animeId}, seasonId=${seasonId}`
-    );
-  } else {
-    console.log(
-      `Relacionamento já existe: animeId=${animeId}, seasonId=${seasonId}`
-    );
   }
 };
 
+// === Episódios ===
+/**
+ * Insere ou atualiza um episódio, preenchendo apenas campos não-nulos.
+ */
+const upsertEpisode = async (episodeData) => {
+  await knex("episodes")
+    .insert(episodeData)
+    .onConflict(["anime_season_id", "episode_number"])
+    .merge({
+      name: knex.raw("COALESCE(EXCLUDED.name, ??)", ["episodes.name"]),
+      overview: knex.raw("COALESCE(EXCLUDED.overview, ??)", [
+        "episodes.overview",
+      ]),
+      still_path: knex.raw("COALESCE(EXCLUDED.still_path, ??)", [
+        "episodes.still_path",
+      ]),
+      air_date: knex.raw("COALESCE(EXCLUDED.air_date, ??)", [
+        "episodes.air_date",
+      ]),
+      runtime: knex.raw("COALESCE(EXCLUDED.runtime, ??)", ["episodes.runtime"]),
+      tmdb_id: knex.raw("COALESCE(EXCLUDED.tmdb_id, ??)", ["episodes.tmdb_id"]),
+      vote_average: knex.raw("COALESCE(EXCLUDED.vote_average, ??)", [
+        "episodes.vote_average",
+      ]),
+      vote_count: knex.raw("COALESCE(EXCLUDED.vote_count, ??)", [
+        "episodes.vote_count",
+      ]),
+      is_pending_update: knex.raw("EXCLUDED.is_pending_update"),
+    });
+};
+
+/**
+ * Processa um array de episódios para uma determinada temporada.
+ */
+const processEpisodes = async (seasonId, episodes, logger) => {
+  await Promise.all(
+    episodes.map(async (ep) => {
+      try {
+        const episodeData = {
+          anime_season_id: seasonId,
+          episode_number: ep.episode_number,
+          name: ep.name || null,
+          overview: ep.overview || null,
+          still_path: ep.still_path
+            ? `https://image.tmdb.org/t/p/w500${ep.still_path}`
+            : null,
+          air_date: ep.air_date || null,
+          runtime: ep.runtime || null,
+          tmdb_id: ep.id || null,
+          vote_average: ep.vote_average || 0,
+          vote_count: ep.vote_count || 0,
+          is_pending_update: ep.overview == null,
+        };
+        await upsertEpisode(episodeData);
+      } catch (error) {
+        logger.error(
+          `Erro ao processar episódio seasonId=${seasonId} ep=${ep.episode_number}:`,
+          error.message
+        );
+      }
+    })
+  );
+};
+
+// === Títulos e Keywords ===
 async function getEnglishTitleFromTitles(animeId) {
   return knex("titles").select("english_title").where("id", animeId).first();
 }
@@ -101,20 +143,17 @@ const processKeywords = async (animeId, logger, keywords) => {
   await Promise.all(
     keywords.map(async (keyword) => {
       try {
-        // Inserir keyword se não existir
         await knex("keywords")
           .insert({ id: keyword.id, name: keyword.name })
           .onConflict("id")
           .ignore();
-
-        // Relacionar anime com keyword
         await knex("anime_keywords")
           .insert({ anime_id: animeId, keyword_id: keyword.id })
           .onConflict(["anime_id", "keyword_id"])
           .ignore();
       } catch (error) {
         logger.error(
-          `Erro ao processar keyword '${keyword.name}' (ID ${keyword.id})`,
+          `Erro ao processar keyword '${keyword.name}' (ID ${keyword.id}):`,
           error.message
         );
       }
@@ -138,6 +177,8 @@ module.exports = {
   insertAnimeGenreRelation,
   upsertSeason,
   insertAnimeSeasonRelation,
+  upsertEpisode,
+  processEpisodes,
   getEnglishTitleFromTitles,
   processKeywords,
   findKeywordsByAnimeId,
