@@ -1,91 +1,61 @@
-# 📜 Documentação das Rotas
-
-## Sumário
-
-- [Rotas de Autenticação e Gestão de Tokens](#-rotas-de-autenticação-e-gestão-de-tokens)
-
-- [Registro](#1-registro)
-- [Login](#2-login)
-- [Logout](#3-logout)
-- [Renovação de Token](#4-renovação-de-token)
-- [Recuperação de Senha](#5-recuperação-de-senha)
-  - [Solicitação de Redefinição de Senha](#51-solicitação-de-redefinição-de-senha)
-  - [Redefinição de Senha](#52-redefinição-de-senha)
-- [Middleware de Autenticação](#middleware-de-autenticação)
-
----
-
-- [Rotas de Busca](#-rotas-de-busca)
-
-  - [Buscar Títulos de Animes](#1-buscar-títulos-de-animes)
-  - [Buscar e Inserir Animes na Base Local](#2-buscar-e-inserir-animes-na-base-local)
-
----
-
-### 📚 **Rotas de Animes**
-
-- [Gerenciar Anime Seguido](#1-gerenciar-anime-seguido)  
-- [Listar Animes Seguidos](#2-listar-animes-seguidos)  
-- [Informações de um Anime](#3-informações-de-um-anime)  
-- [Listar Todos os Animes](#4-listar-todos-os-animes)  
-- [Listar Animes com Status `Returning Series`](#5-listar-animes-com-status-returning-series)  
-- [Listar Temporadas de um Anime](#6-listar-temporadas-de-um-anime)
-- [Importar Episódios de um Anime](#7-importar-episódios-de-um-anime)  
-- [Listar Episódios de um Anime](#8-listar-episódios-de-um-anime)  
-- [Atualizar Episódios Pendentes](#9-atualizar-episódios-pendentes)  
-- [Listar Últimos Episódios Atualizados (Apenas Returning Series)](#10-listar-últimos-episódios-atualizados-apenas-returning-series)
-- [Animes com Estreia Hoje (Cacheado)](#11-animes-com-estreia-hoje-cacheado)  
-- [Sincronizar Animes com Estreia Hoje (Inserção no Banco)](#12-sincronizar-animes-com-estreia-hoje-inserção-no-banco)
-
----
-
-- [Rotas de Episódios](#-rotas-de-episódios)
-
-  - [Importar Episódios de um Anime](#1-importar-episódios-de-um-anime)
-  - [Listar Episódios de um Anime com Paginação e Filtro de Temporada](#2-listar-episódios-de-um-anime-com-paginação-e-filtro-de-temporada)
-  - [Atualizar Episódios com Runtime Nulo](#3-atualizar-episódios-com-runtime-nulo)
-
----
-
-- [Rotas de Vídeos](#-rotas-de-vídeos)
-
-  - [Adicionar Vídeos de um Anime](#1-adicionar-vídeos-de-um-anime)
-  - [Consultar Vídeos](#2-consultar-vídeos)
-
----
-
-- [Rotas de Comentários](#-rotas-de-comentários)
-
-  - [Criar Comentário](#1-criar-comentário)
-  - [Responder a Comentário](#2-responder-comentário)
-  - [Listar Comentários](#3-listar-comentários)
-  - [Editar Comentário](#4-editar-comentário)
-  - [Excluir Comentário](#5-excluir-comentário)
-
----
-
-- [Rotas de Reações](#-rotas-de-reações)
-
-  - [Adicionar/Atualizar/Remover Reação](#1-adicionar-atualizar-remover-reação)
-
----
-
-- [Rotas de Usuário](#-rotas-de-usuário)
-
-  - [Atualizar Avatar do Usuário](#1-atualizar-avatar-do-usuário)
-  - [Buscar Detalhes do Usuário](#2-buscar-detalhes-do-usuário)
-  - [Atualizar Informações do Usuário](#3-atualizar-informações-do-usuário)
-  - [Atualizar Senha do Usuário](#4-atualizar-senha-do-usuário)
-  - [Listar Preferências do Usuário](#5-listar-preferências-do-usuário)
-  - [Atualizar Preferências do Usuário](#6-atualizar-preferências-do-usuário)
-
----
-
-- [Rotas de Notificações](#-rotas-de-notificações)
-  - [Listar Notificações](#1-listar-notificações)
-  - [Marcar Notificação como Lida](#2-marcar-notificação-como-lida)
-
----
+- [🔒 Rotas de Autenticação e Gestão de Tokens](#-rotas-de-autenticação-e-gestão-de-tokens)
+  - [1. Registro](#1-registro)
+  - [2. Login](#2-login)
+  - [3. Logout](#3-logout)
+  - [4. Renovação de Token](#4-renovação-de-token)
+  - [5. Recuperação de Senha](#5-recuperação-de-senha)
+    - [5.1 Solicitação de Redefinição de Senha](#51-solicitação-de-redefinição-de-senha)
+    - [5.2 Redefinição de Senha](#52-redefinição-de-senha)
+  - [Middleware de Autenticação](#middleware-de-autenticação)
+- [🔎 Rotas de Busca](#-rotas-de-busca)
+  - [1. Buscar Títulos de Animes](#1-buscar-títulos-de-animes)
+  - [2. Buscar e Inserir Animes na Base Local](#2-buscar-e-inserir-animes-na-base-local)
+  - [Exemplo de Respostas](#exemplo-de-respostas)
+    - [**1. Buscar Títulos de Animes**](#1-buscar-títulos-de-animes-1)
+    - [**2. Buscar e Inserir Animes na Base Local**](#2-buscar-e-inserir-animes-na-base-local-1)
+- [🍿 Rotas de Animes](#-rotas-de-animes)
+  - [1. Gerenciar Anime Seguido](#1-gerenciar-anime-seguido)
+  - [2. Listar Animes Seguidos](#2-listar-animes-seguidos)
+  - [3. Informações de um Anime](#3-informações-de-um-anime)
+  - [4. Listar Todos os Animes](#4-listar-todos-os-animes)
+  - [5. Listar Animes com Status `Returning Series`](#5-listar-animes-com-status-returning-series)
+  - [6. Listar Temporadas de um Anime](#6-listar-temporadas-de-um-anime)
+  - [7. Importar Episódios de um Anime](#7-importar-episódios-de-um-anime)
+  - [8. Listar Episódios de um Anime](#8-listar-episódios-de-um-anime)
+  - [9. Atualizar Episódios Pendentes](#9-atualizar-episódios-pendentes)
+  - [10. Listar Últimos Episódios Atualizados (Apenas Returning Series)](#10-listar-últimos-episódios-atualizados-apenas-returning-series)
+  - [11. Animes com Estreia Hoje (Cacheado)](#11-animes-com-estreia-hoje-cacheado)
+  - [12. Sincronizar Animes com Estreia Hoje (Inserção no Banco)](#12-sincronizar-animes-com-estreia-hoje-inserção-no-banco)
+- [📺 Rotas de Vídeos](#-rotas-de-vídeos)
+  - [1. Adicionar Vídeos de um Anime](#1-adicionar-vídeos-de-um-anime)
+  - [2. Consultar Vídeos](#2-consultar-vídeos)
+- [💬 Rotas de Comentários](#-rotas-de-comentários)
+  - [1. Criar Comentário](#1-criar-comentário)
+  - [2. Responder Comentário](#2-responder-comentário)
+  - [3. Listar Comentários](#3-listar-comentários)
+  - [4. Excluir Comentário](#4-excluir-comentário)
+  - [5. Editar Comentário](#5-editar-comentário)
+- [👍 Rotas de Reações](#-rotas-de-reações)
+  - [1. POST /reactions](#1-post-reactions)
+- [👤 Rotas de Usuário](#-rotas-de-usuário)
+  - [1. Atualizar Avatar do Usuário](#1-atualizar-avatar-do-usuário)
+  - [2. Buscar Detalhes do Usuário](#2-buscar-detalhes-do-usuário)
+  - [3. Atualizar Informações do Usuário](#3-atualizar-informações-do-usuário)
+  - [4. Atualizar Senha do Usuário](#4-atualizar-senha-do-usuário)
+  - [5. Listar Preferências do Usuário](#5-listar-preferências-do-usuário)
+  - [6. Atualizar Preferências do Usuário](#6-atualizar-preferências-do-usuário)
+- [🔔 Rotas de Notificações](#-rotas-de-notificações)
+  - [1. Listar Notificações](#1-listar-notificações)
+  - [2. Marcar Notificação como Lida](#2-marcar-notificação-como-lida)
+  - [Exemplos de Uso no Frontend](#exemplos-de-uso-no-frontend)
+- [📊 Rotas de Ranking](#-rotas-de-ranking)
+  - [1. Obter Ranking de Animes](#1-obter-ranking-de-animes)
+- [⭐ Rotas de Votação](#-rotas-de-votação)
+  - [1. Avaliar um Anime com Estrelas](#1-avaliar-um-anime-com-estrelas)
+  - [2. Escolher o Melhor Anime da Temporada](#2-escolher-o-melhor-anime-da-temporada)
+  - [3. Visualizar Minhas Avaliações](#3-visualizar-minhas-avaliações)
+- [🔄 Códigos de Erro Comuns](#-códigos-de-erro-comuns)
+- [📆 Temporadas](#-temporadas)
 
 ## 🔒 Rotas de Autenticação e Gestão de Tokens
 
@@ -1555,3 +1525,325 @@ Adiciona ou altera uma reação (“upvote” ou “downvote”) a um comentári
      ```
 
 ---
+
+## 📊 Rotas de Ranking
+
+### 1. Obter Ranking de Animes
+
+- **Endpoint**: `GET /anime/ranking`
+- **Descrição**: Retorna o ranking de animes com base nos critérios especificados. Pode exibir tanto o ranking por estrelas (média de avaliações) quanto o ranking por escolha de melhor anime da temporada.
+- **Autenticação**: Não necessária.
+- **Headers**:
+
+  ```json
+  {
+    "Content-Type": "application/json"
+  }
+  ```
+
+- **Parâmetros da Query**:
+  - `page` (opcional): Número da página para paginação (padrão: 1)
+  - `limit` (opcional): Quantidade de itens por página (padrão: 10)
+  - `season` (opcional): Temporada específica (verão, outono, inverno, primavera). Se não fornecido, usa a temporada atual.
+  - `year` (opcional): Ano específico. Se não fornecido, usa o ano atual.
+  - `genres` (opcional): Filtro por gêneros, separados por vírgula (ex: "ação,aventura,comédia")
+  - `keywords` (opcional): Filtro por palavras-chave, separadas por vírgula
+  - `ranking_type` (opcional): Tipo de ranking - "stars" para avaliações com estrelas (padrão) ou "best_pick" para melhores escolhidos
+  - `sort_by` (opcional): Campo para ordenação - "stars" ou "vote_count" (padrão: "stars")
+  - `sort_order` (opcional): Direção da ordenação - "asc" ou "desc" (padrão: "desc")
+
+- **Resposta de Exemplo (Ranking por Estrelas)**:
+
+  ```json
+  {
+    "pagination": {
+      "total": 45,
+      "totalPages": 5,
+      "currentPage": 1,
+      "perPage": 10
+    },
+    "sort": {
+      "field": "stars",
+      "order": "desc"
+    },
+    "filters": {
+      "ranking_type": "stars",
+      "season": "inverno",
+      "year": 2025,
+      "genres": ["ação", "aventura"],
+      "keywords": []
+    },
+    "data": [
+      {
+        "position": 1,
+        "anime_id": 123,
+        "name": "Attack on Titan",
+        "original_name": "進撃の巨人",
+        "poster_path": "/path/to/image.jpg",
+        "stars": 4.8,
+        "vote_count": 352
+      },
+      {
+        "position": 2,
+        "anime_id": 456,
+        "name": "Demon Slayer",
+        "original_name": "鬼滅の刃",
+        "poster_path": "/path/to/image.jpg",
+        "stars": 4.7,
+        "vote_count": 289
+      }
+      // Mais animes...
+    ]
+  }
+  ```
+
+- **Resposta de Exemplo (Ranking por Melhor da Temporada)**:
+
+  ```json
+  {
+    "pagination": {
+      "total": 45,
+      "totalPages": 5,
+      "currentPage": 1,
+      "perPage": 10
+    },
+    "sort": {
+      "field": "vote_count",
+      "order": "desc"
+    },
+    "filters": {
+      "ranking_type": "best_pick",
+      "season": "inverno",
+      "year": 2025,
+      "genres": [],
+      "keywords": []
+    },
+    "data": [
+      {
+        "position": 1,
+        "anime_id": 123,
+        "name": "Attack on Titan",
+        "original_name": "進撃の巨人",
+        "poster_path": "/path/to/image.jpg",
+        "vote_count": 187
+      },
+      {
+        "position": 2,
+        "anime_id": 456,
+        "name": "Demon Slayer",
+        "original_name": "鬼滅の刃",
+        "poster_path": "/path/to/image.jpg",
+        "vote_count": 156
+      }
+      // Mais animes...
+    ]
+  }
+  ```
+
+- **Observação**:
+  - Os animes são classificados por sua posição no ranking.
+  - Para ranking tipo "stars", os resultados incluem a média de estrelas (0-5).
+  - Para ranking tipo "best_pick", os resultados mostram apenas a contagem de votos.
+  - A temporada é determinada automaticamente se não for especificada.
+
+---
+
+## ⭐ Rotas de Votação
+
+### 1. Avaliar um Anime com Estrelas
+
+- **Endpoint**: `POST /anime/rate`
+- **Descrição**: Permite que um usuário avalie um anime com uma classificação de 0 a 5 estrelas (permitindo meias estrelas).
+- **Autenticação**: Necessária.
+- **Headers**:
+
+  ```json
+  {
+    "Authorization": "Bearer <seu-token>",
+    "Content-Type": "application/json"
+  }
+  ```
+
+- **Corpo da Requisição**:
+
+  ```json
+  {
+    "anime_id": 123,
+    "stars": 4.5
+  }
+  ```
+
+- **Resposta (Novo Voto)**:
+
+  ```json
+  {
+    "message": "Avaliação para \"Attack on Titan\" registrada com sucesso.",
+    "data": {
+      "anime_id": 123,
+      "stars": 4.5,
+      "season": "inverno",
+      "year": 2025
+    }
+  }
+  ```
+
+- **Resposta (Atualização de Voto)**:
+
+  ```json
+  {
+    "message": "Avaliação para \"Attack on Titan\" atualizada com sucesso.",
+    "data": {
+      "anime_id": 123,
+      "stars": 4.5,
+      "season": "inverno",
+      "year": 2025
+    }
+  }
+  ```
+
+- **Observação**:
+  - Um usuário pode votar em múltiplos animes por temporada.
+  - Os valores possíveis para `stars` são: 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5 e 5.
+  - A temporada é determinada automaticamente com base no status do anime:
+    - Para animes marcados como `is_current_season = true`, usa a temporada atual
+    - Para animes marcados como `is_current_season = false`, usa a temporada baseada em `first_air_date`
+
+---
+
+### 2. Escolher o Melhor Anime da Temporada
+
+- **Endpoint**: `POST /anime/best-pick`
+- **Descrição**: Permite que um usuário escolha qual anime considera o melhor da temporada.
+- **Autenticação**: Necessária.
+- **Headers**:
+
+  ```json
+  {
+    "Authorization": "Bearer <seu-token>",
+    "Content-Type": "application/json"
+  }
+  ```
+
+- **Corpo da Requisição**:
+
+  ```json
+  {
+    "anime_id": 456
+  }
+  ```
+
+- **Resposta (Primeira Escolha)**:
+
+  ```json
+  {
+    "message": "\"Demon Slayer\" foi escolhido como seu anime favorito da temporada.",
+    "data": {
+      "anime_id": 456,
+      "season": "inverno",
+      "year": 2025
+    }
+  }
+  ```
+
+- **Resposta (Mudança de Escolha)**:
+
+  ```json
+  {
+    "message": "Sua escolha para o melhor anime da temporada foi alterada de \"Attack on Titan\" para \"Demon Slayer\".",
+    "data": {
+      "anime_id": 456,
+      "previous_anime_id": 123,
+      "season": "inverno",
+      "year": 2025
+    }
+  }
+  ```
+
+- **Observação**:
+  - Um usuário só pode escolher um único anime como o melhor da temporada.
+  - Escolhas subsequentes substituirão a escolha anterior.
+  - A temporada é determinada automaticamente com base no status do anime:
+    - Para animes marcados como `is_current_season = true`, usa a temporada atual
+    - Para animes marcados como `is_current_season = false`, usa a temporada baseada em `first_air_date`
+
+---
+
+### 3. Visualizar Minhas Avaliações
+
+- **Endpoint**: `GET /anime/my-ratings`
+- **Descrição**: Retorna todas as avaliações e a escolha do melhor anime feitas pelo usuário autenticado na temporada atual.
+- **Autenticação**: Necessária.
+- **Headers**:
+
+  ```json
+  {
+    "Authorization": "Bearer <seu-token>",
+    "Content-Type": "application/json"
+  }
+  ```
+
+- **Resposta de Exemplo**:
+
+  ```json
+  {
+    "season": "inverno",
+    "year": 2025,
+    "ratings": [
+      {
+        "anime_id": 123,
+        "stars": 4.5,
+        "updated_at": "2025-01-10T15:30:45Z",
+        "name": "Attack on Titan",
+        "poster_path": "/path/to/image.jpg"
+      },
+      {
+        "anime_id": 456,
+        "stars": 5.0,
+        "updated_at": "2025-01-15T18:22:10Z",
+        "name": "Demon Slayer",
+        "poster_path": "/path/to/image.jpg"
+      }
+      // Mais avaliações...
+    ],
+    "best_pick": {
+      "anime_id": 456,
+      "name": "Demon Slayer",
+      "poster_path": "/path/to/image.jpg"
+    }
+  }
+  ```
+
+- **Observação**:
+  - A resposta inclui tanto as avaliações com estrelas quanto a escolha do melhor anime (se houver).
+  - As avaliações são ordenadas por data de atualização (mais recentes primeiro).
+  - Se o usuário não tiver escolhido um melhor anime, o campo `best_pick` será `null`.
+
+---
+
+## 🔄 Códigos de Erro Comuns
+
+- **400 Bad Request**: Parâmetros inválidos ou ausentes
+  - Anime ID ausente
+  - Avaliação em estrelas fora do intervalo válido (0-5, com incrementos de 0.5)
+
+- **401 Unauthorized**: Token de autenticação ausente ou inválido
+
+- **404 Not Found**: Recurso não encontrado
+  - Anime não encontrado
+  - Gêneros ou keywords não encontrados
+
+- **500 Internal Server Error**: Erro no servidor durante o processamento da requisição
+
+---
+
+## 📆 Temporadas
+
+O sistema define automaticamente as temporadas com base nos meses:
+
+- **Verão**: Dezembro, Janeiro, Fevereiro
+- **Outono**: Março, Abril, Maio
+- **Inverno**: Junho, Julho, Agosto
+- **Primavera**: Setembro, Outubro, Novembro
+
+Para animes em exibição atual (`is_current_season = true`), a temporada é determinada pela data atual.
+Para animes antigos (`is_current_season = false`), a temporada é determinada pela data de lançamento (`first_air_date`).

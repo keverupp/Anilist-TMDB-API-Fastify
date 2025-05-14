@@ -7,17 +7,41 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 async function syncTodayTitles(req, reply) {
   try {
     const today = new Date().toISOString().split("T")[0];
+    const baseUrl = "https://api.themoviedb.org/3/discover/tv";
+    const commonParams = {
+      api_key: TMDB_API_KEY,
+      language: "pt-BR",
+      include_adult: false,
+      include_null_first_air_dates: false,
+      "air_date.gte": today,
+      "air_date.lte": today,
+      sort_by: "name.asc",
+      with_genres: 16,
+      with_original_language: "ja",
+    };
 
-    const url = `https://api.themoviedb.org/3/discover/tv?air_date.gte=${today}&air_date.lte=${today}&include_adult=false&include_null_first_air_dates=false&language=pt-BR&page=1&sort_by=name.asc&with_genres=16&with_original_language=ja&api_key=${TMDB_API_KEY}`;
-    const { data } = await axios.get(url);
+    // 1) busca 1ª página para pegar total_pages
+    const { data: firstPage } = await axios.get(baseUrl, {
+      params: { ...commonParams, page: 1 },
+    });
+    let allAnimes = firstPage.results || [];
+    const totalPages = firstPage.total_pages || 1;
 
-    const animes = data.results;
+    // 2) itera das páginas 2 até totalPages
+    for (let page = 2; page <= totalPages; page++) {
+      const { data } = await axios.get(baseUrl, {
+        params: { ...commonParams, page },
+      });
+      allAnimes = allAnimes.concat(data.results || []);
+    }
 
+    // 3) prepara arrays de inserção
     const titlesToInsert = [];
     const alternativeTitlesToInsert = [];
 
+    // 4) preenche titlesToInsert e busca alt titles
     await Promise.all(
-      animes.map(async (anime) => {
+      allAnimes.map(async (anime) => {
         const animeId = anime.id;
 
         titlesToInsert.push({
@@ -27,7 +51,6 @@ async function syncTodayTitles(req, reply) {
           native_title: anime.original_name || "N/A",
         });
 
-        // Buscar títulos alternativos
         try {
           const { data: altData } = await axios.get(
             `https://api.themoviedb.org/3/tv/${animeId}/alternative_titles`,
@@ -52,9 +75,13 @@ async function syncTodayTitles(req, reply) {
       })
     );
 
-    if (titlesToInsert.length > 0) await insertTitles(titlesToInsert);
-    if (alternativeTitlesToInsert.length > 0)
+    // 5) insere no banco
+    if (titlesToInsert.length) {
+      await insertTitles(titlesToInsert);
+    }
+    if (alternativeTitlesToInsert.length) {
       await knex("alternative_titles").insert(alternativeTitlesToInsert);
+    }
 
     return reply.send({
       message: "Sincronização concluída com sucesso.",
@@ -70,6 +97,4 @@ async function syncTodayTitles(req, reply) {
   }
 }
 
-module.exports = {
-  syncTodayTitles,
-};
+module.exports = { syncTodayTitles };
