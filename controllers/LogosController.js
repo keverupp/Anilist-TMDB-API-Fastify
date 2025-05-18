@@ -1,52 +1,30 @@
-const axios = require("axios");
-const knex = require("knex")(require("../knexfile").development);
-
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
-const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
+const {
+  fetchAndProcessTmdbImagesWithCache,
+} = require("../services/LogoService");
 
 async function getAnimeLogos(req, reply) {
-  const { id } = req.params;
+  const { id } = req.params; // Este 'id' é o TMDB ID do anime
 
   try {
-    const existing = await knex("tmdb_anime_logos")
-      .where({ anime_id: id })
-      .first();
-
-    if (existing) {
-      return reply.send(existing.data);
+    const imageData = await fetchAndProcessTmdbImagesWithCache(id, req.log); // Passando req.log para logging
+    return reply.send(imageData); // Envia a resposta completa como antes
+  } catch (error) {
+    // Erros da API já são logados no serviço. Erros inesperados são logados aqui.
+    if (req.log && typeof req.log.error === "function") {
+      req.log.error(
+        { err: error, animeId: id },
+        "Erro no controller getAnimeLogos"
+      );
+    } else {
+      
     }
 
-    const url = `https://api.themoviedb.org/3/tv/${id}/images?include_image_language=en,pt,ja&api_key=${TMDB_API_KEY}`;
-    const { data } = await axios.get(url);
+    const statusCode =
+      error.response && error.response.status ? error.response.status : 500;
 
-    const processFilePath = (items, size) => {
-      if (!items || !Array.isArray(items)) return [];
-      return items.map((item) => ({
-        ...item,
-        file_path: item.file_path
-          ? `${TMDB_IMAGE_BASE_URL}/w${size}${item.file_path}`
-          : null,
-      }));
-    };
-
-    const processed = {
-      ...data,
-      logos: processFilePath(data.logos, 500),
-      backdrops: processFilePath(data.backdrops, 1280),
-      posters: processFilePath(data.posters, 500),
-    };
-
-    await knex("tmdb_anime_logos").insert({
-      anime_id: id,
-      data: JSON.stringify(processed),
-    });
-
-    return reply.send(processed);
-  } catch (error) {
-    req.log.error(error);
-    return reply.status(500).send({
+    return reply.status(statusCode).send({
       error: "Erro ao buscar ou processar dados da TMDB.",
-      details: error.message,
+      details: error.message, // Em produção, tenha cuidado ao expor error.message
     });
   }
 }
