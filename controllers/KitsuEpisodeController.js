@@ -140,7 +140,7 @@ async function updateEpisodesKitsune(request, reply) {
     const { episodes } = await getEpisodesByAnimeId(animeId, 1, total);
     console.log(`   • Total de episódios locais: ${episodes.length}`);
 
-    // 5) filtrar mais precisamente os episódios que precisam de atualização
+    // 5) filtrar os episódios que precisam de atualização
     const toUpdate = episodes.filter(
       (ep) =>
         !ep.overview ||
@@ -228,8 +228,6 @@ async function updateEpisodesKitsune(request, reply) {
         console.log(`      ✔ Encontrado: "${canonicalTitle}"`);
 
         // Determinar o que precisa ser atualizado
-        const needsTranslatedTitle =
-          !ep.name || ep.name === "Nome não disponível";
         const needsTranslatedSynopsis =
           !ep.overview || ep.overview === "Descrição não disponível.";
         const needsThumbnail =
@@ -238,10 +236,8 @@ async function updateEpisodesKitsune(request, reply) {
         // Preparar os dados a serem atualizados
         const updateData = {};
 
-        // 6.4) traduzir - apenas quando necessário
-        if (needsTranslatedTitle) {
-          updateData.name = await translateText(canonicalTitle);
-        }
+        // 6.4) traduzir - Sempre atualize o nome (independente de já estar preenchido)
+        updateData.name = await translateText(canonicalTitle);
 
         if (needsTranslatedSynopsis) {
           updateData.overview = await translateText(synopsis);
@@ -254,14 +250,9 @@ async function updateEpisodesKitsune(request, reply) {
         // Sempre atualizar o timestamp
         updateData.updated_at = new Date().toISOString();
 
-        // 6.5) atualizar no banco apenas se houver dados para atualizar
-        if (Object.keys(updateData).length > 1) {
-          // > 1 porque always tem updated_at
-          await knex("episodes").where({ id: ep.id }).update(updateData);
-          console.log(`      ✔ Atualizado no DB: ep interno ${ep.id}`);
-        } else {
-          console.log(`      ⚠ Nenhum dado para atualizar no ep ${ep.id}`);
-        }
+        // 6.5) atualizar no banco
+        await knex("episodes").where({ id: ep.id }).update(updateData);
+        console.log(`      ✔ Atualizado no DB: ep interno ${ep.id}`);
 
         results.push({
           status: "fulfilled",
