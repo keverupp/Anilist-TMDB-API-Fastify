@@ -5,7 +5,7 @@ const qs = require("querystring");
 const knex = require("knex")(require("../knexfile").development);
 const { getEpisodesByAnimeId } = require("../models/episodesModel");
 
-const DEEPL_KEY = "f3a942c3-e69f-4b1b-a124-284eb186b119:fx";
+const DEEPL_KEY = process.env.DEEPL_KEY;
 const KITSU_BASE = "https://kitsu.io/api/edge";
 const KITSU_HEADERS = {
   Accept: "application/vnd.api+json",
