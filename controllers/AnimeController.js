@@ -147,8 +147,12 @@ async function getAnime(req, reply) {
     const animeId = Number(id);
     let anime = await findAnimeById(animeId);
     if (anime) {
-      const genres = await findGenresByAnimeId(animeId);
-      return reply.send({ ...anime, genres });
+      // Busca tanto os gêneros quanto as keywords do anime
+      const [genres, keywords] = await Promise.all([
+        findGenresByAnimeId(animeId),
+        findKeywordsByAnimeId(animeId),
+      ]);
+      return reply.send({ ...anime, genres, keywords });
     }
 
     const titleInfo = await getEnglishTitleFromTitles(animeId);
