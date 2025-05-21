@@ -46,7 +46,14 @@ async function updateUpcomingAnime(id, data) {
  * @returns {Promise<Array>} Lista de animes futuros
  */
 async function listUpcomingAnimes(options = {}) {
-  const { page = 1, limit = 20, season, year, hasOtakuId = null } = options;
+  const {
+    page = 1,
+    limit = 20,
+    season,
+    year,
+    hasOtakuId = null,
+    name,
+  } = options;
 
   const query = knex("upcoming_animes")
     .orderBy("release_date", "asc")
@@ -69,6 +76,11 @@ async function listUpcomingAnimes(options = {}) {
     }
   }
 
+  // Adicionando filtro por nome
+  if (name) {
+    query.whereILike("title", `%${name}%`);
+  }
+
   return query;
 }
 
@@ -78,9 +90,9 @@ async function listUpcomingAnimes(options = {}) {
  * @returns {Promise<number>} Total de animes
  */
 async function countUpcomingAnimes(options = {}) {
-  const { season, year, hasOtakuId = null } = options;
+  const { season, year, hasOtakuId = null, name } = options;
 
-  const query = knex("upcoming_animes").count("id as total").first();
+  const query = knex("upcoming_animes").count("* as total");
 
   if (season) {
     query.where("season", season);
@@ -98,8 +110,13 @@ async function countUpcomingAnimes(options = {}) {
     }
   }
 
+  // Adicionando filtro por nome
+  if (name) {
+    query.whereILike("title", `%${name}%`);
+  }
+
   const result = await query;
-  return result.total;
+  return parseInt(result[0].total);
 }
 
 module.exports = {
