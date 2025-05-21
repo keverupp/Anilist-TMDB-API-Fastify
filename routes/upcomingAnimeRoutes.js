@@ -17,6 +17,20 @@ async function upcomingAnimeRoutes(fastify) {
    * @desc Busca animes futuros na Jikan API e salva no banco
    * @access Private (Admin)
    */
+  fastify.get("/upcoming-animes/fetch", fetchUpcomingAnimes);
+
+  /**
+   * @route GET /upcoming-animes/process
+   * @desc Processa animes não processados (tradução e busca de ID)
+   * @access Private (Admin)
+   */
+  fastify.get("/upcoming-animes/process", processUnprocessedAnimes);
+
+  /**
+   * @route GET /upcoming-animes
+   * @desc Lista animes futuros com paginação e filtros
+   * @access Public
+   */
   fastify.get("/upcoming-animes", async (request, reply) => {
     try {
       const {
@@ -26,6 +40,7 @@ async function upcomingAnimeRoutes(fastify) {
         year,
         hasOtakuId,
         name,
+        fields,
       } = request.query;
 
       const options = {
@@ -34,7 +49,8 @@ async function upcomingAnimeRoutes(fastify) {
         season,
         year: year ? parseInt(year) : undefined,
         hasOtakuId: hasOtakuId === undefined ? null : hasOtakuId === "true",
-        name, // Adicionando o parâmetro de filtro por nome
+        name,
+        fields: fields ? fields.split(",").map((field) => field.trim()) : null, // Convertendo string de campos para array
       };
 
       const [animes, total] = await Promise.all([

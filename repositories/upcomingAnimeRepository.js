@@ -53,9 +53,23 @@ async function listUpcomingAnimes(options = {}) {
     year,
     hasOtakuId = null,
     name,
+    fields,
   } = options;
 
-  const query = knex("upcoming_animes")
+  // Iniciar a query
+  let query = knex("upcoming_animes");
+
+  // Selecionar campos específicos se fornecidos, caso contrário selecionar todos
+  if (fields && Array.isArray(fields) && fields.length > 0) {
+    // Garantindo que sempre incluímos o campo id para manter a consistência
+    if (!fields.includes("id")) {
+      fields.push("id");
+    }
+    query = query.select(fields);
+  }
+
+  // Continuar com o resto da query
+  query = query
     .orderBy("release_date", "asc")
     .limit(limit)
     .offset((page - 1) * limit);
@@ -76,7 +90,6 @@ async function listUpcomingAnimes(options = {}) {
     }
   }
 
-  // Adicionando filtro por nome
   if (name) {
     query.whereILike("title", `%${name}%`);
   }
