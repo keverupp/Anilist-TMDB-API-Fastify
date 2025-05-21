@@ -91,7 +91,12 @@ async function listUpcomingAnimes(options = {}) {
   }
 
   if (name) {
-    query.whereILike("title", `%${name}%`);
+    // Modificar para buscar em todos os três campos de título
+    query.where(function () {
+      this.whereILike("title", `%${name}%`)
+        .orWhereILike("title_english", `%${name}%`)
+        .orWhereILike("title_pt", `%${name}%`);
+    });
   }
 
   return query;
