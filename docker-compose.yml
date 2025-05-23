@@ -1,19 +1,36 @@
-version: "3.9"
-
 services:
   otakudiscuss-api:
     build:
       context: .
-      dockerfile: Dockerfile
     container_name: otakudiscuss-api
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgres://postgres:postgres@otakudiscuss-db:5432/otakudiscuss
-      NODE_ENV: production
+      DB_CLIENT: ${DB_CLIENT}
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      FROM_EMAIL: ${FROM_EMAIL}
+      FROM_NAME: ${FROM_NAME}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      API_URL: ${API_URL}
+      COMPANY_LOGO: ${COMPANY_LOGO}
+      PRIMARY_COLOR: ${PRIMARY_COLOR}
     depends_on:
-      - otakudiscuss-db
-    restart: always
+      otakudiscuss-db:
+        condition: service_healthy
     networks:
       - otakudiscuss_network
 
@@ -21,9 +38,9 @@ services:
     image: postgres:16
     container_name: otakudiscuss-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: otakudiscuss
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - otakudiscuss_pgdata:/var/lib/postgresql/data
     ports:
@@ -31,6 +48,11 @@ services:
     restart: always
     networks:
       - otakudiscuss_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   otakudiscuss_pgdata:

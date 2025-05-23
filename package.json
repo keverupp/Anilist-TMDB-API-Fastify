@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "nodemon --watch . --ext js,json --exec \"node dev.js\"",
-    "start": "fastify start -l info app.js",
+    "start": "npm run migrate && npm run seed && fastify start -l info app.js",
     "test": "node --test test/**/*.test.js",
     "migrate": "npx knex migrate:latest",
     "rollback": "npx knex migrate:rollback --all",
