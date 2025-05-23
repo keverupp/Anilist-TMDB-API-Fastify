@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  otakudiscuss-api:
+    image: node:18
+    container_name: otakudiscuss-api
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npm run start"
+    depends_on:
+      - otakudiscuss-db
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@otakudiscuss-db:5432/otakudiscuss
+    restart: always
+
+  otakudiscuss-db:
+    image: postgres:16
+    container_name: otakudiscuss-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: otakudiscuss
+    volumes:
+      - otakudiscuss_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+
+volumes:
+  otakudiscuss_pgdata:

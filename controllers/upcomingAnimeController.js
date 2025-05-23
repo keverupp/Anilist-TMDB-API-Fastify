@@ -19,7 +19,7 @@ async function fetchUpcomingAnimes(request, reply) {
   try {
     // Busca animes da próxima temporada na Jikan API
     const { data } = await axios.get(
-      "https://api.jikan.moe/v4/seasons/upcoming?page=10"
+      "https://api.jikan.moe/v4/seasons/upcoming?page=20"
     );
 
     if (!data || !data.data || !Array.isArray(data.data)) {
