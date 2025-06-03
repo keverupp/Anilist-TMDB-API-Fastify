@@ -25,11 +25,14 @@ async function searchAnimes(req, reply) {
 
     await Promise.all(
       results.map(async (anime) => {
+        // Adicionando a verificação de origin_country
         if (
           !anime.genre_ids?.includes(16) ||
-          !["ja", "zh"].includes(anime.original_language)
-        )
+          (!["ja", "zh"].includes(anime.original_language) &&
+            !anime.origin_country?.includes("JP")) // Adiciona a condição para origin_country
+        ) {
           return;
+        }
 
         const animeId = anime.id;
         let ptTitle = "N/A";
