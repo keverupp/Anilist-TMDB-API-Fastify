@@ -76,6 +76,8 @@ html {
   font-optical-sizing: auto;
   -webkit-tap-highlight-color: transparent !important;
 }
+
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded&display=swap");
 .material-icons {
   font-family: "Material Symbols Rounded" !important;
   display: inline-block;
