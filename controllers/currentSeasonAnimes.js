@@ -1,3 +1,5 @@
+// controllers/getCurrentSeasonAnimes.js
+
 const knex = require("knex")(require("../knexfile").development);
 
 async function getCurrentSeasonAnimes(request, reply) {
@@ -6,8 +8,8 @@ async function getCurrentSeasonAnimes(request, reply) {
     limit = 20,
     genres,
     keywords,
-    sort_by = "popularity", // Campo para ordenação
-    sort_order = "desc", // Direção da ordenação
+    sort_by = "popularity",
+    sort_order = "desc",
   } = request.query;
 
   try {
@@ -30,41 +32,37 @@ async function getCurrentSeasonAnimes(request, reply) {
       "animes.type",
     ];
 
-    // Buscar IDs de gêneros, se fornecido
+    // --- Filtragem opcional por gêneros ---
     let genreIdArray = [];
     if (genres) {
-      const genreNames = genres.split(",").map((name) => name.trim());
+      const genreNames = genres.split(",").map((s) => s.trim());
       const genreIds = await knex("genres")
         .whereIn("name_pt", genreNames)
         .select("id");
-
       if (genreIds.length === 0) {
         return reply
           .status(404)
           .send({ error: "Nenhum gênero correspondente foi encontrado." });
       }
-
-      genreIdArray = genreIds.map((genre) => genre.id);
+      genreIdArray = genreIds.map((g) => g.id);
     }
 
-    // Buscar IDs de keywords, se fornecido
+    // --- Filtragem opcional por keywords ---
     let keywordIdArray = [];
     if (keywords) {
-      const keywordNames = keywords.split(",").map((k) => k.trim());
+      const keywordNames = keywords.split(",").map((s) => s.trim());
       const keywordIds = await knex("keywords")
         .whereIn("name", keywordNames)
         .select("id");
-
       if (keywordIds.length === 0) {
         return reply
           .status(404)
           .send({ error: "Nenhuma keyword correspondente foi encontrada." });
       }
-
       keywordIdArray = keywordIds.map((k) => k.id);
     }
 
-    // Validar campo de ordenação
+    // --- Ordenação ---
     const validSortFields = [
       "name",
       "popularity",
@@ -72,25 +70,32 @@ async function getCurrentSeasonAnimes(request, reply) {
       "first_air_date",
       "episodes_count",
     ];
-
     const sortField = validSortFields.includes(sort_by)
       ? `animes.${sort_by}`
       : "animes.popularity";
-
-    // Validar direção de ordenação
     const sortDirection = ["asc", "desc"].includes(sort_order.toLowerCase())
       ? sort_order.toLowerCase()
       : "desc";
 
-    // Query base - filtrando apenas animes da temporada atual
+    // --- Intervalo de ±2 meses em torno de hoje ---
+    const hoje = new Date();
+    const inicioIntervalo = new Date(hoje);
+    inicioIntervalo.setMonth(hoje.getMonth() - 2);
+    const fimIntervalo = new Date(hoje);
+    fimIntervalo.setMonth(hoje.getMonth() + 2);
+    const dataInicio = inicioIntervalo.toISOString().slice(0, 10);
+    const dataFim = fimIntervalo.toISOString().slice(0, 10);
+
+    // --- Query base: ambos filtros aplicados em AND ---
     let query = knex("animes")
       .select(selectedFields)
       .where({ is_current_season: true })
+      .andWhereBetween("animes.first_air_date", [dataInicio, dataFim])
       .orderBy(sortField, sortDirection)
       .limit(limit)
       .offset(offset);
 
-    // Aplicar filtro por gêneros
+    // --- Filtro por gêneros (se houver) ---
     if (genres) {
       query = query
         .join("anime_genres", "animes.id", "anime_genres.anime_id")
@@ -101,7 +106,7 @@ async function getCurrentSeasonAnimes(request, reply) {
         ]);
     }
 
-    // Aplicar filtro por keywords
+    // --- Filtro por keywords (se houver) ---
     if (keywords) {
       query = query
         .join("anime_keywords", "animes.id", "anime_keywords.anime_id")
@@ -112,29 +117,28 @@ async function getCurrentSeasonAnimes(request, reply) {
         ]);
     }
 
-    // Remover duplicatas caso haja JOINs
+    // Remove duplicações de JOINs
     query = query.distinct();
 
-    // Determinar temporada atual para informação adicional
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth() + 1;
+    // --- Determina temporada atual para metadata ---
+    const currentYear = hoje.getFullYear();
+    const currentMonth = hoje.getMonth() + 1;
     let currentSeason;
-
-    if (currentMonth >= 12 || currentMonth <= 2) {
+    if (currentMonth === 12 || currentMonth <= 2) {
       currentSeason = "verão";
-    } else if (currentMonth >= 3 && currentMonth <= 5) {
+    } else if (currentMonth <= 5) {
       currentSeason = "outono";
-    } else if (currentMonth >= 6 && currentMonth <= 8) {
+    } else if (currentMonth <= 8) {
       currentSeason = "inverno";
     } else {
       currentSeason = "primavera";
     }
 
-    // Modificador para contagem total com os mesmos filtros
+    // --- Função para aplicar os mesmos filtros na contagem total ---
     const applyFilters = (builder) => {
-      builder.where({ is_current_season: true });
-
+      builder
+        .where({ is_current_season: true })
+        .andWhereBetween("animes.first_air_date", [dataInicio, dataFim]);
       if (genres) {
         builder
           .join("anime_genres", "animes.id", "anime_genres.anime_id")
@@ -144,7 +148,6 @@ async function getCurrentSeasonAnimes(request, reply) {
             genreIdArray.length,
           ]);
       }
-
       if (keywords) {
         builder
           .join("anime_keywords", "animes.id", "anime_keywords.anime_id")
@@ -156,32 +159,24 @@ async function getCurrentSeasonAnimes(request, reply) {
       }
     };
 
-    // Obter os animes e a contagem total com os mesmos filtros
-    const [animes, totalCount] = await Promise.all([
+    // --- Executa em paralelo: busca paginada e contagem total ---
+    const [animes, totalCountRow] = await Promise.all([
       query,
-      knex("animes")
-        .count("id as total")
-        .where({ is_current_season: true })
-        .modify(applyFilters)
-        .first(),
+      knex("animes").count("id as total").modify(applyFilters).first(),
     ]);
 
-    // Para cada anime, buscar seus gêneros
+    // --- Monta resposta com gêneros embutidos ---
     const animesWithGenres = await Promise.all(
       animes.map(async (anime) => {
         const genres = await knex("genres")
           .select("genres.id", "genres.name_pt")
           .join("anime_genres", "genres.id", "anime_genres.genre_id")
           .where({ "anime_genres.anime_id": anime.id });
-
-        return {
-          ...anime,
-          genres,
-        };
+        return { ...anime, genres };
       })
     );
 
-    const total = parseInt(totalCount?.total || 0, 10);
+    const total = parseInt(totalCountRow.total || 0, 10);
     const totalPages = Math.ceil(total / limit);
 
     return reply.status(200).send({
