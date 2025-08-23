@@ -10,6 +10,23 @@ const {
   updateUpcomingAnime,
 } = require("../repositories/upcomingAnimeRepository");
 
+// Utilitário simples de espera
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Realiza requisições respeitando limites da API
+async function fetchPageWithRetry(url, retries = 5, delayMs = 1000) {
+  try {
+    return await axios.get(url);
+  } catch (error) {
+    // Se atingir o limite de requisições, aguarda e tenta novamente
+    if (error.response?.status === 429 && retries > 0) {
+      await wait(delayMs);
+      return fetchPageWithRetry(url, retries - 1, delayMs * 2);
+    }
+    throw error;
+  }
+}
+
 /**
  * Busca animes futuros na Jikan API e salva no banco de dados
  * @param {Object} request - Requisição Fastify
@@ -17,16 +34,39 @@ const {
  */
 async function fetchUpcomingAnimes(request, reply) {
   try {
-    // Busca animes da próxima temporada na Jikan API
-    const { data } = await axios.get(
-      "https://api.jikan.moe/v4/seasons/upcoming?page=20"
-    );
+    // Busca todas as páginas de animes futuros na Jikan API
+    let page = 1;
+    let hasNextPage = true;
+    const animes = [];
 
-    if (!data || !data.data || !Array.isArray(data.data)) {
-      throw new Error("Formato de resposta inválido da Jikan API");
+    while (hasNextPage) {
+      const { data } = await fetchPageWithRetry(
+        `https://api.jikan.moe/v4/seasons/upcoming?page=${page}`
+      );
+
+      if (!data || !data.data || !Array.isArray(data.data)) {
+        throw new Error("Formato de resposta inválido da Jikan API");
+      }
+
+      // Filtrar animes com classificação +18
+      const filtered = data.data.filter((anime) => {
+        const rating = anime.rating || "";
+        const hasHentaiGenre = (anime.genres || []).some(
+          (g) => g.name?.toLowerCase() === "hentai"
+        );
+        return !/R\+|Rx/i.test(rating) && !hasHentaiGenre;
+      });
+
+      animes.push(...filtered);
+      hasNextPage = data.pagination?.has_next_page;
+      page++;
+
+      // Aguarda um pouco antes da próxima requisição para evitar 429
+      if (hasNextPage) {
+        await wait(400);
+      }
     }
 
-    const animes = data.data;
     request.log.info(
       `Encontrados ${animes.length} animes futuros na Jikan API`
     );
