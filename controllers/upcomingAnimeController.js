@@ -10,6 +10,23 @@ const {
   updateUpcomingAnime,
 } = require("../repositories/upcomingAnimeRepository");
 
+// Utilitário simples de espera
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Realiza requisições respeitando limites da API
+async function fetchPageWithRetry(url, retries = 5, delayMs = 1000) {
+  try {
+    return await axios.get(url);
+  } catch (error) {
+    // Se atingir o limite de requisições, aguarda e tenta novamente
+    if (error.response?.status === 429 && retries > 0) {
+      await wait(delayMs);
+      return fetchPageWithRetry(url, retries - 1, delayMs * 2);
+    }
+    throw error;
+  }
+}
+
 /**
  * Busca animes futuros na Jikan API e salva no banco de dados
  * @param {Object} request - Requisição Fastify
@@ -23,7 +40,7 @@ async function fetchUpcomingAnimes(request, reply) {
     const animes = [];
 
     while (hasNextPage) {
-      const { data } = await axios.get(
+      const { data } = await fetchPageWithRetry(
         `https://api.jikan.moe/v4/seasons/upcoming?page=${page}`
       );
 
@@ -43,6 +60,11 @@ async function fetchUpcomingAnimes(request, reply) {
       animes.push(...filtered);
       hasNextPage = data.pagination?.has_next_page;
       page++;
+
+      // Aguarda um pouco antes da próxima requisição para evitar 429
+      if (hasNextPage) {
+        await wait(400);
+      }
     }
 
     request.log.info(
