@@ -1,7 +1,22 @@
 /**
  * Repositório para operações de banco de dados relacionadas a animes futuros
  */
-const knex = require("knex")(require("../knexfile").development);
+const knexConfig = require("../knexfile").development;
+let knex = require("knex")(knexConfig);
+
+// Reexecuta a query caso a conexão seja perdida
+async function runQuery(buildQuery) {
+  try {
+    return await buildQuery(knex);
+  } catch (err) {
+    if (err.message.includes("Connection terminated unexpectedly")) {
+      knex.destroy();
+      knex = require("knex")(knexConfig);
+      return await buildQuery(knex);
+    }
+    throw err;
+  }
+}
 
 /**
  * Busca anime futuro pelo ID do MyAnimeList
@@ -9,7 +24,9 @@ const knex = require("knex")(require("../knexfile").development);
  * @returns {Promise<Object|null>} Dados do anime ou null se não encontrado
  */
 async function findUpcomingAnimeByMalId(malId) {
-  return knex("upcoming_animes").where("mal_id", malId).first();
+  return runQuery((db) =>
+    db("upcoming_animes").where("mal_id", malId).first()
+  );
 }
 
 /**
@@ -18,8 +35,10 @@ async function findUpcomingAnimeByMalId(malId) {
  * @returns {Promise<number>} ID do anime inserido
  */
 async function insertUpcomingAnime(animeData) {
-  const [id] = await knex("upcoming_animes").insert(animeData).returning("id");
-  return id;
+  const result = await runQuery((db) =>
+    db("upcoming_animes").insert(animeData).returning("id")
+  );
+  return result[0]?.id || result[0];
 }
 
 /**
@@ -27,7 +46,9 @@ async function insertUpcomingAnime(animeData) {
  * @returns {Promise<Array>} Lista de animes não processados
  */
 async function findUnprocessedUpcomingAnimes() {
-  return knex("upcoming_animes").where("processed", false);
+  return runQuery((db) =>
+    db("upcoming_animes").where("processed", false)
+  );
 }
 
 /**
@@ -37,7 +58,9 @@ async function findUnprocessedUpcomingAnimes() {
  * @returns {Promise<void>}
  */
 async function updateUpcomingAnime(id, data) {
-  return knex("upcoming_animes").where("id", id).update(data);
+  return runQuery((db) =>
+    db("upcoming_animes").where("id", id).update(data)
+  );
 }
 
 /**
@@ -57,7 +80,8 @@ async function listUpcomingAnimes(options = {}) {
   } = options;
 
   // Iniciar a query
-  let query = knex("upcoming_animes");
+  return runQuery((db) => {
+    let query = db("upcoming_animes");
 
   // Selecionar campos específicos se fornecidos, caso contrário selecionar todos
   if (fields && Array.isArray(fields) && fields.length > 0) {
@@ -103,6 +127,7 @@ async function listUpcomingAnimes(options = {}) {
   }
 
   return query;
+  });
 }
 
 /**
@@ -113,7 +138,8 @@ async function listUpcomingAnimes(options = {}) {
 async function countUpcomingAnimes(options = {}) {
   const { season, year, hasOtakuId = null, name } = options;
 
-  const query = knex("upcoming_animes").count("* as total");
+  const result = await runQuery((db) => {
+    const query = db("upcoming_animes").count("* as total");
 
   if (season) {
     query.where("season", season);
@@ -138,10 +164,12 @@ async function countUpcomingAnimes(options = {}) {
         .orWhereILike("title_english", `%${name}%`)
         .orWhereILike("title_pt", `%${name}%`);
     });
-  }
+    }
 
-  const result = await query;
-  return parseInt(result[0].total);
+    return query;
+  });
+
+  return parseInt(result[0].total, 10);
 }
 
 module.exports = {
