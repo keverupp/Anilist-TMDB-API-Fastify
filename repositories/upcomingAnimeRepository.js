@@ -95,8 +95,10 @@ async function listUpcomingAnimes(options = {}) {
   // Continuar com o resto da query
   query = query
     // Ordena pela data de lançamento, colocando registros sem data ao final
+    // e garante ordenação determinística entre datas iguais
     .orderBy([
       { column: "release_date", order: "asc", nulls: "last" },
+      { column: "id", order: "asc" },
     ])
     .limit(limit)
     .offset((page - 1) * limit);
