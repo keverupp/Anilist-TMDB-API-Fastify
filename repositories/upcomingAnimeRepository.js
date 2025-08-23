@@ -70,7 +70,10 @@ async function listUpcomingAnimes(options = {}) {
 
   // Continuar com o resto da query
   query = query
-    .orderBy("release_date", "asc")
+    // Ordena pela data de lançamento, colocando registros sem data ao final
+    .orderBy([
+      { column: "release_date", order: "asc", nulls: "last" },
+    ])
     .limit(limit)
     .offset((page - 1) * limit);
 
@@ -128,9 +131,13 @@ async function countUpcomingAnimes(options = {}) {
     }
   }
 
-  // Adicionando filtro por nome
+  // Adicionando filtro por nome (busca em múltiplos campos para manter consistência com listagem)
   if (name) {
-    query.whereILike("title", `%${name}%`);
+    query.where(function () {
+      this.whereILike("title", `%${name}%`)
+        .orWhereILike("title_english", `%${name}%`)
+        .orWhereILike("title_pt", `%${name}%`);
+    });
   }
 
   const result = await query;
