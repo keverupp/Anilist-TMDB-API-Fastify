@@ -17,16 +17,34 @@ const {
  */
 async function fetchUpcomingAnimes(request, reply) {
   try {
-    // Busca animes da próxima temporada na Jikan API
-    const { data } = await axios.get(
-      "https://api.jikan.moe/v4/seasons/upcoming?page=20"
-    );
+    // Busca todas as páginas de animes futuros na Jikan API
+    let page = 1;
+    let hasNextPage = true;
+    const animes = [];
 
-    if (!data || !data.data || !Array.isArray(data.data)) {
-      throw new Error("Formato de resposta inválido da Jikan API");
+    while (hasNextPage) {
+      const { data } = await axios.get(
+        `https://api.jikan.moe/v4/seasons/upcoming?page=${page}`
+      );
+
+      if (!data || !data.data || !Array.isArray(data.data)) {
+        throw new Error("Formato de resposta inválido da Jikan API");
+      }
+
+      // Filtrar animes com classificação +18
+      const filtered = data.data.filter((anime) => {
+        const rating = anime.rating || "";
+        const hasHentaiGenre = (anime.genres || []).some(
+          (g) => g.name?.toLowerCase() === "hentai"
+        );
+        return !/R\+|Rx/i.test(rating) && !hasHentaiGenre;
+      });
+
+      animes.push(...filtered);
+      hasNextPage = data.pagination?.has_next_page;
+      page++;
     }
 
-    const animes = data.data;
     request.log.info(
       `Encontrados ${animes.length} animes futuros na Jikan API`
     );
