@@ -30,4 +30,5 @@ services:
       PRIMARY_COLOR: ${PRIMARY_COLOR}
 
 networks:
-  otakudiscuss_network:
+  proxy_network:
+    external: true
