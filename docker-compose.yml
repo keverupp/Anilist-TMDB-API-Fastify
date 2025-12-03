@@ -28,35 +28,6 @@ services:
       API_URL: ${API_URL}
       COMPANY_LOGO: ${COMPANY_LOGO}
       PRIMARY_COLOR: ${PRIMARY_COLOR}
-    depends_on:
-      otakudiscuss-db:
-        condition: service_healthy
-    networks:
-      - otakudiscuss_network
-
-  otakudiscuss-db:
-    image: postgres:16
-    container_name: otakudiscuss-db
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    volumes:
-      - otakudiscuss_pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    restart: always
-    networks:
-      - otakudiscuss_network
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-volumes:
-  otakudiscuss_pgdata:
-
 
 networks:
   otakudiscuss_network:
