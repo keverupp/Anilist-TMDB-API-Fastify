@@ -3,8 +3,6 @@ services:
     build:
       context: .
     container_name: otakudiscuss-api
-    ports:
-      - "3000:3000"
     environment:
       DB_CLIENT: ${DB_CLIENT}
       DB_HOST: ${DB_HOST}
